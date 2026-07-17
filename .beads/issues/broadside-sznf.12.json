@@ -1,0 +1,29 @@
+{
+  "id": "broadside-sznf.12",
+  "title": "SSRF guard in Follow handler only checks https:// prefix — RFC-1918 not blocked",
+  "description": "handle_inbox (server.rs line 431) rejects actor URIs that don't start with https://, but does not block RFC-1918 or link-local addresses. An attacker can send a Follow activity with actor='https://169.254.169.254/latest/meta-data' (AWS instance metadata) or 'https://192.168.1.1/admin' and the server will fetch it using the shared http_client. On cloud infrastructure this leaks instance metadata. On internal networks this provides a blind SSRF pivot. Fix: after parsing the URL, check that the resolved host is not in 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, or 169.254.0.0/16 before sending the request. The reqwest client does not do this automatically.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:36:24.946041046Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:40:03.021663276Z",
+  "closed_at": "2026-07-17T23:40:03.021663276Z",
+  "close_reason": "All pass 2 fixes applied: circuit breaker reset, persona-scoped 410, SSRF private IP block, tokio::fs, URL scheme validation, Content-Type, page clamp, watch dedup",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-sznf.12",
+      "depends_on_id": "broadside-sznf",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:36:24.974662425Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

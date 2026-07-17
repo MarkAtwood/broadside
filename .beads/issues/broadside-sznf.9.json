@@ -1,0 +1,29 @@
+{
+  "id": "broadside-sznf.9",
+  "title": "Outbox page=0 silently returns page 1 with wrong id URL",
+  "description": "In server.rs outbox(), page is declared as Option\u003cu32\u003e and the offset is computed as:\n\n  let page = query.page.unwrap_or(1);  // page=0 stays 0\n  let offset = (page as i64 - 1) * per_page;  // 0-1 = -1, * 20 = -20\n\nSQLite treats a negative OFFSET as 0, so page=0 returns the same first-page results as page=1. The OrderedCollectionPage response has id set to \"...?page=0\" which is a valid-looking but incorrect page identifier. An ActivityPub crawler that tries page=0 after seeing first=...?page=1 (or that iterates from 0) gets duplicated first-page content with a confusing id.\n\nFix: clamp page to a minimum of 1 before computing offset, or return 400 for page=0.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:36:06.19596251Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:40:02.976558605Z",
+  "closed_at": "2026-07-17T23:40:02.976558605Z",
+  "close_reason": "All pass 2 fixes applied: circuit breaker reset, persona-scoped 410, SSRF private IP block, tokio::fs, URL scheme validation, Content-Type, page clamp, watch dedup",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-sznf.9",
+      "depends_on_id": "broadside-sznf",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:36:06.222730397Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

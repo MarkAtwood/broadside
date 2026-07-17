@@ -1,0 +1,29 @@
+{
+  "id": "broadside-to5p.12",
+  "title": "Run clippy and rustfmt, fix all warnings",
+  "description": "No clippy or rustfmt pass has been done. Run: cargo fmt --all, cargo clippy -- -D warnings. Fix all warnings and formatting issues. Add these to the build/test section of CLAUDE.md as required quality gates.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:08:41.818918142Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:13:40.912166801Z",
+  "started_at": "2026-07-17T23:09:06.210019973Z",
+  "closed_at": "2026-07-17T23:13:40.912166801Z",
+  "close_reason": "All quick fixes applied: markdown rendering, feed dedup, rate limiter wired in, error logging, shared HTTP client, clippy+rustfmt clean",
+  "labels": [
+    "hardening"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-to5p.12",
+      "depends_on_id": "broadside-to5p",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:08:41.831649903Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

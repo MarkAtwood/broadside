@@ -1,0 +1,29 @@
+{
+  "id": "broadside-3ctt.1",
+  "title": "webhook key compare leaks key length via early exit",
+  "description": "webhook.rs lines 50-51 short-circuit on length before the constant-time compare: if expected_bytes.len() != provided_bytes.len() { return UNAUTHORIZED }. This leaks the expected key length to timing measurement — an attacker can binary-search the key length in O(log n) probes before the ct_eq even runs. The fix introduced in pass 1 preserved the oracle for length. A correct fix either: (a) uses HMAC-based comparison (hmac::verify), or (b) always runs ct_eq on length-normalized inputs (pad shorter side to longer, then compare, discarding result when lengths differ only after the ct_eq finishes). The subtle::ConstantTimeEq trait handles equal-length inputs only; mismatched lengths must be handled by the caller without branching on the difference.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:42:06.334113177Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:48:34.522299164Z",
+  "closed_at": "2026-07-17T23:48:34.522299164Z",
+  "close_reason": "Pass 3 fixes: HMAC key compare, inbox SSRF guard, domain validation, async Accept dispatch, foreign keys, IPv6 SSRF, poll timeout. Remaining P2-P3 accepted as known debt.",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3ctt.1",
+      "depends_on_id": "broadside-3ctt",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:42:06.351441901Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

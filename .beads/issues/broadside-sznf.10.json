@@ -1,0 +1,29 @@
+{
+  "id": "broadside-sznf.10",
+  "title": "signatures.rs has zero tests — sign/verify and known-vector coverage absent",
+  "description": "The signatures module (sign_request, verify_signature, parse_signature_header) is the most security-critical code in the codebase and has no unit tests at all. There is no test for: (1) sign+verify round-trip, (2) known test vectors against an external oracle (e.g. a pre-computed signature from OpenSSL or Mastodon), (3) parse_signature_header edge cases (missing headers= field, commas inside quoted values, empty signature), (4) verify_signature rejecting a tampered body or wrong key. Without tests, regressions in the signing path will silently break federation — all outbound deliveries will be rejected by remote servers with no obvious error. Fix: add unit tests with at least a sign+verify round-trip using a fixed test keypair, and at least one known-vector test using a signature computed externally (e.g. via openssl dgst -sha256 -sign).",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:36:16.265937929Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:40:02.993753951Z",
+  "closed_at": "2026-07-17T23:40:02.993753951Z",
+  "close_reason": "All pass 2 fixes applied: circuit breaker reset, persona-scoped 410, SSRF private IP block, tokio::fs, URL scheme validation, Content-Type, page clamp, watch dedup",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-sznf.10",
+      "depends_on_id": "broadside-sznf",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:36:16.29198774Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

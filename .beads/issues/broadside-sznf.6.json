@@ -1,0 +1,29 @@
+{
+  "id": "broadside-sznf.6",
+  "title": "HTML truncation cuts mid-tag, producing malformed HTML",
+  "description": "feed.rs truncate_utf8() cuts the combined HTML string at a UTF-8 character boundary but has no awareness of HTML tag structure. If the 5000-byte limit falls inside a tag (e.g. '\u003cblockquote\u003elong...' cut to '\u003cblockquote\u003elon'), the stored HTML is malformed: unclosed tags, broken attributes, or partial tag names. This malformed HTML is stored in the DB and delivered to all followers via ActivityPub. Most clients will attempt to render it, producing garbled output or layout breakage. Fix: after truncation, pass the result through ammonia (which re-parses and closes open tags), or truncate at a semantic boundary (e.g. end of last complete paragraph) before appending the 'read more' link.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:35:48.831667552Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:40:02.928168272Z",
+  "closed_at": "2026-07-17T23:40:02.928168272Z",
+  "close_reason": "All pass 2 fixes applied: circuit breaker reset, persona-scoped 410, SSRF private IP block, tokio::fs, URL scheme validation, Content-Type, page clamp, watch dedup",
+  "labels": [
+    "idiomatic-rust",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-sznf.6",
+      "depends_on_id": "broadside-sznf",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:35:48.860028834Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

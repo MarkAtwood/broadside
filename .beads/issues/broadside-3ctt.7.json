@@ -1,0 +1,29 @@
+{
+  "id": "broadside-3ctt.7",
+  "title": "inbox_uri from actor document not SSRF-checked before Accept dispatch and DB storage",
+  "description": "server.rs:480 extracts inbox_uri from the remote actor document (controlled by the follower). The SSRF guard (is_private_host) is applied only to the follower_actor URL before fetching it, not to the inbox_uri returned in the actor document itself. A malicious actor can return {\"inbox\": \"http://169.254.169.254/latest/meta-data\"} in their actor JSON, causing Broadside to: (1) store this private URL in the followers table, and (2) dispatch the Accept POST directly to the metadata endpoint. Every subsequent delivery fan_out also hits that URL. The same is_private_host check should be applied to inbox_uri (and shared_inbox_uri) before storage and dispatch.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:44:23.532477547Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:48:34.588479093Z",
+  "closed_at": "2026-07-17T23:48:34.588479093Z",
+  "close_reason": "Pass 3 fixes: HMAC key compare, inbox SSRF guard, domain validation, async Accept dispatch, foreign keys, IPv6 SSRF, poll timeout. Remaining P2-P3 accepted as known debt.",
+  "labels": [
+    "risk",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3ctt.7",
+      "depends_on_id": "broadside-3ctt",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:44:23.545195596Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

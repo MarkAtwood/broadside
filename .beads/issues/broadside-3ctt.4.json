@@ -1,0 +1,28 @@
+{
+  "id": "broadside-3ctt.4",
+  "title": "pass 3 clean: no further findings beyond 3 filed",
+  "description": "Pass 3 read all 12 source files in src/ plus tests/integration.rs. Three substantive findings were filed (broadside-3ctt.1, .2, .3). The remaining patterns examined and cleared: id.rs expect() on UNIX_EPOCH is unreachable in practice (clock-before-epoch panics on any sane OS); FeedConfig::interval() expect() is invariant-protected by Config::validate() at load time; the query.page.unwrap_or(1) dead-code idiom (server.rs:292) is harmless; private_key String conversion comment (persona.rs:22) is accurate, just acknowledging an unavoidable limitation of SQLite storage; delivery.rs chrono unwrap_or is dead code for the given RETRY_DELAYS values. No additional crypto, unsafe, or Rust idiom issues found beyond what is tracked.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "decision",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:42:35.710029461Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:48:34.559042938Z",
+  "closed_at": "2026-07-17T23:48:34.559042938Z",
+  "close_reason": "Pass 3 fixes: HMAC key compare, inbox SSRF guard, domain validation, async Accept dispatch, foreign keys, IPv6 SSRF, poll timeout. Remaining P2-P3 accepted as known debt.",
+  "labels": [
+    "review",
+    "codereview"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3ctt.4",
+      "depends_on_id": "broadside-3ctt",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:42:35.721777321Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

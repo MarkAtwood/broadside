@@ -1,0 +1,29 @@
+{
+  "id": "broadside-sznf.5",
+  "title": "Feed link URLs not HTML-encoded in href attributes",
+  "description": "In feed.rs, link URLs from feed entries are sanitized with ammonia::clean() and then interpolated directly into HTML attribute context:\n\n  let safe_url = ammonia::clean(url);\n  html.push_str(\u0026format!(r#\"\u003cp\u003e\u003ca href=\"{safe_url}\"\u003e{safe_url}\u003c/a\u003e\u003c/p\u003e\"#));\n\nammonia::clean() strips HTML tags but does not HTML-encode bare text. A URL containing \u0026 in its query string (e.g., https://example.com/page?a=1\u0026b=2) passes through unchanged. The resulting HTML attribute href=\"https://example.com/page?a=1\u0026b=2\" is invalid HTML — the \u0026 should be \u0026amp;. Strict HTML parsers (including some ActivityPub clients) will misparse the URL, breaking the link.\n\nThe same issue appears in the truncation suffix:\n  html.push_str(\u0026format!(r#\"… \u003ca href=\"{safe_url}\"\u003eread more\u003c/a\u003e\"#));\n\nFix: use a proper URL-to-HTML-attribute encoder (e.g., encode \u0026 as \u0026amp;, \" as \u0026quot;) or build the anchor through ammonia by sanitizing a pre-formed \u003ca\u003e tag rather than interpolating into a format string.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:35:40.708056346Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:40:02.914096952Z",
+  "closed_at": "2026-07-17T23:40:02.914096952Z",
+  "close_reason": "All pass 2 fixes applied: circuit breaker reset, persona-scoped 410, SSRF private IP block, tokio::fs, URL scheme validation, Content-Type, page clamp, watch dedup",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-sznf.5",
+      "depends_on_id": "broadside-sznf",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:35:40.734451793Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

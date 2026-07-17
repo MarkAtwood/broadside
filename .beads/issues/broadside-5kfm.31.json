@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.31",
+  "title": "Delivery status is stringly-typed TEXT across 8+ query strings",
+  "description": "The delivery_queue.status column takes two values: 'pending' and 'dead'. These string literals appear in at least 8 places:\n\n- db.rs:55 — DEFAULT 'pending' in schema\n- delivery.rs:121 — WHERE status = 'pending'\n- delivery.rs:290 — SET status = 'dead'\n- delivery.rs:351 — WHERE status = 'dead'  (retry_dead)\n- delivery.rs:352 — SET status = 'pending'\n- delivery.rs:367,371 — WHERE status = 'pending'/'dead' (stats)\n- cli.rs:208-213 — WHERE status = 'pending'/'dead' (Status command)\n- server/delivery inspect query in delivery.rs:311,317\n\nWhat goes wrong: adding a third status (e.g. 'sending', 'deferred') requires a grep-and-replace across all query strings with no compiler assistance. A typo ('peding') compiles and silently produces wrong query results. As this codebase grows and new query sites are added, each developer must know the magic strings.\n\nThe idiomatic fix is to define:\n    enum DeliveryStatus { Pending, Dead }\n    impl DeliveryStatus { fn as_str(\u0026self) -\u003e \u0026'static str { ... } }\n\nand use DeliveryStatus::Pending.as_str() at every query site. This is especially important because sqlx's compile-time query macros (query!) could enforce this at the DB layer, but even without them the enum eliminates the string scatter.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:17:04.541942624Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:31:35.273834787Z",
+  "closed_at": "2026-07-17T23:31:35.273834787Z",
+  "close_reason": "P2-P3: RateLimiter::new returns Self, remaining items accepted as known tech debt or tracked in hardening epic",
+  "labels": [
+    "idiomatic-rust",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.31",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:17:04.555799081Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

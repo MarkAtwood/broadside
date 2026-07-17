@@ -1,0 +1,29 @@
+{
+  "id": "broadside-3ctt.12",
+  "title": "IPv6 SSRF guard incomplete: only loopback/unspecified checked, misses fc00::/7 ULA",
+  "description": "server.rs:636: IpAddr::V6(v6) =\u003e v6.is_loopback() || v6.is_unspecified() — this guards ::1 (loopback) and :: (unspecified) but misses IPv6 unique-local addresses (fc00::/7, e.g. fd00::1), IPv6 link-local (fe80::/10), and the IPv4-mapped range (::ffff:10.0.0.1 which maps to private IPv4). An attacker can supply a follower actor URL with host 'fd00::1' and bypass the SSRF check entirely. Rust 1.80's IpAddr::V6 has is_unique_local() (nightly) but not stable; use a manual prefix check: (v6.segments()[0] \u0026 0xfe00) == 0xfc00 for ULA, v6.segments()[0] == 0xfe80 for link-local. Also check IpAddr::V6::to_ipv4_mapped().",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:45:03.098640056Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:48:34.633578349Z",
+  "closed_at": "2026-07-17T23:48:34.633578349Z",
+  "close_reason": "Pass 3 fixes: HMAC key compare, inbox SSRF guard, domain validation, async Accept dispatch, foreign keys, IPv6 SSRF, poll timeout. Remaining P2-P3 accepted as known debt.",
+  "labels": [
+    "risk",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3ctt.12",
+      "depends_on_id": "broadside-3ctt",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:45:03.120387226Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

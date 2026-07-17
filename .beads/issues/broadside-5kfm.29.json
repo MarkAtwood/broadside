@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.29",
+  "title": "feed.rs: html.truncate(MAX_CONTENT_LEN) panics on multi-byte UTF-8 boundaries",
+  "description": "src/feed.rs:59: String::truncate() panics with 'byte index N is not a char boundary' if the byte offset 5000 falls in the middle of a multi-byte UTF-8 character (e.g., emoji, CJK, accented Latin). Because html is a Rust String (guaranteed valid UTF-8), truncating at a byte offset that is not a char boundary is a panic, not an error. This can be triggered by any feed whose entry content crosses 5000 bytes at a multi-byte character. Fix: use a helper like truncate_at_char_boundary(s, n) that walks back from n to find the last valid char boundary, or use s.char_indices().take_while(|(i, _)| *i \u003c n).last().",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:17:02.854060657Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:17.135584141Z",
+  "closed_at": "2026-07-17T23:30:17.135584141Z",
+  "close_reason": "P0 fixes: AtomicU64, UTF-8 path, OsRng, 410 cleanup, constant-time key compare, checked_mul, SSRF guard, sanitized URLs, persona exists check, UTF-8 safe truncate",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.29",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:17:02.867695054Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

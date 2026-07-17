@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.35",
+  "title": "RSA key size 2048 bits — should document minimum or upgrade path",
+  "description": "In persona.rs:11, RSA keys are generated at 2048 bits. NIST SP 800-131A Rev 2 and BSI TR-02102-1 both recommend 3072-bit RSA as the new minimum for keys protecting data beyond 2030. For an ActivityPub server where private keys are long-lived (they persist in the DB for the lifetime of the persona and cannot be rotated without breaking existing follower relationships), generating 2048-bit keys today creates a migration problem in ~4 years. Mastodon itself recently defaulted to 4096 for new accounts. The current choice is defensible for interop but should be documented as a known limitation. Fix: change the default to 3072 or 4096 bits; note that keygen takes a few hundred ms at 4096 which is acceptable for a one-time CLI operation. At minimum add a comment explaining the choice.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:17:21.335868894Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:31:35.285429766Z",
+  "closed_at": "2026-07-17T23:31:35.285429766Z",
+  "close_reason": "P2-P3: RateLimiter::new returns Self, remaining items accepted as known tech debt or tracked in hardening epic",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.35",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:17:21.356250686Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

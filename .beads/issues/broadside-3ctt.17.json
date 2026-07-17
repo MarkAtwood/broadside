@@ -1,0 +1,28 @@
+{
+  "id": "broadside-3ctt.17",
+  "title": "Pass 3 decision: code is materially improved but 4 P1 bugs remain unfiled before this pass",
+  "description": "Pass 3 review summary. Code quality is substantially higher than pass 1 baseline. Passes 1 and 2 fixed 36+12 issues including the worst XSS, SSRF, timing oracle, and data integrity bugs. New findings in pass 3: P1 bugs (3): Follow object URI not validated against this server's domain (broadside-3ctt.5); Accept dispatch blocks inbox handler synchronously (broadside-3ctt.6); inbox_uri from actor document not SSRF-checked before storage and dispatch (broadside-3ctt.7); timing side-channel regression from pass-1 fix — length check leaks before ct_eq (broadside-3ctt.14). P2 bugs (4): SQLite foreign keys not enabled (broadside-3ctt.8); watch.rs unwrap_or_default on file_name (broadside-3ctt.9); test TOCTOU port race (broadside-3ctt.10); IPv6 SSRF guard misses ULA/link-local/mapped (broadside-3ctt.12); poll_all no timeout (broadside-3ctt.15). P3 issues (3): NULL source_ref dedup footgun (broadside-3ctt.11); missing test coverage for webhook/ratelimit/sanitize/Follow/Undo (broadside-3ctt.13); delivery_queue missing post_id index (broadside-3ctt.16). The Accept-blocking and timing-oracle regression (broadside-3ctt.14) are the most urgent — both affect production behavior under adversarial input.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "decision",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:45:49.722187525Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:48:34.675547527Z",
+  "closed_at": "2026-07-17T23:48:34.675547527Z",
+  "close_reason": "Pass 3 fixes: HMAC key compare, inbox SSRF guard, domain validation, async Accept dispatch, foreign keys, IPv6 SSRF, poll timeout. Remaining P2-P3 accepted as known debt.",
+  "labels": [
+    "review",
+    "codereview"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3ctt.17",
+      "depends_on_id": "broadside-3ctt",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:45:49.737653495Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

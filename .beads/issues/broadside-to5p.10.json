@@ -1,0 +1,29 @@
+{
+  "id": "broadside-to5p.10",
+  "title": "Error handling silently swallows failures",
+  "description": "Multiple places use unwrap_or_default(), unwrap_or((0,)), or let _ = to silently discard errors. Locations: server.rs inbox Follow handler (let _ = sqlx insert), server.rs Accept send (let _ = client.post), delivery.rs process_batch (unwrap_or_default on post query). These hide bugs. At minimum, log errors with tracing::error! instead of silently discarding.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:08:36.509006602Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:13:40.883951248Z",
+  "started_at": "2026-07-17T23:09:06.132953117Z",
+  "closed_at": "2026-07-17T23:13:40.883951248Z",
+  "close_reason": "All quick fixes applied: markdown rendering, feed dedup, rate limiter wired in, error logging, shared HTTP client, clippy+rustfmt clean",
+  "labels": [
+    "hardening"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-to5p.10",
+      "depends_on_id": "broadside-to5p",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:08:36.53036791Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

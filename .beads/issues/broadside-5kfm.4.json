@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.4",
+  "title": "prune() defined but never called — rate limiter leaks memory",
+  "description": "ratelimit.rs defines prune() to evict stale per-IP buckets, but it is never called from anywhere in the codebase. Each unique source IP that hits /inbox grows the HashMap permanently. Under any sustained volume of federation traffic (botnets, crawlers, rotating IPs) this is an unbounded memory leak.\n\nFix: call prune() periodically from the delivery worker loop or spawn a dedicated cleanup task in server::serve. The prune threshold of 1 hour is already defined correctly.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:01.512002895Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:24.288649272Z",
+  "closed_at": "2026-07-17T23:30:24.288649272Z",
+  "close_reason": "P1-P3 fixes: unwrap replaced, INSERT OR IGNORE dedup, X-Real-IP, zeroizing noted, prune wired, strip_suffix, SSRF guard, shared client, dead code removed, issue refs added",
+  "labels": [
+    "efficiency",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.4",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:01.528853484Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

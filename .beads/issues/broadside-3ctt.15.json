@@ -1,0 +1,29 @@
+{
+  "id": "broadside-3ctt.15",
+  "title": "feed.rs poll_all() creates Client::new() without timeout — hangs indefinitely on stuck feed",
+  "description": "feed.rs:154: let client = reqwest::Client::new() in poll_all() has no timeout configured. If a feed server hangs after accepting the TCP connection but before sending a response, the CLI 'broadside feed-poll' command will block indefinitely. The background poller (run_poller) correctly sets a 30s timeout on its client (line 137-140), but poll_all() is the CLI path. An operator running feed-poll interactively gets a hung process. Fix: use Client::builder().timeout(Duration::from_secs(30)).build() in poll_all() consistent with run_poller.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:45:28.305078304Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:48:34.659174021Z",
+  "closed_at": "2026-07-17T23:48:34.659174021Z",
+  "close_reason": "Pass 3 fixes: HMAC key compare, inbox SSRF guard, domain validation, async Accept dispatch, foreign keys, IPv6 SSRF, poll timeout. Remaining P2-P3 accepted as known debt.",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3ctt.15",
+      "depends_on_id": "broadside-3ctt",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:45:28.325078283Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

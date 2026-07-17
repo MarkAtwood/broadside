@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.14",
+  "title": "Filesystem paths stored as String in config types",
+  "description": "config.rs — WatchConfig.path and WatchConfig.published are String fields. They are immediately converted to Path at use sites:\n\n- config.rs:60 — Path::new(\u0026watch.path) in validate()\n- config.rs:64 — Path::new(\u0026watch.published)\n- watch.rs:18-19 — PathBuf::from(\u0026config.path) and PathBuf::from(\u0026config.published)\n\nAlso ServerConfig.data_dir is a String used as a path:\n- server.rs:37 — std::path::Path::new(\u0026config.server.data_dir)\n\nWhat goes wrong: the String type expresses no path semantics, so callers must repeatedly re-parse. More importantly, validation (is_absolute) is done against a borrowed \u0026str, but the struct carries an owned String — this is fine today but when this pattern is copied for new path fields the validator step gets forgotten. PathBuf in the config struct costs the same at deserialization time (serde deserializes to PathBuf directly) and gives you is_absolute(), join(), display(), etc. at every use site without re-wrapping.\n\nFix: change WatchConfig.path, WatchConfig.published, and ServerConfig.data_dir to PathBuf. Serde handles the deserialization automatically.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:21.999818201Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:31:35.181609325Z",
+  "closed_at": "2026-07-17T23:31:35.181609325Z",
+  "close_reason": "P2-P3: RateLimiter::new returns Self, remaining items accepted as known tech debt or tracked in hardening epic",
+  "labels": [
+    "idiomatic-rust",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.14",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:22.018136312Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

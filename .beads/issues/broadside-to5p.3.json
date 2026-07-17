@@ -1,0 +1,33 @@
+{
+  "id": "broadside-to5p.3",
+  "title": "--media flag accepted but completely ignored",
+  "description": "The Post CLI command accepts --media=PATH arguments but the match arm uses .. to discard them. No image processing pipeline exists: no MIME validation, no 10MB size limit, no EXIF stripping, no blurhash computation, no post_media row insertion, no media/ directory storage. The entire media attachment flow is missing.",
+  "status": "open",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:08:18.207732062Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:08:18.207732062Z",
+  "labels": [
+    "hardening"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-to5p.3",
+      "depends_on_id": "broadside-to5p",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:08:18.229473051Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-to5p.3",
+      "depends_on_id": "broadside-to5p.7",
+      "type": "blocks",
+      "created_at": "2026-07-17T23:08:55.742203766Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

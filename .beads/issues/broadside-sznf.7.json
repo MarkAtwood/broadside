@@ -1,0 +1,29 @@
+{
+  "id": "broadside-sznf.7",
+  "title": "Schema init not wrapped in a transaction",
+  "description": "In db.rs init_data_dir(), the schema creation runs as:\n\n  sqlx::raw_sql(SCHEMA).execute(\u0026pool).await?;\n\nSCHEMA contains 7 DDL statements (6 CREATE TABLE IF NOT EXISTS + 1 CREATE INDEX IF NOT EXISTS) executed without a BEGIN/COMMIT transaction. If the process is killed between statements, the database will be partially initialized. The next run succeeds silently due to IF NOT EXISTS, but the missing index (idx_delivery_pending) will not be created because its CREATE INDEX IF NOT EXISTS already ran and... actually the problem is the opposite: statements before the kill succeed, statements after do not. So the database might be missing tables that later code assumes exist, causing runtime errors on first use.\n\nFix: wrap the SCHEMA execution in an explicit transaction:\n  let mut tx = pool.begin().await?;\n  sqlx::raw_sql(SCHEMA).execute(\u0026mut *tx).await?;\n  tx.commit().await?;\n\nNote: SQLite DDL is transactional, so this is straightforward.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:35:54.454248088Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:40:02.947096231Z",
+  "closed_at": "2026-07-17T23:40:02.947096231Z",
+  "close_reason": "All pass 2 fixes applied: circuit breaker reset, persona-scoped 410, SSRF private IP block, tokio::fs, URL scheme validation, Content-Type, page clamp, watch dedup",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-sznf.7",
+      "depends_on_id": "broadside-sznf",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:35:54.482552114Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

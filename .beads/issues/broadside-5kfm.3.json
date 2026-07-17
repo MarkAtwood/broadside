@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.3",
+  "title": "unwrap/expect panics in production paths",
+  "description": "Several .unwrap()/.expect() calls exist in non-test code where the panic can reach production:\n\n- db.rs:71 — SqliteConnectOptions::from_str(db_path.to_str().unwrap()) panics on non-UTF-8 path\n- cli.rs:120 — path.to_str().unwrap() in Init command, same issue\n- delivery.rs:96 — .expect(\"building HTTP client\") inside the background worker; a panic here kills the delivery loop silently (tokio task just ends)\n- delivery.rs:268 — chrono::Duration::from_std(delay).unwrap(); Duration::from_std returns Err on overflow, which is reachable if RETRY_DELAYS ever gets a very large value\n- server.rs:477 — serde_json::to_vec(\u0026accept).unwrap_or_default() sends an empty body Accept if serialization fails, which is protocol-incorrect\n\nWhat goes wrong: db.rs/cli.rs panics crash the process on non-UTF-8 data directories (a real case on some Linux setups). The delivery.rs worker panic is swallowed by tokio and the queue silently stops draining — no error log, no restart. The server.rs case sends a malformed Accept to the follower's server.\n\nFix: db.rs and cli.rs — use Path::to_str().ok_or_else(|| anyhow::anyhow!(\"path is not UTF-8\"))?. delivery.rs worker — use .context() and propagate, or handle the error explicitly. server.rs — propagate serialization error into the if let block's error arm.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:15:59.692000335Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:24.132320448Z",
+  "closed_at": "2026-07-17T23:30:24.132320448Z",
+  "close_reason": "P1-P3 fixes: unwrap replaced, INSERT OR IGNORE dedup, X-Real-IP, zeroizing noted, prune wired, strip_suffix, SSRF guard, shared client, dead code removed, issue refs added",
+  "labels": [
+    "idiomatic-rust",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.3",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:15:59.706473627Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

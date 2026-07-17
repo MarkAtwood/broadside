@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.22",
+  "title": "sign_request API accepts private key as plain \u0026str",
+  "description": "In signatures.rs:17, `sign_request()` takes `private_key_pem: \u0026str`. At every call site (delivery.rs:183, server.rs:481), the private key is fetched from the DB as a plain `String` and passed directly. There is no type-level enforcement that callers treat this as secret material. This means the key can be accidentally passed to logging macros, format strings, or other functions that accept `\u0026str`. Fix: define a `struct PrivateKeyPem(Zeroizing\u003cString\u003e)` that does not derive `Debug`, `Display`, or `Serialize`, and change the function signature to accept `\u0026PrivateKeyPem`. This makes accidental logging a compile error rather than a runtime incident.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:42.054748882Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:31:35.240704822Z",
+  "closed_at": "2026-07-17T23:31:35.240704822Z",
+  "close_reason": "P2-P3: RateLimiter::new returns Self, remaining items accepted as known tech debt or tracked in hardening epic",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.22",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:42.067550426Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

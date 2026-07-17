@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.24",
+  "title": "Gratuitous String allocations from \u0026str via .to_string()",
+  "description": "Multiple sites allocate a new String from a \u0026str that is immediately used and dropped. Clippy flags these as clippy::str_to_string (prefer .to_owned()) and also flags places where no allocation is needed at all.\n\nKey cases:\n\n1. delivery.rs:303 and server.rs:487 — url.host_str() returns Option\u003c\u0026str\u003e; mapping it through .map(|h| h.to_string()) to return an owned String is unnecessary because extract_domain() only returns the value to pass it into HashMap::get(\u0026domain) or record_failure(\u0026domain), both of which take \u0026str. The function signature should return String (since the caller stores it in a local), but the internal map should use .to_owned() not .to_string().\n\n2. delivery.rs:186-187 and server.rs:482-488 — url.path() returns \u0026str; .to_string() is called only to produce a String that is immediately borrowed as \u0026str by sign_request(). Change to .to_owned() or restructure to pass url.path() directly.\n\n3. delivery.rs:72 — inside fan_out(), seen.insert(target.to_string()) where target: \u0026str and seen: HashSet\u003cString\u003e. The HashSet is only used within this function's lifetime, so HashSet\u003c\u0026str\u003e suffices and eliminates all the per-inbox allocations during fan-out. For a persona with N followers this allocates N strings that are freed at end of scope.\n\n4. feed.rs:35-46 — entry.id.clone(), t.content.clone(), c.body.clone(), s.content.clone(), l.href.clone() for title/link/body values that are used immediately and not stored beyond the loop iteration (except entry_id which is stored in newest_id). The clones for title body and link can be replaced with borrows.\n\nWhat goes wrong: individually minor, but this pattern trains developers to reach for .to_string()/.clone() reflexively. In the fan-out path (delivery.rs:72) this is O(followers) allocations per post that serve no purpose.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:48.302132833Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:31:35.251824013Z",
+  "closed_at": "2026-07-17T23:31:35.251824013Z",
+  "close_reason": "P2-P3: RateLimiter::new returns Self, remaining items accepted as known tech debt or tracked in hardening epic",
+  "labels": [
+    "idiomatic-rust",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.24",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:48.318257723Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

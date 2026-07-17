@@ -1,0 +1,5 @@
+{"id":"019f7278-63af-745a-aff5-8233b510b784","issue_id":"broadside-3ctt.14","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-17T23:45:20.30328579Z"}
+{"id":"019f7278-63b3-71cf-b851-3f8718781d24","issue_id":"broadside-3ctt.14","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: risk","created_at":"2026-07-17T23:45:20.307119327Z"}
+{"id":"019f7278-63b7-712a-bcb5-5a275ca11ada","issue_id":"broadside-3ctt.14","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: codereview","created_at":"2026-07-17T23:45:20.311076728Z"}
+{"id":"019f7278-63bb-718e-9158-a11aa76b3201","issue_id":"broadside-3ctt.14","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-17T23:45:20.315102436Z"}
+{"id":"019f727b-5add-7c04-a962-0c97a4693497","issue_id":"broadside-3ctt.14","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Pass 3 fixes: HMAC key compare, inbox SSRF guard, domain validation, async Accept dispatch, foreign keys, IPv6 SSRF, poll timeout. Remaining P2-P3 accepted as known debt.","created_at":"2026-07-17T23:48:34.653788152Z"}

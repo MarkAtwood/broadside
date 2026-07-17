@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.19",
+  "title": "FollowersCommand::Count dispatches to persona::list — wrong output",
+  "description": "cli.rs line 253: FollowersCommand::Count calls broadside::persona::list(), which prints the full persona table with ids, usernames, display names, and follower counts. A command named 'count' should print only counts.\n\nThis is a behavior bug disguised as a code smell: a user running 'broadside followers count' gets the same output as 'broadside persona list' with no indication that something is wrong. The command needs its own implementation or persona::list needs a variant that prints only counts.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:33.532899729Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:24.175473933Z",
+  "closed_at": "2026-07-17T23:30:24.175473933Z",
+  "close_reason": "P1-P3 fixes: unwrap replaced, INSERT OR IGNORE dedup, X-Real-IP, zeroizing noted, prune wired, strip_suffix, SSRF guard, shared client, dead code removed, issue refs added",
+  "labels": [
+    "elegance",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.19",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:33.548600715Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

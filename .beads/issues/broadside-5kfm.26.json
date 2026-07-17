@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.26",
+  "title": "trim_end_matches('\"') strips multiple trailing quotes in Signature header parser",
+  "description": "In signatures.rs:115 and 117, `parse_signature_header()` extracts quoted values with `.trim_end_matches('\"')`. `trim_end_matches` removes ALL matching characters from the end, not just one. A Signature header value like `headers=\"(request-target) host\"\"\" ` (with extra trailing quotes inside the token) would have those quotes stripped, silently accepting a malformed header. More critically, a value like `signature=\"abc\"xyz\"` would produce `abc\"xyz` after stripping only the final quote — but `trim_end_matches` would leave `abc\"xyz` which includes an unintended embedded quote, potentially misidentifying the signature bytes. The correct fix is to use a proper quoted-string parser: find the closing `\"` by scanning forward from after the opening quote (respecting the split already done), not by stripping from the end. At minimum, replace with `.strip_suffix('\"').unwrap_or(val)` to remove exactly one trailing quote.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:54.136181377Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:24.223039073Z",
+  "closed_at": "2026-07-17T23:30:24.223039073Z",
+  "close_reason": "P1-P3 fixes: unwrap replaced, INSERT OR IGNORE dedup, X-Real-IP, zeroizing noted, prune wired, strip_suffix, SSRF guard, shared client, dead code removed, issue refs added",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.26",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:54.149847463Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

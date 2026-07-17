@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.16",
+  "title": "Private key stored plaintext in SQLite",
+  "description": "In db.rs:13, the schema defines `private_key TEXT NOT NULL` with no encryption. RSA private keys for all personas are stored in cleartext in broadside.db. Anyone who gains read access to the database file (via backup exfiltration, SQLite ATTACH from a malicious feed URL if SQLite is misconfigured, or directory traversal in the media path) obtains all private keys permanently. Fix options: (1) encrypt the private key column using SQLCipher or application-level AES-256-GCM with a key derived from a passphrase or hardware secret; (2) store keys in the OS keychain/secret store. At minimum, document the threat model clearly and ensure the data_dir has mode 0700. This is a P1 rather than P0 because exploitation requires filesystem read access, which is a separate boundary.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:27.439389888Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:31:35.210996151Z",
+  "closed_at": "2026-07-17T23:31:35.210996151Z",
+  "close_reason": "P2-P3: RateLimiter::new returns Self, remaining items accepted as known tech debt or tracked in hardening epic",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.16",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:27.452873725Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

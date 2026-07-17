@@ -1,0 +1,29 @@
+{
+  "id": "broadside-3ctt.6",
+  "title": "Accept dispatch blocks inbox handler: slow remote inbox delays response",
+  "description": "In server.rs handle_inbox Follow branch (~line 549), the code awaits state.http_client.post(\u0026inbox_uri).send().await before returning StatusCode::ACCEPTED. This blocks the Axum handler task for up to 30 seconds (the client timeout) while waiting for the remote server's inbox to respond. The ActivityPub spec requires servers to queue outbound Accept activities and return 202 immediately. Any remote server that is slow or unreachable will cause this inbox endpoint to hold an HTTP connection open for the full timeout, consuming a Tokio task and connection thread. Under load this enables a trivial slowloris-style attack: send many Follow requests pointing to slow remote inboxes. Fix: spawn the Accept dispatch into a background tokio task or use the delivery queue.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:44:14.129205016Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:48:34.578703926Z",
+  "closed_at": "2026-07-17T23:48:34.578703926Z",
+  "close_reason": "Pass 3 fixes: HMAC key compare, inbox SSRF guard, domain validation, async Accept dispatch, foreign keys, IPv6 SSRF, poll timeout. Remaining P2-P3 accepted as known debt.",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3ctt.6",
+      "depends_on_id": "broadside-3ctt",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:44:14.144389475Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

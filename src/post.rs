@@ -36,7 +36,10 @@ pub fn text_to_html(text: &str) -> String {
         .replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;");
-    format!("<p>{}</p>", escaped.replace("\n\n", "</p><p>").replace('\n', "<br>"))
+    format!(
+        "<p>{}</p>",
+        escaped.replace("\n\n", "</p><p>").replace('\n', "<br>")
+    )
 }
 
 /// Fetch recent posts for a persona, newest first.
@@ -61,12 +64,10 @@ pub async fn list_for_persona(
 
 /// Count total posts for a persona.
 pub async fn count_for_persona(pool: &SqlitePool, persona_id: &str) -> anyhow::Result<i64> {
-    let (count,) = sqlx::query_as::<_, (i64,)>(
-        "SELECT COUNT(*) FROM posts WHERE persona_id = ?",
-    )
-    .bind(persona_id)
-    .fetch_one(pool)
-    .await?;
+    let (count,) = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM posts WHERE persona_id = ?")
+        .bind(persona_id)
+        .fetch_one(pool)
+        .await?;
     Ok(count)
 }
 

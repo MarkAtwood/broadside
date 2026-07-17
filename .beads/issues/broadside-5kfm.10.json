@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.10",
+  "title": "parse_duration silently overflows on large values",
+  "description": "src/config.rs:93: n * 86400 (and n * 3600, n * 60) are unchecked u64 multiplications. A config value like poll_interval = \"213503982334602d\" overflows to 0, and the interval() method returns Duration::from_secs(0), causing the feed poller to spin as fast as possible hammering the remote feed server. Fix: use n.checked_mul(86400).ok_or_else(|| anyhow::anyhow!(\"duration overflow\"))? for each multiplier.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:11.197198556Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:17.090869889Z",
+  "closed_at": "2026-07-17T23:30:17.090869889Z",
+  "close_reason": "P0 fixes: AtomicU64, UTF-8 path, OsRng, 410 cleanup, constant-time key compare, checked_mul, SSRF guard, sanitized URLs, persona exists check, UTF-8 safe truncate",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.10",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:11.208964554Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

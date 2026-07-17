@@ -20,16 +20,15 @@ pub fn sign_request(
     host: &str,
     body: &[u8],
 ) -> anyhow::Result<HeaderMap> {
-    let private_key = RsaPrivateKey::from_pkcs8_pem(private_key_pem)
-        .context("parsing private key PEM")?;
+    let private_key =
+        RsaPrivateKey::from_pkcs8_pem(private_key_pem).context("parsing private key PEM")?;
     let signing_key = rsa::pkcs1v15::SigningKey::<Sha256>::new(private_key);
 
     let date = Utc::now().format("%a, %d %b %Y %H:%M:%S GMT").to_string();
     let digest = format!("SHA-256={}", B64.encode(sha256_digest(body)));
 
-    let signed_string = format!(
-        "(request-target): post {target}\nhost: {host}\ndate: {date}\ndigest: {digest}"
-    );
+    let signed_string =
+        format!("(request-target): post {target}\nhost: {host}\ndate: {date}\ndigest: {digest}");
 
     let signature = signing_key.sign(signed_string.as_bytes());
     let sig_b64 = B64.encode(signature.to_bytes());
@@ -65,7 +64,11 @@ pub fn verify_signature(
     let mut lines = Vec::new();
     for h in signed_headers {
         if h == "(request-target)" {
-            lines.push(format!("(request-target): {} {}", method.to_lowercase(), path));
+            lines.push(format!(
+                "(request-target): {} {}",
+                method.to_lowercase(),
+                path
+            ));
         } else {
             let val = headers
                 .get(h)
@@ -77,8 +80,8 @@ pub fn verify_signature(
     }
     let signed_string = lines.join("\n");
 
-    let public_key = RsaPublicKey::from_public_key_pem(public_key_pem)
-        .context("parsing public key PEM")?;
+    let public_key =
+        RsaPublicKey::from_public_key_pem(public_key_pem).context("parsing public key PEM")?;
     let verifying_key = rsa::pkcs1v15::VerifyingKey::<Sha256>::new(public_key);
 
     let sig_bytes = B64
@@ -109,9 +112,9 @@ fn parse_signature_header(header: &str) -> anyhow::Result<SignatureParts> {
     for part in split_signature_params(header) {
         let part = part.trim();
         if let Some(val) = part.strip_prefix("headers=\"") {
-            headers_val = Some(val.trim_end_matches('"').to_string());
+            headers_val = Some(val.strip_suffix('"').unwrap_or(val).to_string());
         } else if let Some(val) = part.strip_prefix("signature=\"") {
-            signature_val = Some(val.trim_end_matches('"').to_string());
+            signature_val = Some(val.strip_suffix('"').unwrap_or(val).to_string());
         }
     }
 

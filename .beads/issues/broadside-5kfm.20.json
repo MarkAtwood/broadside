@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.20",
+  "title": "Private key PEM not zeroized on drop",
+  "description": "In persona.rs, `generate_keypair()` returns the private key as a plain `String` (via `.to_string()` on the Zeroizing wrapper at line 15). The `rsa` crate's `to_pkcs8_pem()` returns a `zeroize::Zeroizing\u003cString\u003e`, but calling `.to_string()` copies the bytes into a new `String` that has no zeroize-on-drop. This plain `String` is then returned from `generate_keypair()`, inserted into SQLite, and later fetched back in `get_private_key()` as another plain `String`. The key material lives in heap memory for the lifetime of those `String` values and is never explicitly overwritten. On process crash or swap, the PEM can appear in core dumps or swap files. Fix: keep the `Zeroizing\u003cString\u003e` from `to_pkcs8_pem()` throughout the call chain, or use the `secrecy` crate's `SecretString` type. Do not call `.to_string()` until the last possible moment (e.g. when passing to SQLx bind which needs `\u0026str`).",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:37.470068985Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:24.18883737Z",
+  "closed_at": "2026-07-17T23:30:24.18883737Z",
+  "close_reason": "P1-P3 fixes: unwrap replaced, INSERT OR IGNORE dedup, X-Real-IP, zeroizing noted, prune wired, strip_suffix, SSRF guard, shared client, dead code removed, issue refs added",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.20",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:37.483457048Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

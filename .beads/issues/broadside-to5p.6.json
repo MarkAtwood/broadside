@@ -1,0 +1,29 @@
+{
+  "id": "broadside-to5p.6",
+  "title": "Feed poller dedup breaks on non-chronological feeds",
+  "description": "feed.rs processes entries in reverse order and breaks when it hits last_seen_id. This assumes entries are in chronological order, which RSS/Atom specs don't guarantee. Should instead skip any entry whose id matches a previously-seen source_ref in the posts table, not break on first match.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:08:25.949265992Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:13:40.861523883Z",
+  "started_at": "2026-07-17T23:09:06.051280281Z",
+  "closed_at": "2026-07-17T23:13:40.861523883Z",
+  "close_reason": "All quick fixes applied: markdown rendering, feed dedup, rate limiter wired in, error logging, shared HTTP client, clippy+rustfmt clean",
+  "labels": [
+    "hardening"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-to5p.6",
+      "depends_on_id": "broadside-to5p",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:08:25.962377518Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

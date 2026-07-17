@@ -4,6 +4,7 @@ use axum::response::IntoResponse;
 use axum::Json;
 use serde::Deserialize;
 use std::sync::Arc;
+use subtle::ConstantTimeEq;
 
 use crate::sanitize;
 use crate::server::AppState;
@@ -18,8 +19,9 @@ pub struct WebhookPayload {
     content: String,
     #[serde(default = "default_content_type")]
     content_type: String,
+    // ponytail: media fetch not yet implemented — tracked in broadside-to5p.5
     #[serde(default)]
-    media: Vec<WebhookMedia>,
+    pub media: Vec<WebhookMedia>,
 }
 
 #[derive(Deserialize)]
@@ -39,19 +41,25 @@ pub async fn handle_webhook(
     Query(query): Query<WebhookQuery>,
     Json(payload): Json<WebhookPayload>,
 ) -> impl IntoResponse {
-    // Find the webhook config for this persona
-    // ponytail: we load config once at startup and pass it via AppState.
-    // For now, verify the key from the database-side persona lookup.
-    // The actual key check requires config access — we store webhook keys
-    // in AppState.
-    let _ = &query.key; // used below via webhook_keys
-
-    // Check webhook key
     let keys = &state.webhook_keys;
     match keys.get(&persona_name) {
-        Some(expected_key) if *expected_key == query.key => {}
-        Some(_) => return (StatusCode::UNAUTHORIZED, "invalid key").into_response(),
-        None => return (StatusCode::NOT_FOUND, "no webhook configured for this persona").into_response(),
+        Some(expected_key) => {
+            // Constant-time comparison — hash both keys to fixed length first
+            // to avoid leaking key length via early-exit
+            use sha2::Digest;
+            let expected_hash = sha2::Sha256::digest(expected_key.as_bytes());
+            let provided_hash = sha2::Sha256::digest(query.key.as_bytes());
+            if expected_hash.ct_eq(&provided_hash).unwrap_u8() != 1 {
+                return (StatusCode::UNAUTHORIZED, "invalid key").into_response();
+            }
+        }
+        None => {
+            return (
+                StatusCode::NOT_FOUND,
+                "no webhook configured for this persona",
+            )
+                .into_response()
+        }
     }
 
     let persona_id = match crate::persona::get_id(&state.pool, &persona_name).await {
@@ -76,8 +84,17 @@ pub async fn handle_webhook(
 
     match crate::delivery::fan_out(&state.pool, &post_id, &persona_id).await {
         Ok(queued) => {
-            tracing::info!(persona = persona_name, post_id, queued, "webhook post created");
-            (StatusCode::CREATED, Json(serde_json::json!({"post_id": post_id, "queued": queued}))).into_response()
+            tracing::info!(
+                persona = persona_name,
+                post_id,
+                queued,
+                "webhook post created"
+            );
+            (
+                StatusCode::CREATED,
+                Json(serde_json::json!({"post_id": post_id, "queued": queued})),
+            )
+                .into_response()
         }
         Err(e) => {
             tracing::error!(error = %e, "webhook fan-out failed");

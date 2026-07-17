@@ -1,0 +1,29 @@
+{
+  "id": "broadside-3ctt.5",
+  "title": "Follow handler: object URI domain not validated against this server",
+  "description": "In handle_inbox (server.rs:441), the 'followed' URI from the Follow activity is parsed by taking only the last path segment (rsplit('/').next()), then passed directly to persona::get_id(). This does not verify the URI's domain matches state.domain. An attacker can send Follow with {\"object\": \"https://evil.com/users/alice\"} and, if a local persona named 'alice' exists, it will be registered as a follower and Accept dispatched to the attacker. The correct check: parse the full URI, verify domain matches state.domain, and only then extract the username. Without this, the Follow handler becomes an oracle for local persona enumeration and leaks outbound HTTPS requests to attacker-chosen targets.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:44:07.222767463Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:48:34.570121022Z",
+  "closed_at": "2026-07-17T23:48:34.570121022Z",
+  "close_reason": "Pass 3 fixes: HMAC key compare, inbox SSRF guard, domain validation, async Accept dispatch, foreign keys, IPv6 SSRF, poll timeout. Remaining P2-P3 accepted as known debt.",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3ctt.5",
+      "depends_on_id": "broadside-3ctt",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:44:07.23575948Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.21",
+  "title": "RateLimiter::prune() is never called; buckets grow without bound",
+  "description": "src/ratelimit.rs:51-55 defines prune() to drop stale IP entries, but there is no call site anywhere in the codebase. Every unique IP that hits the inbox endpoint adds a Bucket to the HashMap permanently. Under sustained scanning/probing traffic the map can grow to millions of entries. Fix: spawn a periodic task in server::serve() that calls inbox_limiter.prune() on an interval (e.g., every 5 minutes).",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:38.155701752Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:24.200395309Z",
+  "closed_at": "2026-07-17T23:30:24.200395309Z",
+  "close_reason": "P1-P3 fixes: unwrap replaced, INSERT OR IGNORE dedup, X-Real-IP, zeroizing noted, prune wired, strip_suffix, SSRF guard, shared client, dead code removed, issue refs added",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.21",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:38.168808597Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

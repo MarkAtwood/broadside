@@ -1,0 +1,29 @@
+{
+  "id": "broadside-3ctt.10",
+  "title": "Test port allocation has TOCTOU race: std TcpListener dropped before tokio rebinds",
+  "description": "tests/integration.rs:31-48: a std::net::TcpListener binds 127.0.0.1:0 to get a free port, then is dropped immediately (line 33), then a tokio::net::TcpListener tries to re-bind the same port number (line 46). Between drop and re-bind another process can steal the port, causing the test to fail with 'address already in use'. More subtly, the two parallel test instances can steal each other's ports. Fix: pass the std TcpListener's file descriptor directly to tokio using TcpListener::from_std(), eliminating the TOCTOU window entirely.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:44:46.751359265Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:48:34.61803833Z",
+  "closed_at": "2026-07-17T23:48:34.61803833Z",
+  "close_reason": "Pass 3 fixes: HMAC key compare, inbox SSRF guard, domain validation, async Accept dispatch, foreign keys, IPv6 SSRF, poll timeout. Remaining P2-P3 accepted as known debt.",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3ctt.10",
+      "depends_on_id": "broadside-3ctt",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:44:46.76629809Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

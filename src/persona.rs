@@ -1,5 +1,6 @@
 use anyhow::Context;
 use rsa::pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding};
+use rsa::rand_core::OsRng;
 use rsa::RsaPrivateKey;
 use sqlx::SqlitePool;
 
@@ -7,18 +8,18 @@ use crate::id::gen_id;
 
 /// Generate an RSA 2048 keypair, returning (private_pem, public_pem).
 fn generate_keypair() -> anyhow::Result<(String, String)> {
-    let mut rng = rand::thread_rng();
-    let private_key = RsaPrivateKey::new(&mut rng, 2048)
-        .context("generating RSA 2048 keypair")?;
+    let private_key =
+        RsaPrivateKey::new(&mut OsRng, 2048).context("generating RSA 2048 keypair")?;
     let private_pem = private_key
         .to_pkcs8_pem(LineEnding::LF)
-        .context("encoding private key to PEM")?
-        .to_string();
+        .context("encoding private key to PEM")?;
     let public_pem = private_key
         .to_public_key()
         .to_public_key_pem(LineEnding::LF)
         .context("encoding public key to PEM")?;
-    Ok((private_pem, public_pem))
+    // private_pem is Zeroizing<String> — we must convert to String for SQLite storage.
+    // The Zeroizing wrapper zeros the original on drop after this conversion.
+    Ok((private_pem.to_string(), public_pem))
 }
 
 /// Create a new persona with a fresh RSA keypair.
@@ -82,6 +83,15 @@ pub async fn update(
         anyhow::bail!("nothing to update — specify --display-name, --bio, --avatar, or --header");
     }
 
+    // Verify persona exists first
+    let (count,) = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM personas WHERE username = ?")
+        .bind(username)
+        .fetch_one(pool)
+        .await?;
+    if count == 0 {
+        anyhow::bail!("persona @{username} not found");
+    }
+
     if let Some(name) = display_name {
         sqlx::query("UPDATE personas SET display_name = ? WHERE username = ?")
             .bind(name)
@@ -117,36 +127,32 @@ pub async fn update(
 
 /// Look up a persona's private key PEM by username.
 pub async fn get_private_key(pool: &SqlitePool, username: &str) -> anyhow::Result<String> {
-    let (key,) = sqlx::query_as::<_, (String,)>(
-        "SELECT private_key FROM personas WHERE username = ?",
-    )
-    .bind(username)
-    .fetch_one(pool)
-    .await
-    .with_context(|| format!("persona @{username} not found"))?;
+    let (key,) =
+        sqlx::query_as::<_, (String,)>("SELECT private_key FROM personas WHERE username = ?")
+            .bind(username)
+            .fetch_one(pool)
+            .await
+            .with_context(|| format!("persona @{username} not found"))?;
     Ok(key)
 }
 
 /// Look up a persona's public key PEM by username.
 pub async fn get_public_key(pool: &SqlitePool, username: &str) -> anyhow::Result<String> {
-    let (key,) = sqlx::query_as::<_, (String,)>(
-        "SELECT public_key FROM personas WHERE username = ?",
-    )
-    .bind(username)
-    .fetch_one(pool)
-    .await
-    .with_context(|| format!("persona @{username} not found"))?;
+    let (key,) =
+        sqlx::query_as::<_, (String,)>("SELECT public_key FROM personas WHERE username = ?")
+            .bind(username)
+            .fetch_one(pool)
+            .await
+            .with_context(|| format!("persona @{username} not found"))?;
     Ok(key)
 }
 
 /// Look up a persona's ID by username.
 pub async fn get_id(pool: &SqlitePool, username: &str) -> anyhow::Result<String> {
-    let (id,) = sqlx::query_as::<_, (String,)>(
-        "SELECT id FROM personas WHERE username = ?",
-    )
-    .bind(username)
-    .fetch_one(pool)
-    .await
-    .with_context(|| format!("persona @{username} not found"))?;
+    let (id,) = sqlx::query_as::<_, (String,)>("SELECT id FROM personas WHERE username = ?")
+        .bind(username)
+        .fetch_one(pool)
+        .await
+        .with_context(|| format!("persona @{username} not found"))?;
     Ok(id)
 }

@@ -1,0 +1,5 @@
+{"id":"019f725d-c8d2-7acd-9ec8-53650a472d2c","issue_id":"broadside-5kfm.11","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-17T23:16:16.722709027Z"}
+{"id":"019f725d-c8d6-76f5-a1c6-3f446193e009","issue_id":"broadside-5kfm.11","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: efficiency","created_at":"2026-07-17T23:16:16.726456305Z"}
+{"id":"019f725d-c8da-768b-85be-e37676aceffd","issue_id":"broadside-5kfm.11","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: codereview","created_at":"2026-07-17T23:16:16.730429445Z"}
+{"id":"019f725d-c8de-7889-a05b-0f16af57eeff","issue_id":"broadside-5kfm.11","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-17T23:16:16.734559785Z"}
+{"id":"019f726b-cc83-7ddd-bcb3-2806f51f8b10","issue_id":"broadside-5kfm.11","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"P2-P3: RateLimiter::new returns Self, remaining items accepted as known tech debt or tracked in hardening epic","created_at":"2026-07-17T23:31:35.171909446Z"}

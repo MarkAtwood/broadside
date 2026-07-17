@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.5",
+  "title": "thread_rng() used for RSA key generation",
+  "description": "In persona.rs:10, `rand::thread_rng()` is used as the RNG source for `RsaPrivateKey::new()`. On Linux this seeds from OsRng so it is currently safe, but rand 0.8's `thread_rng()` is documented as a CSPRNG-seeded convenience wrapper — it is NOT a guaranteed CSPRNG interface. If the process forks after seeding (e.g. a future daemonization path) or if rand internals change, the key generation RNG becomes insecure. The correct source for key material in Rust is `OsRng` directly, which calls getrandom() and is guaranteed CSPRNG at the API level. Fix: replace `rand::thread_rng()` with `rsa::rand_core::OsRng` (re-exported by the rsa crate) in the `generate_keypair()` call.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:02.509442434Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:17.05529417Z",
+  "closed_at": "2026-07-17T23:30:17.05529417Z",
+  "close_reason": "P0 fixes: AtomicU64, UTF-8 path, OsRng, 410 cleanup, constant-time key compare, checked_mul, SSRF guard, sanitized URLs, persona exists check, UTF-8 safe truncate",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.5",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:02.523811885Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

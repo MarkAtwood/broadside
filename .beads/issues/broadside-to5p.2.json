@@ -1,0 +1,33 @@
+{
+  "id": "broadside-to5p.2",
+  "title": "Inbox accepts unsigned requests — no HTTP signature verification",
+  "description": "handle_inbox() in server.rs has a ponytail comment noting signature verification is skipped. Any remote server (or attacker) can send fake Follow/Undo Follow requests. Must verify HTTP signatures on all inbound inbox POSTs by: parsing the Signature header, fetching the sender's public key from their actor document, verifying the signature using signatures::verify_signature(). Reject unsigned/invalid requests with 401.",
+  "status": "open",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:08:15.07508119Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:08:15.07508119Z",
+  "labels": [
+    "hardening"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-to5p.2",
+      "depends_on_id": "broadside-to5p",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:08:15.095855575Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-to5p.2",
+      "depends_on_id": "broadside-to5p.8",
+      "type": "blocks",
+      "created_at": "2026-07-17T23:08:55.87261417Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

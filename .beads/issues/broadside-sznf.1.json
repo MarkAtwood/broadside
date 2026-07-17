@@ -1,0 +1,29 @@
+{
+  "id": "broadside-sznf.1",
+  "title": "Circuit breaker re-trips immediately after recovery",
+  "description": "In delivery.rs, once a domain trips the circuit breaker (10+ consecutive failures), deliveries to that domain are skipped so record_success() is never called. After 1 hour, is_tripped() returns false and delivery resumes. But the failure count is never reset, so the first new failure after recovery immediately re-trips the breaker (count is still ≥10 and last.elapsed() \u003c 3600s). A domain that had an outage and is now healthy can only ever get one delivery attempt per hour before re-tripping.\n\nFix: record_failure() should reset the count to 1 (not increment) if last.elapsed() \u003e= 3600s, so a fresh failure window starts after recovery.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:35:22.527727672Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:40:02.856907466Z",
+  "closed_at": "2026-07-17T23:40:02.856907466Z",
+  "close_reason": "All pass 2 fixes applied: circuit breaker reset, persona-scoped 410, SSRF private IP block, tokio::fs, URL scheme validation, Content-Type, page clamp, watch dedup",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-sznf.1",
+      "depends_on_id": "broadside-sznf",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:35:22.556136526Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

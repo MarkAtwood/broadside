@@ -1,0 +1,29 @@
+{
+  "id": "broadside-to5p.11",
+  "title": "Delivery worker creates fresh HTTP client per cycle",
+  "description": "delivery::run_worker creates a reqwest::Client at startup which is fine, but the inbox handler in server.rs creates a new reqwest::Client::new() for every Follow request to send the Accept. reqwest::Client is designed to be reused (connection pooling, cookie jar). Store one in AppState and share it.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:08:39.506612691Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:13:40.894443264Z",
+  "started_at": "2026-07-17T23:09:06.169801579Z",
+  "closed_at": "2026-07-17T23:13:40.894443264Z",
+  "close_reason": "All quick fixes applied: markdown rendering, feed dedup, rate limiter wired in, error logging, shared HTTP client, clippy+rustfmt clean",
+  "labels": [
+    "hardening"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-to5p.11",
+      "depends_on_id": "broadside-to5p",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:08:39.518818131Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

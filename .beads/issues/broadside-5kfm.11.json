@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.11",
+  "title": "fan_out inserts deliveries one-at-a-time outside a transaction",
+  "description": "delivery.rs fan_out() runs one INSERT per follower inbox inside a loop (lines 77-83) with no enclosing transaction. For a post with 1000 followers this is 1000 individual write transactions, each with its own fsync.\n\nWith WAL mode each autocommit INSERT is an independent write transaction. Wrapping the loop in an explicit transaction (pool.begin() / tx.commit()) reduces the cost to one fsync for the whole fan-out and makes the operation atomic — either all deliveries are queued or none are, which is the correct semantic.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:16.719712481Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:31:35.167082727Z",
+  "closed_at": "2026-07-17T23:31:35.167082727Z",
+  "close_reason": "P2-P3: RateLimiter::new returns Self, remaining items accepted as known tech debt or tracked in hardening epic",
+  "labels": [
+    "efficiency",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.11",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:16.739361936Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

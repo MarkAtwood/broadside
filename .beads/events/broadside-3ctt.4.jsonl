@@ -1,0 +1,4 @@
+{"id":"019f7275-e0c0-71c9-bc4a-6ff1c467891a","issue_id":"broadside-3ctt.4","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-17T23:42:35.712117615Z"}
+{"id":"019f7275-e0c2-7452-a8ce-c17604cb8b81","issue_id":"broadside-3ctt.4","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-17T23:42:35.714283553Z"}
+{"id":"019f7275-e0c4-760d-a224-f8e9bd5a128a","issue_id":"broadside-3ctt.4","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: codereview","created_at":"2026-07-17T23:42:35.716401537Z"}
+{"id":"019f727b-5a82-7984-b723-8816416798fc","issue_id":"broadside-3ctt.4","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Pass 3 fixes: HMAC key compare, inbox SSRF guard, domain validation, async Accept dispatch, foreign keys, IPv6 SSRF, poll timeout. Remaining P2-P3 accepted as known debt.","created_at":"2026-07-17T23:48:34.562624944Z"}

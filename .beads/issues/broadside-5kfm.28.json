@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.28",
+  "title": "Follow handler fetches attacker-controlled actor URL without SSRF protection",
+  "description": "In server.rs:421-433, the inbox Follow handler fetches the `actor` field from the incoming JSON body via `state.http_client.get(follower_actor)`. The `follower_actor` URL is fully attacker-controlled — it comes from the unauthenticated (signature verification is skipped per broadside-to5p.2) activity body. This is a Server-Side Request Forgery (SSRF) vector: an attacker can POST a Follow with actor set to any URL (e.g., `http://169.254.169.254/latest/meta-data/` on AWS, or any internal service). The reqwest client follows redirects by default. Fix: validate that the actor URL uses https:// and that its host is not a private/loopback/link-local address before fetching. Consider a deny-list of RFC 1918 / RFC 5735 ranges, or use a dedicated SSRF-safe HTTP client library.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:17:00.381447334Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:24.233593288Z",
+  "closed_at": "2026-07-17T23:30:24.233593288Z",
+  "close_reason": "P1-P3 fixes: unwrap replaced, INSERT OR IGNORE dedup, X-Real-IP, zeroizing noted, prune wired, strip_suffix, SSRF guard, shared client, dead code removed, issue refs added",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.28",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:17:00.392315331Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

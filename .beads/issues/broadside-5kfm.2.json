@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.2",
+  "title": "cli.rs Init command panics on non-UTF-8 path argument",
+  "description": "src/cli.rs:120: path.to_str().unwrap() panics if the path contains non-UTF-8 bytes (valid on Linux). Similarly db.rs:71 does the same. Consequence: broadside init \u003cpath-with-bad-bytes\u003e aborts with a panic instead of an error message. Fix: use .to_str().ok_or_else(|| anyhow::anyhow!(\"path is not valid UTF-8\"))? in both locations.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:15:56.08435745Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:17.04228667Z",
+  "closed_at": "2026-07-17T23:30:17.04228667Z",
+  "close_reason": "P0 fixes: AtomicU64, UTF-8 path, OsRng, 410 cleanup, constant-time key compare, checked_mul, SSRF guard, sanitized URLs, persona exists check, UTF-8 safe truncate",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.2",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:15:56.099904012Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

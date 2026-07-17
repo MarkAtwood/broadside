@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.9",
+  "title": "UNIQUE violation detected via error string match",
+  "description": "feed.rs:77:\n    if e.to_string().contains(\"UNIQUE\") {\n        continue;\n    }\n    return Err(e);\n\nWhat goes wrong: this is the dedup mechanism — the only way the feed poller avoids re-posting already-seen entries. If sqlx ever changes its error message format, or if the real error is something unrelated that happens to contain the word \"UNIQUE\" (unlikely but possible), the dedup silently breaks or genuine errors are suppressed. This is a data-integrity path, not just aesthetics.\n\nsqlx::Error::Database exposes is_unique_violation() (or code() == \"2067\"/\"1555\" for SQLite) which is stable and not message-dependent. The correct fix:\n\n    use sqlx::Error;\n    Err(Error::Database(e)) if e.is_unique_violation() =\u003e continue,\n\nThis pattern will be copied anywhere dedup-on-insert is needed as the codebase grows.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:10.648294199Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:24.145650678Z",
+  "closed_at": "2026-07-17T23:30:24.145650678Z",
+  "close_reason": "P1-P3 fixes: unwrap replaced, INSERT OR IGNORE dedup, X-Real-IP, zeroizing noted, prune wired, strip_suffix, SSRF guard, shared client, dead code removed, issue refs added",
+  "labels": [
+    "idiomatic-rust",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.9",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:10.660371568Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

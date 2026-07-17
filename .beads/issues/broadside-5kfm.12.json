@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.12",
+  "title": "X-Forwarded-For trusted blindly for rate limiting",
+  "description": "In server.rs:374-379, the inbox rate limiter keys on the first value from the `X-Forwarded-For` header, falling back to 'unknown'. This header is entirely attacker-controlled: any client can spoof it with an arbitrary IP address, completely bypassing the 60 req/min rate limit. An attacker can flood the inbox with malicious activities (e.g. mass Follow requests that trigger actor-document fetches) by rotating the X-Forwarded-For value on every request. Fix: rate limit on the TCP peer address (available via axum's `ConnectInfo` extractor), or at minimum validate that the X-Forwarded-For IP is in a known trusted proxy CIDR range before accepting it. If behind a trusted reverse proxy, add the peer IP to a proxy allowlist before trusting the header.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:20.174255051Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:17.101663304Z",
+  "closed_at": "2026-07-17T23:30:17.101663304Z",
+  "close_reason": "P0 fixes: AtomicU64, UTF-8 path, OsRng, 410 cleanup, constant-time key compare, checked_mul, SSRF guard, sanitized URLs, persona exists check, UTF-8 safe truncate",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.12",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:20.191195612Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

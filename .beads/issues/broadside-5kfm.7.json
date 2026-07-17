@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.7",
+  "title": "Webhook key compared with non-constant-time ==",
+  "description": "In webhook.rs:53, the webhook authentication key is compared with `*expected_key == query.key`. Rust's `String` PartialEq short-circuits on the first differing byte, creating a timing side-channel. An attacker who can make many webhook requests can binary-search the correct key one byte at a time. This is a P0 because the webhook key is the sole access-control gate for creating and federating posts. Fix: use a constant-time comparison such as `subtle::ConstantTimeEq` on the byte slices, or `ring::constant_time::verify_slices_are_equal`. Add the `subtle` crate (already a transitive dep via rsa) and compare `expected_key.as_bytes().ct_eq(query.key.as_bytes()).into()`.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:07.8378953Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:17.079407998Z",
+  "closed_at": "2026-07-17T23:30:17.079407998Z",
+  "close_reason": "P0 fixes: AtomicU64, UTF-8 path, OsRng, 410 cleanup, constant-time key compare, checked_mul, SSRF guard, sanitized URLs, persona exists check, UTF-8 safe truncate",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.7",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:07.856076735Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

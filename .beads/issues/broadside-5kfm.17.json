@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.17",
+  "title": "feed.rs: RSS link URL injected into HTML without escaping, bypasses sanitizer",
+  "description": "src/feed.rs:55: the link URL from a feed entry is interpolated directly into an href attribute and link text: format\\!(r#\"\u003cp\u003e\u003ca href=\\\"{url}\\\"\u003e{url}\u003c/a\u003e\u003c/p\u003e\"#). If the URL contains a double-quote (e.g., https://example.com/?a=\\\"\u003e\u003cscript\u003e...) it breaks out of the href attribute. The assembled html string is appended AFTER sanitize::sanitize_html() was called on body_html, so this injected fragment is never sanitized. An attacker controlling a feed can inject arbitrary HTML into posts delivered to followers. Fix: HTML-escape the URL before interpolating it into the href attribute and text, or pass the final assembled html through sanitize_html() before storing.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:29.503851951Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:17.11251557Z",
+  "closed_at": "2026-07-17T23:30:17.11251557Z",
+  "close_reason": "P0 fixes: AtomicU64, UTF-8 path, OsRng, 410 cleanup, constant-time key compare, checked_mul, SSRF guard, sanitized URLs, persona exists check, UTF-8 safe truncate",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.17",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:29.516613167Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

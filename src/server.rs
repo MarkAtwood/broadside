@@ -14,6 +14,8 @@ pub struct AppState {
     pub pool: SqlitePool,
     pub domain: String,
     pub webhook_keys: std::collections::HashMap<String, String>,
+    pub http_client: reqwest::Client,
+    pub inbox_limiter: std::sync::Arc<crate::ratelimit::RateLimiter>,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -41,14 +43,32 @@ pub async fn serve(config: &Config) -> anyhow::Result<()> {
         .map(|w| (w.persona.clone(), w.key.clone()))
         .collect();
 
+    let http_client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()?;
+
+    // 60 requests per minute per IP on inbox endpoints
+    let inbox_limiter = std::sync::Arc::new(crate::ratelimit::RateLimiter::new(60, 60));
+
     let state = Arc::new(AppState {
         pool: pool.clone(),
         domain: domain.clone(),
         webhook_keys,
+        http_client,
+        inbox_limiter: inbox_limiter.clone(),
     });
 
     // Start delivery worker
     tokio::spawn(crate::delivery::run_worker(pool.clone(), domain.clone()));
+
+    // Periodic rate limiter prune (every 10 minutes)
+    let limiter_clone = inbox_limiter.clone();
+    tokio::spawn(async move {
+        loop {
+            tokio::time::sleep(std::time::Duration::from_secs(600)).await;
+            limiter_clone.prune().await;
+        }
+    });
 
     // Start feed pollers
     for feed_config in &config.feed {
@@ -100,8 +120,8 @@ async fn webfinger(
     State(state): State<Arc<AppState>>,
     Query(query): Query<WebfingerQuery>,
 ) -> impl IntoResponse {
-    let prefix = format!("acct:");
-    let acct = if let Some(acct) = query.resource.strip_prefix(&prefix) {
+    let prefix = "acct:";
+    let acct = if let Some(acct) = query.resource.strip_prefix(prefix) {
         acct
     } else {
         return (StatusCode::BAD_REQUEST, "resource must start with acct:").into_response();
@@ -116,12 +136,10 @@ async fn webfinger(
         return (StatusCode::NOT_FOUND, "unknown domain").into_response();
     }
 
-    let exists = sqlx::query_as::<_, (i64,)>(
-        "SELECT COUNT(*) FROM personas WHERE username = ?",
-    )
-    .bind(username)
-    .fetch_one(&state.pool)
-    .await;
+    let exists = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM personas WHERE username = ?")
+        .bind(username)
+        .fetch_one(&state.pool)
+        .await;
 
     match exists {
         Ok((0,)) | Err(_) => (StatusCode::NOT_FOUND, "unknown user").into_response(),
@@ -191,7 +209,7 @@ async fn actor(
     .fetch_optional(&state.pool)
     .await;
 
-    let (id, username, display_name, bio, public_key) = match row {
+    let (_id, username, display_name, bio, public_key) = match row {
         Ok(Some(r)) => r,
         _ => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
     };
@@ -221,7 +239,10 @@ async fn actor(
 
     (
         StatusCode::OK,
-        [(axum::http::header::CONTENT_TYPE, "application/activity+json")],
+        [(
+            axum::http::header::CONTENT_TYPE,
+            "application/activity+json",
+        )],
         Json(doc),
     )
         .into_response()
@@ -258,10 +279,17 @@ async fn outbox(
             "totalItems": total,
             "first": format!("{}?page=1", outbox_uri)
         });
-        return Json(doc).into_response();
+        return (
+            [(
+                axum::http::header::CONTENT_TYPE,
+                "application/activity+json",
+            )],
+            Json(doc),
+        )
+            .into_response();
     }
 
-    let page = query.page.unwrap_or(1);
+    let page = query.page.unwrap_or(1).max(1);
     let per_page: i64 = 20;
     let offset = (page as i64 - 1) * per_page;
 
@@ -302,7 +330,14 @@ async fn outbox(
         "orderedItems": items
     });
 
-    Json(doc).into_response()
+    (
+        [(
+            axum::http::header::CONTENT_TYPE,
+            "application/activity+json",
+        )],
+        Json(doc),
+    )
+        .into_response()
 }
 
 // --- Followers collection ---
@@ -316,13 +351,12 @@ async fn followers_collection(
         Err(_) => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
     };
 
-    let (count,) = sqlx::query_as::<_, (i64,)>(
-        "SELECT COUNT(*) FROM followers WHERE persona_id = ?",
-    )
-    .bind(&persona_id)
-    .fetch_one(&state.pool)
-    .await
-    .unwrap_or((0,));
+    let (count,) =
+        sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM followers WHERE persona_id = ?")
+            .bind(&persona_id)
+            .fetch_one(&state.pool)
+            .await
+            .unwrap_or((0,));
 
     let doc = serde_json::json!({
         "@context": "https://www.w3.org/ns/activitystreams",
@@ -331,7 +365,14 @@ async fn followers_collection(
         "totalItems": count
     });
 
-    Json(doc).into_response()
+    (
+        [(
+            axum::http::header::CONTENT_TYPE,
+            "application/activity+json",
+        )],
+        Json(doc),
+    )
+        .into_response()
 }
 
 // --- Inbox ---
@@ -356,13 +397,27 @@ async fn shared_inbox(
 async fn handle_inbox(
     state: &AppState,
     _username: Option<&str>,
-    _headers: &HeaderMap,
+    headers: &HeaderMap,
     body: &str,
 ) -> impl IntoResponse {
-    // ponytail: signature verification skipped for now — requires fetching
-    // remote actor's public key, which needs async HTTP + caching. Will be
-    // added in hardening phase. Accepting unsigned activities is standard
-    // during development.
+    // Rate limit by X-Real-IP (set by reverse proxy), falling back to X-Forwarded-For,
+    // then "unknown". Deploy behind a reverse proxy that sets X-Real-IP from the
+    // actual client IP — X-Forwarded-For is attacker-controlled without proxy cooperation.
+    let client_ip = headers
+        .get("x-real-ip")
+        .or_else(|| headers.get("x-forwarded-for"))
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.split(',').next())
+        .unwrap_or("unknown")
+        .trim()
+        .to_string();
+
+    if !state.inbox_limiter.try_acquire(&client_ip).await {
+        return StatusCode::TOO_MANY_REQUESTS;
+    }
+
+    // ponytail: signature verification not yet implemented (broadside-to5p.2).
+    // Requires fetching remote actor's public key + caching (broadside-to5p.8).
 
     let activity: serde_json::Value = match serde_json::from_str(body) {
         Ok(v) => v,
@@ -382,10 +437,11 @@ async fn handle_inbox(
                 None => return StatusCode::BAD_REQUEST,
             };
 
-            // Extract username from the followed URI
-            let username = match followed.rsplit('/').next() {
-                Some(u) => u,
-                None => return StatusCode::BAD_REQUEST,
+            // Validate the followed URI belongs to this server
+            let expected_prefix = format!("https://{}/users/", state.domain);
+            let username = match followed.strip_prefix(&expected_prefix) {
+                Some(u) if !u.is_empty() && !u.contains('/') => u,
+                _ => return StatusCode::BAD_REQUEST,
             };
 
             let persona_id = match crate::persona::get_id(&state.pool, username).await {
@@ -393,9 +449,23 @@ async fn handle_inbox(
                 Err(_) => return StatusCode::NOT_FOUND,
             };
 
+            // SSRF guard: only fetch public https URLs
+            if !follower_actor.starts_with("https://") {
+                tracing::warn!(actor = follower_actor, "rejecting non-https actor URI");
+                return StatusCode::BAD_REQUEST;
+            }
+            if let Ok(parsed) = url::Url::parse(follower_actor) {
+                if let Some(host) = parsed.host_str() {
+                    if is_private_host(host) {
+                        tracing::warn!(actor = follower_actor, "rejecting private/local actor URI");
+                        return StatusCode::BAD_REQUEST;
+                    }
+                }
+            }
+
             // Fetch the follower's actor document to get their inbox
-            let client = reqwest::Client::new();
-            let actor_doc = match client
+            let actor_doc = match state
+                .http_client
                 .get(follower_actor)
                 .header("Accept", "application/activity+json")
                 .send()
@@ -413,13 +483,22 @@ async fn handle_inbox(
                 .as_str()
                 .map(|s| s.to_string());
 
-            if inbox_uri.is_empty() {
+            if inbox_uri.is_empty() || !inbox_uri.starts_with("https://") {
                 return StatusCode::ACCEPTED;
+            }
+            // SSRF guard on inbox_uri too — it's attacker-controlled (from actor doc)
+            if let Ok(parsed) = url::Url::parse(&inbox_uri) {
+                if let Some(host) = parsed.host_str() {
+                    if is_private_host(host) {
+                        tracing::warn!(inbox = %inbox_uri, "rejecting private inbox URI from actor doc");
+                        return StatusCode::ACCEPTED;
+                    }
+                }
             }
 
             // Insert follower
             let follower_id = crate::id::gen_id();
-            let _ = sqlx::query(
+            if let Err(e) = sqlx::query(
                 "INSERT OR IGNORE INTO followers \
                  (id, persona_id, actor_uri, inbox_uri, shared_inbox_uri) \
                  VALUES (?, ?, ?, ?, ?)",
@@ -430,11 +509,18 @@ async fn handle_inbox(
             .bind(&inbox_uri)
             .bind(&shared_inbox_uri)
             .execute(&state.pool)
-            .await;
+            .await
+            {
+                tracing::error!(error = %e, follower = follower_actor, "failed to insert follower");
+            }
 
-            tracing::info!(follower = follower_actor, persona = username, "accepted follow");
+            tracing::info!(
+                follower = follower_actor,
+                persona = username,
+                "accepted follow"
+            );
 
-            // Send Accept asynchronously
+            // Send Accept in a background task so we don't block the response
             let accept = serde_json::json!({
                 "@context": "https://www.w3.org/ns/activitystreams",
                 "id": format!("https://{}/users/{}#accept/{}", state.domain, username, follower_id),
@@ -443,15 +529,32 @@ async fn handle_inbox(
                 "object": activity
             });
 
-            let accept_body = serde_json::to_vec(&accept).unwrap_or_default();
-            let actor_uri = format!("https://{}/users/{}", state.domain, username);
-            let key_id = format!("{actor_uri}#main-key");
+            let pool = state.pool.clone();
+            let client = state.http_client.clone();
+            let domain = state.domain.clone();
+            let inbox = inbox_uri.clone();
+            let uname = username.to_string();
 
-            if let Ok(private_key) = crate::persona::get_private_key(&state.pool, username).await {
-                let target_path = url::Url::parse(&inbox_uri)
+            tokio::spawn(async move {
+                let accept_body = match serde_json::to_vec(&accept) {
+                    Ok(b) => b,
+                    Err(e) => {
+                        tracing::error!(error = %e, "failed to serialize Accept activity");
+                        return;
+                    }
+                };
+                let actor_uri = format!("https://{}/users/{}", domain, uname);
+                let key_id = format!("{actor_uri}#main-key");
+
+                let private_key = match crate::persona::get_private_key(&pool, &uname).await {
+                    Ok(k) => k,
+                    Err(_) => return,
+                };
+
+                let target_path = url::Url::parse(&inbox)
                     .map(|u| u.path().to_string())
                     .unwrap_or_else(|_| "/inbox".to_string());
-                let inbox_domain = url::Url::parse(&inbox_uri)
+                let inbox_domain = url::Url::parse(&inbox)
                     .ok()
                     .and_then(|u| u.host_str().map(|h| h.to_string()))
                     .unwrap_or_default();
@@ -463,19 +566,24 @@ async fn handle_inbox(
                     &inbox_domain,
                     &accept_body,
                 ) {
-                    let _ = client
-                        .post(&inbox_uri)
+                    if let Err(e) = client
+                        .post(&inbox)
                         .headers(sig_headers)
                         .header("Content-Type", "application/activity+json")
                         .body(accept_body)
                         .send()
-                        .await;
+                        .await
+                    {
+                        tracing::error!(error = %e, inbox = %inbox, "failed to send Accept");
+                    }
                 }
-            }
+            });
 
             StatusCode::ACCEPTED
         }
         "Undo" => {
+            // ponytail: Undo Follow mutates followers based on unverified body.
+            // Safe only after signature verification is implemented (broadside-to5p.2).
             let inner_type = activity["object"]["type"].as_str().unwrap_or("");
             if inner_type == "Follow" {
                 let follower_actor = activity["object"]["actor"]
@@ -484,11 +592,19 @@ async fn handle_inbox(
                     .unwrap_or("");
 
                 if !follower_actor.is_empty() {
-                    let _ = sqlx::query("DELETE FROM followers WHERE actor_uri = ?")
+                    match sqlx::query("DELETE FROM followers WHERE actor_uri = ?")
                         .bind(follower_actor)
                         .execute(&state.pool)
-                        .await;
-                    tracing::info!(follower = follower_actor, "removed follower (Undo Follow)");
+                        .await
+                    {
+                        Ok(_) => tracing::info!(
+                            follower = follower_actor,
+                            "removed follower (Undo Follow)"
+                        ),
+                        Err(e) => {
+                            tracing::error!(error = %e, follower = follower_actor, "failed to remove follower")
+                        }
+                    }
                 }
             }
             StatusCode::ACCEPTED
@@ -509,17 +625,49 @@ async fn health(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
         .map(|(c,)| c)
         .unwrap_or(0);
 
-    let pending = sqlx::query_as::<_, (i64,)>(
-        "SELECT COUNT(*) FROM delivery_queue WHERE status = 'pending'",
-    )
-    .fetch_one(&state.pool)
-    .await
-    .map(|(c,)| c)
-    .unwrap_or(0);
+    let pending =
+        sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM delivery_queue WHERE status = 'pending'")
+            .fetch_one(&state.pool)
+            .await
+            .map(|(c,)| c)
+            .unwrap_or(0);
 
     Json(serde_json::json!({
         "status": "ok",
         "personas": persona_count,
         "pending_deliveries": pending
     }))
+}
+
+/// Check if a hostname resolves to a private/loopback/link-local address.
+fn is_private_host(host: &str) -> bool {
+    use std::net::IpAddr;
+    if let Ok(ip) = host.parse::<IpAddr>() {
+        return match ip {
+            IpAddr::V4(v4) => {
+                v4.is_loopback()
+                    || v4.is_private()
+                    || v4.is_link_local()
+                    || v4.is_broadcast()
+                    || v4.is_unspecified()
+                    // AWS metadata endpoint
+                    || v4.octets()[0] == 169 && v4.octets()[1] == 254
+            }
+            IpAddr::V6(v6) => {
+                v6.is_loopback()
+                    || v6.is_unspecified()
+                    // ULA (fc00::/7)
+                    || (v6.segments()[0] & 0xfe00) == 0xfc00
+                    // Link-local (fe80::/10)
+                    || (v6.segments()[0] & 0xffc0) == 0xfe80
+                    // IPv4-mapped (::ffff:x.x.x.x) — check the mapped v4 address
+                    || v6.to_ipv4_mapped().is_some_and(|v4| {
+                        v4.is_loopback() || v4.is_private() || v4.is_link_local()
+                            || v4.octets()[0] == 169 && v4.octets()[1] == 254
+                    })
+            }
+        };
+    }
+    // Block common private hostnames
+    host == "localhost" || host.ends_with(".local") || host.ends_with(".internal")
 }

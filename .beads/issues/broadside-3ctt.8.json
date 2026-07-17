@@ -1,0 +1,29 @@
+{
+  "id": "broadside-3ctt.8",
+  "title": "SQLite foreign keys not enabled: REFERENCES constraints silently ignored",
+  "description": "db.rs creates the connection pool with SqliteConnectOptions but does not call .foreign_keys(true) (or run PRAGMA foreign_keys = ON). SQLite defaults to foreign_keys = OFF. This means the REFERENCES constraints in the schema (e.g. delivery_queue.post_id REFERENCES posts(id), followers.persona_id REFERENCES personas(id)) are not enforced at runtime. Orphaned delivery queue rows for deleted posts, or followers referencing non-existent personas, can accumulate silently. Fix: add .foreign_keys(true) to the SqliteConnectOptions builder in db::connect.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:44:31.268446709Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:48:34.600078808Z",
+  "closed_at": "2026-07-17T23:48:34.600078808Z",
+  "close_reason": "Pass 3 fixes: HMAC key compare, inbox SSRF guard, domain validation, async Accept dispatch, foreign keys, IPv6 SSRF, poll timeout. Remaining P2-P3 accepted as known debt.",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3ctt.8",
+      "depends_on_id": "broadside-3ctt",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:44:31.282864947Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

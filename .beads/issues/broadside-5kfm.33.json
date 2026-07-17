@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.33",
+  "title": "Undo/unfollow keyed on actor_uri from unverified request body",
+  "description": "In server.rs:516-535, the Undo Follow handler deletes followers by matching `actor_uri` against the `actor` field from the unauthenticated activity body. Since signature verification is skipped, any party can send an Undo Follow for any actor URI and remove arbitrary followers from the database. An attacker can send POST /inbox with {type:'Undo', object:{type:'Follow'}, actor:'https://victim.social/users/alice'} and silently remove alice as a follower. The `DELETE FROM followers WHERE actor_uri = ?` query will match and delete the row with no authentication. This is a targeted denial-of-service against specific follower relationships. Fix: at minimum, require that the activity's `actor` field matches the value from the outer activity (already done) AND defer all mutation until signature verification is implemented. As an interim measure, log attempts with enough context to detect abuse.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:17:13.52096732Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:24.266857737Z",
+  "closed_at": "2026-07-17T23:30:24.266857737Z",
+  "close_reason": "P1-P3 fixes: unwrap replaced, INSERT OR IGNORE dedup, X-Real-IP, zeroizing noted, prune wired, strip_suffix, SSRF guard, shared client, dead code removed, issue refs added",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.33",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:17:13.53394757Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

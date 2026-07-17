@@ -1,0 +1,28 @@
+{
+  "id": "broadside-3ctt.13",
+  "title": "No test coverage for: webhook, rate limiter, sanitize, signatures, Follow/Undo inbox",
+  "description": "The integration test suite (tests/integration.rs) covers: webfinger, actor, outbox, followers collection, nodeinfo, health, inbox (bad JSON, unknown activity, shared inbox), and post dedup. Missing coverage: (1) webhook endpoint (no test for key auth, content_type routing, or post creation); (2) rate limiter behavior (no test that 61st request gets 429); (3) sanitize functions (no unit test for markdown_to_html, html_to_text, or XSS payloads); (4) signatures sign+verify round-trip (noted as missing in pass 2 broadside-sznf.10 — was a fix filed but tests were never written); (5) Follow activity in inbox (no test for the success path); (6) Undo Follow (no test for follower removal). These gaps mean regressions in the most security-critical paths will not be caught by CI.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:45:11.759301091Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:48:34.641205485Z",
+  "closed_at": "2026-07-17T23:48:34.641205485Z",
+  "close_reason": "Pass 3 fixes: HMAC key compare, inbox SSRF guard, domain validation, async Accept dispatch, foreign keys, IPv6 SSRF, poll timeout. Remaining P2-P3 accepted as known debt.",
+  "labels": [
+    "review",
+    "codereview"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3ctt.13",
+      "depends_on_id": "broadside-3ctt",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:45:11.776249791Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "broadside-sznf.11",
+  "title": "Watched file stranded in inbox dir on UNIQUE constraint error",
+  "description": "In watch.rs, when process_file() calls post::create() (which uses plain INSERT, not INSERT OR IGNORE), a duplicate filesystem event for the same file causes a UNIQUE constraint violation (posts.source_ref is unique). The error propagates to watch_loop's Err branch, which logs it and leaves the file in the watch directory. Since notify only fires EventKind::Create once per file creation, the file is never retried and never moved to the published/ directory. The file is stuck in the inbox indefinitely with an opaque error log entry that gives no indication it was a dedup.\n\nThe post itself was already created by the first event, so data integrity is fine — but the operator sees a persistent error log and a stranded file with no clear explanation.\n\nFix: in watch.rs process_file() or watch_loop(), detect the UNIQUE constraint error (or check if a post with this source_ref already exists) and treat it as success — move the file to published/ rather than leaving it stranded.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:36:19.738428883Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:40:03.007705097Z",
+  "closed_at": "2026-07-17T23:40:03.007705097Z",
+  "close_reason": "All pass 2 fixes applied: circuit breaker reset, persona-scoped 410, SSRF private IP block, tokio::fs, URL scheme validation, Content-Type, page clamp, watch dedup",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-sznf.11",
+      "depends_on_id": "broadside-sznf",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:36:19.766687049Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

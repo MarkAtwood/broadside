@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.25",
+  "title": "persona::update silently succeeds when username does not exist",
+  "description": "src/persona.rs:84-111: each UPDATE branch runs without checking rows_affected(). If the caller passes a typo'd username, all four UPDATE queries silently affect zero rows and the function prints 'Updated persona @\u003ctypo\u003e' with exit code 0. The user has no way to know the update was a no-op. Fix: after the final UPDATE (or after any UPDATE), check that at least one row was affected; if rows_affected() == 0 return Err(anyhow\\!(\"persona @{username} not found\")).",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:49.421922369Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:17.123154823Z",
+  "closed_at": "2026-07-17T23:30:17.123154823Z",
+  "close_reason": "P0 fixes: AtomicU64, UTF-8 path, OsRng, 410 cleanup, constant-time key compare, checked_mul, SSRF guard, sanitized URLs, persona exists check, UTF-8 safe truncate",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.25",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:49.433931192Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

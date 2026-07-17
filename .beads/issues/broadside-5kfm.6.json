@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.6",
+  "title": "410 Gone follower cleanup deletes wrong rows when shared inbox is used",
+  "description": "src/delivery.rs:227-230: When a delivery to a shared inbox gets HTTP 410, the code runs DELETE FROM followers WHERE inbox_uri = ? OR shared_inbox_uri = ? binding the same shared_inbox_uri value to both parameters. The first bind matches individual-inbox followers whose inbox_uri happens to equal the shared inbox URL (unlikely), not the followers who actually use shared_inbox_uri. The second bind compares shared_inbox_uri column against a shared inbox URL, which is correct, but only coincidentally. More critically: when fan-out chose shared_inbox_uri as the delivery target, the inbox_uri stored in delivery_queue.inbox_uri IS the shared inbox URL, so the WHERE clause should filter on shared_inbox_uri column = ?, not inbox_uri. Followers whose individual inboxes differ from the shared inbox URL are never cleaned up. Fix: on 410, look up which followers use that shared inbox and delete by shared_inbox_uri = ? only.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:04.46074167Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:17.067394003Z",
+  "closed_at": "2026-07-17T23:30:17.067394003Z",
+  "close_reason": "P0 fixes: AtomicU64, UTF-8 path, OsRng, 410 cleanup, constant-time key compare, checked_mul, SSRF guard, sanitized URLs, persona exists check, UTF-8 safe truncate",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.6",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:04.472962116Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "broadside-3ctt.16",
+  "title": "delivery_queue has no index on post_id; ON DELETE CASCADE absent causing orphan rows",
+  "description": "db.rs:51: delivery_queue.post_id references posts(id) but has no ON DELETE CASCADE. SQLite with foreign keys disabled (the current state) means deleting a post leaves delivery_queue rows pointing to a non-existent post. In process_batch, the None branch (line 162-167) marks these dead individually, which is correct, but only if PRAGMA foreign_keys is OFF. More importantly, there is no index on delivery_queue(post_id), so if a manual admin delete of a post is ever implemented, the mark_dead scan is a full table scan. Additionally, the idx_delivery_pending index covers (status, next_retry) but NOT (post_id), so the post lookup in process_batch requires a JOIN which scans all delivery rows for a post. This is a latent schema deficiency that pairs with the missing foreign_keys pragma finding.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:45:38.10111238Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:48:34.666729085Z",
+  "closed_at": "2026-07-17T23:48:34.666729085Z",
+  "close_reason": "Pass 3 fixes: HMAC key compare, inbox SSRF guard, domain validation, async Accept dispatch, foreign keys, IPv6 SSRF, poll timeout. Remaining P2-P3 accepted as known debt.",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3ctt.16",
+      "depends_on_id": "broadside-3ctt",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:45:38.11478678Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

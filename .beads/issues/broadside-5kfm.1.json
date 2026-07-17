@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.1",
+  "title": "id::gen_id sequence wraps silently causing PRIMARY KEY collisions",
+  "description": "src/id.rs: SEQUENCE is AtomicU16; after 65535 calls within the same millisecond it wraps to 0, producing an ID identical to a previous one in that millisecond. Both posts and delivery_queue use gen_id() as PRIMARY KEY TEXT, so the INSERT fails with a UNIQUE constraint error instead of succeeding. Under bursty fan-out to many followers this can happen in production. Fix: use AtomicU32 or AtomicU64, or check/reject on wrap.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:15:49.939537794Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:17.027407731Z",
+  "closed_at": "2026-07-17T23:30:17.027407731Z",
+  "close_reason": "P0 fixes: AtomicU64, UTF-8 path, OsRng, 410 cleanup, constant-time key compare, checked_mul, SSRF guard, sanitized URLs, persona exists check, UTF-8 safe truncate",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.1",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:15:49.949952092Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

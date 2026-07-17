@@ -1,0 +1,29 @@
+{
+  "id": "broadside-sznf.3",
+  "title": "Blocking fs I/O in async fns (watch.rs, db.rs)",
+  "description": "watch_loop() calls std::fs::create_dir_all and std::fs::rename directly inside an async fn. init_data_dir() calls std::fs::create_dir_all and std::fs::write inside an async fn. These block the tokio executor thread for the duration of the syscall. Under load, or on slow/network filesystems, this stalls the entire async runtime. Fix: replace with tokio::fs equivalents (tokio::fs::create_dir_all, tokio::fs::rename, tokio::fs::write), or wrap in tokio::task::spawn_blocking.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:35:30.976746664Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:40:02.887388986Z",
+  "closed_at": "2026-07-17T23:40:02.887388986Z",
+  "close_reason": "All pass 2 fixes applied: circuit breaker reset, persona-scoped 410, SSRF private IP block, tokio::fs, URL scheme validation, Content-Type, page clamp, watch dedup",
+  "labels": [
+    "idiomatic-rust",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-sznf.3",
+      "depends_on_id": "broadside-sznf",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:35:31.002179652Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

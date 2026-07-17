@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.23",
+  "title": "UNIQUE dedup detection via error string contains(\"UNIQUE\")",
+  "description": "feed.rs line 77: duplicate feed entries are detected by checking whether the error message string contains the substring \"UNIQUE\". This is fragile: it breaks if sqlx changes its error formatting, if a different constraint named UNIQUE-something fires, or if the message is localized.\n\nThe correct fix is to match on the sqlx error type. sqlx::Error::Database exposes a code() method; for SQLite, UNIQUE constraint violations have code \"2067\" (SQLITE_CONSTRAINT_UNIQUE). Alternatively, match on sqlx::Error::Database and check .is_unique_violation() which is available on PostgreSQL and MySQL backends but not SQLite directly — for SQLite, check the constraint name via .message().\n\nThe safest drop-in: use sqlx::Error::Database(e) if e.message().contains(\"UNIQUE\") — same brittleness, but at least it doesn't match on the outer anyhow chain. Better: INSERT OR IGNORE and check rows_affected() == 0.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:45.673944707Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:30:24.211514924Z",
+  "closed_at": "2026-07-17T23:30:24.211514924Z",
+  "close_reason": "P1-P3 fixes: unwrap replaced, INSERT OR IGNORE dedup, X-Real-IP, zeroizing noted, prune wired, strip_suffix, SSRF guard, shared client, dead code removed, issue refs added",
+  "labels": [
+    "elegance",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.23",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:45.687018916Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "broadside-sznf.8",
+  "title": "Outbox and followers collection return application/json, not application/activity+json",
+  "description": "The /users/{username}/outbox and /users/{username}/followers endpoints return Json(doc).into_response(), which axum sets to Content-Type: application/json. The ActivityPub spec (and Mastodon's implementation) requires Content-Type: application/activity+json (or application/ld+json with profile) for all AP documents including OrderedCollection and OrderedCollectionPage responses. Strict AP clients will reject these responses or fail to dereference them. The actor endpoint correctly sets application/activity+json (server.rs line 244); outbox and followers need the same treatment. Fix: wrap with explicit content-type header, same pattern as the actor handler.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:36:01.483816944Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:40:02.961627669Z",
+  "closed_at": "2026-07-17T23:40:02.961627669Z",
+  "close_reason": "All pass 2 fixes applied: circuit breaker reset, persona-scoped 410, SSRF private IP block, tokio::fs, URL scheme validation, Content-Type, page clamp, watch dedup",
+  "labels": [
+    "idiomatic-rust",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-sznf.8",
+      "depends_on_id": "broadside-sznf",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:36:01.511296432Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

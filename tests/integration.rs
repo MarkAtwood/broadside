@@ -11,7 +11,9 @@ async fn test_server() -> (String, tempfile::TempDir) {
 
     // Create a test persona
     let pool = broadside::db::connect(tmp.path()).await.unwrap();
-    broadside::persona::add(&pool, "test", Some("Test Account")).await.unwrap();
+    broadside::persona::add(&pool, "test", Some("Test Account"))
+        .await
+        .unwrap();
 
     // Create a post
     let persona_id = broadside::persona::get_id(&pool, "test").await.unwrap();
@@ -36,6 +38,8 @@ async fn test_server() -> (String, tempfile::TempDir) {
         pool,
         domain: format!("127.0.0.1:{port}"),
         webhook_keys: std::collections::HashMap::new(),
+        http_client: reqwest::Client::new(),
+        inbox_limiter: std::sync::Arc::new(broadside::ratelimit::RateLimiter::new(1000, 60)),
     });
 
     let app = broadside::server::router(state);
@@ -73,7 +77,10 @@ async fn test_webfinger_discovery() {
     assert_eq!(resp.status(), 200, "webfinger should return 200");
 
     let body: serde_json::Value = resp.json().await.unwrap();
-    assert!(body["links"][0]["href"].as_str().unwrap().contains("/users/test"));
+    assert!(body["links"][0]["href"]
+        .as_str()
+        .unwrap()
+        .contains("/users/test"));
 }
 
 #[tokio::test]
@@ -112,7 +119,10 @@ async fn test_actor_document() {
     let body: serde_json::Value = resp.json().await.unwrap();
     assert_eq!(body["type"], "Person");
     assert_eq!(body["preferredUsername"], "test");
-    assert!(body["publicKey"]["publicKeyPem"].as_str().unwrap().contains("BEGIN PUBLIC KEY"));
+    assert!(body["publicKey"]["publicKeyPem"]
+        .as_str()
+        .unwrap()
+        .contains("BEGIN PUBLIC KEY"));
     assert!(body["inbox"].as_str().unwrap().contains("/inbox"));
     assert!(body["outbox"].as_str().unwrap().contains("/outbox"));
 }
@@ -270,7 +280,11 @@ async fn test_inbox_discard_unknown_activity() {
         .await
         .unwrap();
 
-    assert_eq!(resp.status(), 202, "unknown activities should be accepted and discarded");
+    assert_eq!(
+        resp.status(),
+        202,
+        "unknown activities should be accepted and discarded"
+    );
 }
 
 #[tokio::test]
@@ -302,12 +316,16 @@ async fn test_post_dedup_via_source_ref() {
     let _ = base_url; // server not needed for this test
 
     let tmp = tempfile::tempdir().unwrap();
-    broadside::db::init_data_dir(tmp.path().to_str().unwrap()).await.unwrap();
+    broadside::db::init_data_dir(tmp.path().to_str().unwrap())
+        .await
+        .unwrap();
     let pool = broadside::db::connect(tmp.path()).await.unwrap();
     broadside::persona::add(&pool, "dedup", None).await.unwrap();
     let pid = broadside::persona::get_id(&pool, "dedup").await.unwrap();
 
-    let id1 = broadside::post::create(&pool, &pid, "<p>a</p>", "a", Some("ref-1")).await.unwrap();
+    let id1 = broadside::post::create(&pool, &pid, "<p>a</p>", "a", Some("ref-1"))
+        .await
+        .unwrap();
     assert!(!id1.is_empty());
 
     // Same source_ref should fail with UNIQUE constraint

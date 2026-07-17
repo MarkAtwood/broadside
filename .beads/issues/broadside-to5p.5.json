@@ -1,0 +1,33 @@
+{
+  "id": "broadside-to5p.5",
+  "title": "Webhook endpoint ignores media URLs in payload",
+  "description": "webhook.rs accepts a media array in the JSON payload (with url and description fields) but never fetches the URLs, validates them, or creates post_media rows. Per DESIGN.md: fetch with 30s timeout, 10MB max, image-only validation, cache locally.",
+  "status": "open",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:08:23.218482469Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:08:23.218482469Z",
+  "labels": [
+    "hardening"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-to5p.5",
+      "depends_on_id": "broadside-to5p",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:08:23.232065015Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-to5p.5",
+      "depends_on_id": "broadside-to5p.7",
+      "type": "blocks",
+      "created_at": "2026-07-17T23:08:55.785641037Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

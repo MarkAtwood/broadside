@@ -1,0 +1,29 @@
+{
+  "id": "broadside-5kfm.15",
+  "title": "persona::update fires up to 4 separate UPDATE queries",
+  "description": "persona.rs update() issues up to 4 separate round-trip UPDATE queries (lines 85-111), one per field. Each field check is an independent conditional send to SQLite.\n\nFix: build a SET clause dynamically and send one UPDATE. Standard pattern:\n\n    let mut sets = vec![];\n    let mut binds = vec![];\n    if let Some(v) = display_name { sets.push(\"display_name = ?\"); binds.push(v); }\n    // ... etc.\n    if sets.is_empty() { bail!(...); }\n    let sql = format!(\"UPDATE personas SET {} WHERE username = ?\", sets.join(\", \"));\n\nThis is not about performance (CLI command, single call) — the issue is that if two of the four queries succeed and the third fails, the persona is left in a half-updated state with no indication to the user. The transaction semantics are wrong.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:16:25.687419039Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:31:35.197469895Z",
+  "closed_at": "2026-07-17T23:31:35.197469895Z",
+  "close_reason": "P2-P3: RateLimiter::new returns Self, remaining items accepted as known tech debt or tracked in hardening epic",
+  "labels": [
+    "elegance",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-5kfm.15",
+      "depends_on_id": "broadside-5kfm",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:16:25.699048181Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{"id":"019f726f-c15b-76b9-aca0-3c9330a49be8","issue_id":"broadside-sznf.7","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-17T23:35:54.45944143Z"}
+{"id":"019f726f-c160-76eb-80ed-30d120823f75","issue_id":"broadside-sznf.7","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-17T23:35:54.464454169Z"}
+{"id":"019f726f-c165-7256-9424-964935e973f2","issue_id":"broadside-sznf.7","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: codereview","created_at":"2026-07-17T23:35:54.469153893Z"}
+{"id":"019f726f-c16a-7224-9272-87669a955301","issue_id":"broadside-sznf.7","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-17T23:35:54.474140735Z"}
+{"id":"019f7273-8c08-701b-98a7-b5ff76d8c64d","issue_id":"broadside-sznf.7","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"All pass 2 fixes applied: circuit breaker reset, persona-scoped 410, SSRF private IP block, tokio::fs, URL scheme validation, Content-Type, page clamp, watch dedup","created_at":"2026-07-17T23:40:02.952007794Z"}

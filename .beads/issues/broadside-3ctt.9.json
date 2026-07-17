@@ -1,0 +1,29 @@
+{
+  "id": "broadside-3ctt.9",
+  "title": "watch.rs: file_name().unwrap_or_default() silently skips files with no name",
+  "description": "watch.rs:61: let dest = published_path.join(file_path.file_name().unwrap_or_default()). If file_path has no file name component (e.g. it IS the published_path itself, or a root path like '/'), file_name() returns None and unwrap_or_default() substitutes an empty OsStr. The join then produces published_path itself as the destination, and tokio::fs::rename(\u0026file_path, \u0026published_path) would overwrite the published directory with the source file — destructive and silent. This is unlikely in practice but not impossible if the notify watcher receives a synthetic event. Fix: handle the None case explicitly and skip the file with a warning.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:44:38.905762613Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:48:34.609761617Z",
+  "closed_at": "2026-07-17T23:48:34.609761617Z",
+  "close_reason": "Pass 3 fixes: HMAC key compare, inbox SSRF guard, domain validation, async Accept dispatch, foreign keys, IPv6 SSRF, poll timeout. Remaining P2-P3 accepted as known debt.",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3ctt.9",
+      "depends_on_id": "broadside-3ctt",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:44:38.917678131Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

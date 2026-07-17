@@ -1,0 +1,29 @@
+{
+  "id": "broadside-3ctt.14",
+  "title": "Timing side-channel remains: key length check leaks before constant-time compare",
+  "description": "webhook.rs:50-51: if expected_bytes.len() != provided_bytes.len() || expected_bytes.ct_eq(provided_bytes).unwrap_u8() != 1 — the length comparison is done first with a short-circuit ||. This leaks the length of the expected key: an attacker can determine the correct key length in O(1) by submitting keys of increasing length and observing when the short-circuit stops. For proper constant-time behavior, both length check and byte comparison must happen in constant time. The subtle crate provides ConstantTimeEq::ct_eq for slices of equal length; for unequal lengths, the correct approach is to pad/zero-extend or use a constant-time length comparison. A simpler correct fix is: use hmac::equal(expected, provided) which is length-constant, or use subtle::ConstantTimeEq on padded slices. This is a regression from the pass-1 fix that replaced == with ct_eq but kept the short-circuit length pre-check.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:45:20.30100761Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:48:34.651505151Z",
+  "closed_at": "2026-07-17T23:48:34.651505151Z",
+  "close_reason": "Pass 3 fixes: HMAC key compare, inbox SSRF guard, domain validation, async Accept dispatch, foreign keys, IPv6 SSRF, poll timeout. Remaining P2-P3 accepted as known debt.",
+  "labels": [
+    "risk",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3ctt.14",
+      "depends_on_id": "broadside-3ctt",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:45:20.321197615Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

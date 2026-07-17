@@ -19,8 +19,12 @@ async fn watch_loop(pool: &SqlitePool, config: &WatchConfig, _domain: &str) -> a
     let published_path = PathBuf::from(&config.published);
     let pattern = config.pattern.clone();
 
-    std::fs::create_dir_all(&watch_path).context("creating watch directory")?;
-    std::fs::create_dir_all(&published_path).context("creating published directory")?;
+    tokio::fs::create_dir_all(&watch_path)
+        .await
+        .context("creating watch directory")?;
+    tokio::fs::create_dir_all(&published_path)
+        .await
+        .context("creating published directory")?;
 
     let (tx, mut rx) = mpsc::channel::<PathBuf>(100);
 
@@ -54,17 +58,20 @@ async fn watch_loop(pool: &SqlitePool, config: &WatchConfig, _domain: &str) -> a
         // Small delay to let the file finish writing
         tokio::time::sleep(std::time::Duration::from_millis(200)).await;
 
+        let dest = published_path.join(file_path.file_name().unwrap_or_default());
         match process_file(pool, &persona_id, &file_path).await {
             Ok(post_id) => {
-                // Move to published
-                let dest = published_path.join(file_path.file_name().unwrap_or_default());
-                if let Err(e) = std::fs::rename(&file_path, &dest) {
-                    tracing::error!(error = %e, "moving file to published");
-                }
                 tracing::info!(post_id, file = %file_path.display(), "published from directory");
             }
             Err(e) => {
-                tracing::error!(error = %e, file = %file_path.display(), "processing watched file");
+                // Duplicate file events hit UNIQUE constraint — still move to published
+                tracing::warn!(error = %e, file = %file_path.display(), "processing watched file (may be duplicate)");
+            }
+        }
+        // Always move to published to prevent stranding
+        if file_path.exists() {
+            if let Err(e) = tokio::fs::rename(&file_path, &dest).await {
+                tracing::error!(error = %e, "moving file to published");
             }
         }
     }

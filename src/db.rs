@@ -68,17 +68,21 @@ CREATE TABLE IF NOT EXISTS feed_state (
 
 pub async fn connect(data_dir: &Path) -> anyhow::Result<SqlitePool> {
     let db_path = data_dir.join("broadside.db");
-    let options = SqliteConnectOptions::from_str(db_path.to_str().unwrap())?
+    let db_str = db_path
+        .to_str()
+        .ok_or_else(|| anyhow::anyhow!("data dir path contains invalid UTF-8"))?;
+    let options = SqliteConnectOptions::from_str(db_str)?
         .journal_mode(SqliteJournalMode::Wal)
-        .create_if_missing(true);
+        .create_if_missing(true)
+        .foreign_keys(true);
     let pool = SqlitePool::connect_with(options).await?;
     Ok(pool)
 }
 
 pub async fn init_data_dir(data_dir: &str) -> anyhow::Result<()> {
     let path = Path::new(data_dir);
-    std::fs::create_dir_all(path)?;
-    std::fs::create_dir_all(path.join("media"))?;
+    tokio::fs::create_dir_all(path).await?;
+    tokio::fs::create_dir_all(path.join("media")).await?;
 
     let pool = connect(path).await?;
     sqlx::raw_sql(SCHEMA).execute(&pool).await?;
@@ -86,14 +90,15 @@ pub async fn init_data_dir(data_dir: &str) -> anyhow::Result<()> {
 
     let config_path = path.join("config.toml");
     if !config_path.exists() {
-        std::fs::write(
+        tokio::fs::write(
             &config_path,
             r#"[server]
 bind = "127.0.0.1:3000"
 domain = "example.com"
 data_dir = "."
 "#,
-        )?;
+        )
+        .await?;
     }
 
     Ok(())

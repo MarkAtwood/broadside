@@ -4,7 +4,18 @@ use std::collections::HashSet;
 /// Sanitize HTML to the Mastodon-compatible allowlist.
 pub fn sanitize_html(html: &str) -> String {
     let tags: HashSet<&str> = [
-        "p", "br", "a", "span", "em", "strong", "del", "blockquote", "code", "pre", "ul", "ol",
+        "p",
+        "br",
+        "a",
+        "span",
+        "em",
+        "strong",
+        "del",
+        "blockquote",
+        "code",
+        "pre",
+        "ul",
+        "ol",
         "li",
     ]
     .into_iter()

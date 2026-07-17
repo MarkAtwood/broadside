@@ -63,10 +63,7 @@ impl Config {
             }
             let published = Path::new(&watch.published);
             if !published.is_absolute() {
-                bail!(
-                    "watch.published must be absolute, got: {}",
-                    watch.published
-                );
+                bail!("watch.published must be absolute, got: {}", watch.published);
             }
         }
         Ok(())
@@ -85,20 +82,20 @@ fn parse_duration(s: &str) -> anyhow::Result<Duration> {
     if s.is_empty() {
         bail!("empty duration string");
     }
-    let (digits, suffix) = s.split_at(
-        s.find(|c: char| !c.is_ascii_digit())
-            .unwrap_or(s.len()),
-    );
+    let (digits, suffix) = s.split_at(s.find(|c: char| !c.is_ascii_digit()).unwrap_or(s.len()));
     let n: u64 = digits
         .parse()
         .with_context(|| format!("invalid duration number in {s:?}"))?;
-    let secs = match suffix.trim() {
-        "s" | "sec" | "secs" => n,
-        "m" | "min" | "mins" => n * 60,
-        "h" | "hr" | "hrs" | "hour" | "hours" => n * 3600,
-        "d" | "day" | "days" => n * 86400,
+    let multiplier: u64 = match suffix.trim() {
+        "s" | "sec" | "secs" => 1,
+        "m" | "min" | "mins" => 60,
+        "h" | "hr" | "hrs" | "hour" | "hours" => 3600,
+        "d" | "day" | "days" => 86400,
         "" => bail!("duration {s:?} missing unit (s/m/h/d)"),
         other => bail!("unknown duration unit {other:?} in {s:?}"),
     };
+    let secs = n
+        .checked_mul(multiplier)
+        .with_context(|| format!("duration {s:?} overflows"))?;
     Ok(Duration::from_secs(secs))
 }

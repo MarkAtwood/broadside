@@ -2,7 +2,10 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "broadside", about = "One-way ActivityPub server for organizations")]
+#[command(
+    name = "broadside",
+    about = "One-way ActivityPub server for organizations"
+)]
 pub struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -114,7 +117,10 @@ impl Cli {
     pub async fn run(self) -> anyhow::Result<()> {
         match self.command {
             Command::Init { path } => {
-                broadside::db::init_data_dir(path.to_str().unwrap()).await?;
+                let path_str = path.to_str().ok_or_else(|| {
+                    anyhow::anyhow!("path contains invalid UTF-8: {}", path.display())
+                })?;
+                broadside::db::init_data_dir(path_str).await?;
                 println!("Initialized broadside in {}", path.display());
             }
             Command::Persona { command } => {
@@ -168,8 +174,16 @@ impl Cli {
                     })?
                 };
 
-                let html = broadside::post::text_to_html(&text);
-                let post_id = broadside::post::create(&pool, &persona_id, &html, &text, None).await?;
+                let (html, plain) = if markdown {
+                    let h = broadside::sanitize::markdown_to_html(&text);
+                    let t = broadside::sanitize::html_to_text(&h);
+                    (h, t)
+                } else {
+                    let h = broadside::post::text_to_html(&text);
+                    (h, text)
+                };
+                let post_id =
+                    broadside::post::create(&pool, &persona_id, &html, &plain, None).await?;
                 let queued = broadside::delivery::fan_out(&pool, &post_id, &persona_id).await?;
                 println!("Created post {post_id} (queued {queued} deliveries)");
             }
@@ -178,22 +192,18 @@ impl Cli {
                     .data_dir
                     .as_ref()
                     .map(|d| d.join("config.toml"))
-                    .ok_or_else(|| {
-                        anyhow::anyhow!("--data-dir or BROADSIDE_DATA_DIR required")
-                    })?;
+                    .ok_or_else(|| anyhow::anyhow!("--data-dir or BROADSIDE_DATA_DIR required"))?;
                 let config = broadside::config::Config::load(&config_path)?;
                 broadside::server::serve(&config).await?;
             }
             Command::Status => {
                 let pool = connect_db(&self.data_dir).await?;
-                let (personas,) =
-                    sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM personas")
-                        .fetch_one(&pool)
-                        .await?;
-                let (followers,) =
-                    sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM followers")
-                        .fetch_one(&pool)
-                        .await?;
+                let (personas,) = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM personas")
+                    .fetch_one(&pool)
+                    .await?;
+                let (followers,) = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM followers")
+                    .fetch_one(&pool)
+                    .await?;
                 let (posts,) = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM posts")
                     .fetch_one(&pool)
                     .await?;
@@ -243,7 +253,16 @@ impl Cli {
                         }
                     }
                     FollowersCommand::Count => {
-                        broadside::persona::list(&pool).await?;
+                        let rows = sqlx::query_as::<_, (String, i64)>(
+                            "SELECT p.username, COUNT(f.id) \
+                             FROM personas p LEFT JOIN followers f ON f.persona_id = p.id \
+                             GROUP BY p.id ORDER BY p.username",
+                        )
+                        .fetch_all(&pool)
+                        .await?;
+                        for (username, count) in &rows {
+                            println!("@{username}: {count}");
+                        }
                     }
                 }
             }

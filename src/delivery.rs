@@ -10,11 +10,11 @@ use crate::signatures;
 
 /// Retry delays by attempt number (0-indexed after the first immediate try).
 const RETRY_DELAYS: &[Duration] = &[
-    Duration::from_secs(60),        // attempt 2
-    Duration::from_secs(300),       // attempt 3
-    Duration::from_secs(1800),      // attempt 4
-    Duration::from_secs(7200),      // attempt 5
-    Duration::from_secs(28800),     // attempt 6
+    Duration::from_secs(60),    // attempt 2
+    Duration::from_secs(300),   // attempt 3
+    Duration::from_secs(1800),  // attempt 4
+    Duration::from_secs(7200),  // attempt 5
+    Duration::from_secs(28800), // attempt 6
 ];
 const MAX_ATTEMPTS: i32 = 7;
 
@@ -31,7 +31,10 @@ impl CircuitBreaker {
     }
 
     fn record_failure(&mut self, domain: &str) {
-        let entry = self.failures.entry(domain.to_string()).or_insert((0, Instant::now()));
+        let entry = self
+            .failures
+            .entry(domain.to_string())
+            .or_insert((0, Instant::now()));
         entry.0 += 1;
         entry.1 = Instant::now();
     }
@@ -41,10 +44,15 @@ impl CircuitBreaker {
     }
 
     /// Returns true if the domain is tripped (10+ consecutive failures within the last hour).
-    fn is_tripped(&self, domain: &str) -> bool {
+    /// After the 1-hour cooldown, resets the counter so the domain gets a fair retry window.
+    fn is_tripped(&mut self, domain: &str) -> bool {
         if let Some((count, last)) = self.failures.get(domain) {
-            if *count >= 10 && last.elapsed() < Duration::from_secs(3600) {
-                return true;
+            if *count >= 10 {
+                if last.elapsed() < Duration::from_secs(3600) {
+                    return true;
+                }
+                // Cooldown expired — reset so domain gets a fresh window
+                self.failures.remove(domain);
             }
         }
         false
@@ -71,14 +79,12 @@ pub async fn fan_out(pool: &SqlitePool, post_id: &str, persona_id: &str) -> anyh
         }
 
         let id = gen_id();
-        sqlx::query(
-            "INSERT INTO delivery_queue (id, post_id, inbox_uri) VALUES (?, ?, ?)",
-        )
-        .bind(&id)
-        .bind(post_id)
-        .bind(target)
-        .execute(pool)
-        .await?;
+        sqlx::query("INSERT INTO delivery_queue (id, post_id, inbox_uri) VALUES (?, ?, ?)")
+            .bind(&id)
+            .bind(post_id)
+            .bind(target)
+            .execute(pool)
+            .await?;
         queued += 1;
     }
 
@@ -89,10 +95,16 @@ pub async fn fan_out(pool: &SqlitePool, post_id: &str, persona_id: &str) -> anyh
 /// Background delivery worker. Runs as a tokio task.
 pub async fn run_worker(pool: SqlitePool, domain: String) {
     let breaker = Arc::new(Mutex::new(CircuitBreaker::new()));
-    let client = reqwest::Client::builder()
+    let client = match reqwest::Client::builder()
         .timeout(Duration::from_secs(30))
         .build()
-        .expect("building HTTP client");
+    {
+        Ok(c) => c,
+        Err(e) => {
+            tracing::error!(error = %e, "failed to build HTTP client, delivery worker exiting");
+            return;
+        }
+    };
 
     loop {
         match process_batch(&pool, &domain, &client, &breaker).await {
@@ -130,7 +142,7 @@ async fn process_batch(
         let inbox_domain = extract_domain(&inbox_uri);
 
         {
-            let br = breaker.lock().await;
+            let mut br = breaker.lock().await;
             if br.is_tripped(&inbox_domain) {
                 tracing::debug!(domain = inbox_domain, "circuit breaker tripped, skipping");
                 continue;
@@ -219,16 +231,40 @@ async fn process_batch(
                 tracing::debug!(inbox = inbox_uri, "delivered");
             }
             Ok(resp) if resp.status().as_u16() == 410 => {
+                // Get the persona_id from the post so we only delete that persona's followers
+                let persona_id =
+                    sqlx::query_as::<_, (String,)>("SELECT persona_id FROM posts WHERE id = ?")
+                        .bind(&post_id)
+                        .fetch_optional(pool)
+                        .await?
+                        .map(|(pid,)| pid);
+
                 sqlx::query("DELETE FROM delivery_queue WHERE id = ?")
                     .bind(&delivery_id)
                     .execute(pool)
                     .await?;
-                sqlx::query("DELETE FROM followers WHERE inbox_uri = ? OR shared_inbox_uri = ?")
+
+                let removed = if let Some(pid) = &persona_id {
+                    sqlx::query(
+                        "DELETE FROM followers WHERE persona_id = ? AND (inbox_uri = ? OR shared_inbox_uri = ?)",
+                    )
+                    .bind(pid)
                     .bind(&inbox_uri)
                     .bind(&inbox_uri)
                     .execute(pool)
-                    .await?;
-                tracing::info!(inbox = inbox_uri, "410 Gone — removed follower");
+                    .await?
+                } else {
+                    sqlx::query("DELETE FROM followers WHERE inbox_uri = ? OR shared_inbox_uri = ?")
+                        .bind(&inbox_uri)
+                        .bind(&inbox_uri)
+                        .execute(pool)
+                        .await?
+                };
+                tracing::info!(
+                    inbox = inbox_uri,
+                    removed = removed.rows_affected(),
+                    "410 Gone — removed followers"
+                );
             }
             Ok(resp) => {
                 let status = resp.status();
@@ -264,7 +300,8 @@ async fn handle_retry(
         .get(attempts as usize)
         .copied()
         .unwrap_or(Duration::from_secs(28800));
-    let next_retry = chrono::Utc::now() + chrono::Duration::from_std(delay).unwrap();
+    let next_retry = chrono::Utc::now()
+        + chrono::Duration::from_std(delay).unwrap_or(chrono::Duration::hours(8));
     let next_retry_str = next_retry.format("%Y-%m-%dT%H:%M:%SZ").to_string();
 
     sqlx::query(
@@ -277,7 +314,12 @@ async fn handle_retry(
     .execute(pool)
     .await?;
 
-    tracing::warn!(delivery_id, attempt = next_attempt, error, "delivery failed, will retry");
+    tracing::warn!(
+        delivery_id,
+        attempt = next_attempt,
+        error,
+        "delivery failed, will retry"
+    );
     Ok(())
 }
 
@@ -329,7 +371,10 @@ pub async fn inspect(pool: &SqlitePool) -> anyhow::Result<()> {
     if !dead.is_empty() {
         println!("Dead-lettered ({}):", dead.len());
         for (id, inbox, error) in &dead {
-            println!("  {id}  → {inbox}  error={}", error.as_deref().unwrap_or("?"));
+            println!(
+                "  {id}  → {inbox}  error={}",
+                error.as_deref().unwrap_or("?")
+            );
         }
     }
 
@@ -345,22 +390,23 @@ pub async fn retry_dead(pool: &SqlitePool) -> anyhow::Result<()> {
     .bind(&now)
     .execute(pool)
     .await?;
-    println!("Retrying {} dead-lettered deliveries.", result.rows_affected());
+    println!(
+        "Retrying {} dead-lettered deliveries.",
+        result.rows_affected()
+    );
     Ok(())
 }
 
 /// CLI: delivery stats.
 pub async fn stats(pool: &SqlitePool) -> anyhow::Result<()> {
-    let (pending,) = sqlx::query_as::<_, (i64,)>(
-        "SELECT COUNT(*) FROM delivery_queue WHERE status = 'pending'",
-    )
-    .fetch_one(pool)
-    .await?;
-    let (dead,) = sqlx::query_as::<_, (i64,)>(
-        "SELECT COUNT(*) FROM delivery_queue WHERE status = 'dead'",
-    )
-    .fetch_one(pool)
-    .await?;
+    let (pending,) =
+        sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM delivery_queue WHERE status = 'pending'")
+            .fetch_one(pool)
+            .await?;
+    let (dead,) =
+        sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM delivery_queue WHERE status = 'dead'")
+            .fetch_one(pool)
+            .await?;
 
     println!("Pending: {pending}");
     println!("Dead:    {dead}");

@@ -1,0 +1,29 @@
+{
+  "id": "broadside-3ctt.3",
+  "title": "test TOCTOU: port freed between bind and re-bind",
+  "description": "tests/integration.rs test_server(): binds TcpListener to get a free port, drops the listener, then re-binds tokio::net::TcpListener to the same port. Between drop and re-bind another process can steal the port, causing a spurious test failure. Standard fix: pass the already-bound std::net::TcpListener to axum via axum::serve(tokio::net::TcpListener::from_std(listener)?, app) without dropping it first. This eliminates the TOCTOU window.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:42:14.484674878Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:48:34.548338387Z",
+  "closed_at": "2026-07-17T23:48:34.548338387Z",
+  "close_reason": "Pass 3 fixes: HMAC key compare, inbox SSRF guard, domain validation, async Accept dispatch, foreign keys, IPv6 SSRF, poll timeout. Remaining P2-P3 accepted as known debt.",
+  "labels": [
+    "idiomatic-rust",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3ctt.3",
+      "depends_on_id": "broadside-3ctt",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:42:14.499881474Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}
