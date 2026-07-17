@@ -1,0 +1,42 @@
+{
+  "id": "broadside-e37d.10",
+  "title": "RSS/Atom feed poller",
+  "description": "Tokio task that polls configured [[feed]] entries on their poll_interval. Parse RSS 2.0 and Atom 1.0. Entry-to-Note mapping: title → bold first line, description/content:encoded → body (sanitized via ammonia), enclosure/media:content with image MIME → attachment, link → footer link, id/guid → source_ref for dedup. Content cap: 5000 chars after sanitization, truncate with read-more link. Persist last_seen_id in feed_state table.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "assignee": "Mark Atwood",
+  "owner": "mark@wolfssl.com",
+  "created_at": "2026-07-17T22:38:52.498676946Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:01:04.059182281Z",
+  "started_at": "2026-07-17T22:58:43.622071577Z",
+  "closed_at": "2026-07-17T23:01:04.059182281Z",
+  "close_reason": "RSS/Atom poller, webhook endpoint, directory watcher all implemented. Sanitization via ammonia, markdown via pulldown-cmark.",
+  "dependencies": [
+    {
+      "issue_id": "broadside-e37d.10",
+      "depends_on_id": "broadside-e37d",
+      "type": "parent-child",
+      "created_at": "2026-07-17T22:38:52.505267665Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-e37d.10",
+      "depends_on_id": "broadside-e37d.5",
+      "type": "blocks",
+      "created_at": "2026-07-17T22:39:19.959156741Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-e37d.10",
+      "depends_on_id": "broadside-e37d.6",
+      "type": "blocks",
+      "created_at": "2026-07-17T22:39:19.993322172Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

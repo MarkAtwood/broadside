@@ -1,0 +1,42 @@
+{
+  "id": "broadside-e37d.12",
+  "title": "Webhook ingestion endpoint",
+  "description": "POST /hook/{persona}?key={secret} — key-authenticated endpoint for external systems (CI, CMS). JSON body: content (required), content_type (optional, default text/plain, supports text/markdown via pulldown-cmark), media array (optional, objects with url and description). Fetch media URLs with 30s timeout, 10MB max, image-only validation. Sanitize content with ammonia. Return 401 for bad key, 422 for invalid payload.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "assignee": "Mark Atwood",
+  "owner": "mark@wolfssl.com",
+  "created_at": "2026-07-17T22:38:56.701195346Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:01:04.073907798Z",
+  "started_at": "2026-07-17T22:58:43.664891754Z",
+  "closed_at": "2026-07-17T23:01:04.073907798Z",
+  "close_reason": "RSS/Atom poller, webhook endpoint, directory watcher all implemented. Sanitization via ammonia, markdown via pulldown-cmark.",
+  "dependencies": [
+    {
+      "issue_id": "broadside-e37d.12",
+      "depends_on_id": "broadside-e37d",
+      "type": "parent-child",
+      "created_at": "2026-07-17T22:38:56.708010202Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-e37d.12",
+      "depends_on_id": "broadside-e37d.5",
+      "type": "blocks",
+      "created_at": "2026-07-17T22:39:20.022850124Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-e37d.12",
+      "depends_on_id": "broadside-e37d.6",
+      "type": "blocks",
+      "created_at": "2026-07-17T22:39:20.051997194Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

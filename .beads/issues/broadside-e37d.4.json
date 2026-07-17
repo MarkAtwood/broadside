@@ -1,0 +1,42 @@
+{
+  "id": "broadside-e37d.4",
+  "title": "Persona management and CLI",
+  "description": "Implement persona CRUD: broadside init (create data dir, empty DB, sample config), persona add (generate RSA 2048 keypair, insert row), persona list (with follower counts), persona update (display name, bio, avatar/header paths). Store PEM-encoded keys in personas table. CLI via clap.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "assignee": "Mark Atwood",
+  "owner": "mark@wolfssl.com",
+  "created_at": "2026-07-17T22:38:23.837900269Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T22:54:24.909113329Z",
+  "started_at": "2026-07-17T22:51:47.7665631Z",
+  "closed_at": "2026-07-17T22:54:24.909113329Z",
+  "close_reason": "Persona CRUD with RSA 2048 keypair gen working. HTTP signatures sign/verify implemented.",
+  "dependencies": [
+    {
+      "issue_id": "broadside-e37d.4",
+      "depends_on_id": "broadside-e37d",
+      "type": "parent-child",
+      "created_at": "2026-07-17T22:38:23.84493091Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-e37d.4",
+      "depends_on_id": "broadside-e37d.2",
+      "type": "blocks",
+      "created_at": "2026-07-17T22:39:19.646798931Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-e37d.4",
+      "depends_on_id": "broadside-e37d.3",
+      "type": "blocks",
+      "created_at": "2026-07-17T22:39:19.678940749Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "id": "broadside-e37d.6",
+  "title": "Delivery fan-out and worker",
+  "description": "When a post is created, query followers for the persona, deduplicate by shared_inbox_uri (fall back to inbox_uri), insert one delivery_queue row per unique inbox. Delivery worker: tokio task polling delivery_queue, HTTP POST with HTTP signatures, retry schedule (immediate, 1m, 5m, 30m, 2h, 8h, dead-letter after 7 attempts). 410 Gone removes follower. Per-domain circuit breaker: 10 consecutive failures triggers 1-hour pause (in-memory state). CLI: queue inspect, queue retry, queue stats.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "assignee": "Mark Atwood",
+  "owner": "mark@wolfssl.com",
+  "created_at": "2026-07-17T22:38:36.406783634Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T22:58:36.122385011Z",
+  "started_at": "2026-07-17T22:56:21.732475026Z",
+  "closed_at": "2026-07-17T22:58:36.122385011Z",
+  "close_reason": "Delivery worker with retry/backoff/circuit-breaker, fan-out, queue CLI, inbox Follow/Accept/Undo all implemented",
+  "dependencies": [
+    {
+      "issue_id": "broadside-e37d.6",
+      "depends_on_id": "broadside-e37d",
+      "type": "parent-child",
+      "created_at": "2026-07-17T22:38:36.412431506Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-e37d.6",
+      "depends_on_id": "broadside-e37d.5",
+      "type": "blocks",
+      "created_at": "2026-07-17T22:39:19.73961378Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "id": "broadside-e37d.1",
+  "title": "Scaffold single-crate Rust project",
+  "description": "Set up a single broadside crate (not a workspace). Binary with axum, tokio, sqlx, serde, reqwest, clap. All shared-looking code (HTTP signatures, delivery, actor docs, WebFinger, NodeInfo) lives in modules within this crate for now. Fieldwork extraction into a shared crate is deferred until smallhold needs it — no speculative API design.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "assignee": "Mark Atwood",
+  "owner": "mark@wolfssl.com",
+  "created_at": "2026-07-17T22:38:15.0843998Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T22:50:56.394311416Z",
+  "started_at": "2026-07-17T22:47:32.821410021Z",
+  "closed_at": "2026-07-17T22:50:56.394311416Z",
+  "close_reason": "Cargo.toml, main.rs, cli.rs, config.rs, db.rs — compiles clean",
+  "dependencies": [
+    {
+      "issue_id": "broadside-e37d.1",
+      "depends_on_id": "broadside-e37d",
+      "type": "parent-child",
+      "created_at": "2026-07-17T22:38:15.090086914Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

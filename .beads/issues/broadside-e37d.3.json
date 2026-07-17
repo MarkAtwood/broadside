@@ -1,0 +1,34 @@
+{
+  "id": "broadside-e37d.3",
+  "title": "Config file parsing (config.toml)",
+  "description": "Parse config.toml with serde + toml crate. Sections: [server] (bind, domain, data_dir), [[feed]] (persona, url, poll_interval), [[webhook]] (persona, key), [watch] (persona, path, published, pattern). Validate on load: referenced personas exist check deferred to runtime, poll_interval parses as duration, paths are absolute.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "assignee": "Mark Atwood",
+  "owner": "mark@wolfssl.com",
+  "created_at": "2026-07-17T22:38:21.172587616Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T22:51:40.227134098Z",
+  "started_at": "2026-07-17T22:51:01.517369712Z",
+  "closed_at": "2026-07-17T22:51:40.227134098Z",
+  "close_reason": "Schema in db.rs, ID gen in id.rs, config parsing with validation in config.rs",
+  "dependencies": [
+    {
+      "issue_id": "broadside-e37d.3",
+      "depends_on_id": "broadside-e37d",
+      "type": "parent-child",
+      "created_at": "2026-07-17T22:38:21.179663396Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-e37d.3",
+      "depends_on_id": "broadside-e37d.1",
+      "type": "blocks",
+      "created_at": "2026-07-17T22:39:19.609816857Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

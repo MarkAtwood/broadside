@@ -1,0 +1,42 @@
+{
+  "id": "broadside-e37d.13",
+  "title": "Directory watcher ingestion",
+  "description": "Optional [watch] config. Use notify crate for filesystem events on configured path. New files matching pattern (e.g. *.md): read as markdown, render to HTML via pulldown-cmark, sanitize with ammonia, federate as Note. Resolve relative image paths against incoming directory, validate and attach. Move processed files to published/ directory. File path is source_ref for dedup.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "assignee": "Mark Atwood",
+  "owner": "mark@wolfssl.com",
+  "created_at": "2026-07-17T22:39:00.130699037Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T23:01:04.089047332Z",
+  "started_at": "2026-07-17T22:58:43.706647815Z",
+  "closed_at": "2026-07-17T23:01:04.089047332Z",
+  "close_reason": "RSS/Atom poller, webhook endpoint, directory watcher all implemented. Sanitization via ammonia, markdown via pulldown-cmark.",
+  "dependencies": [
+    {
+      "issue_id": "broadside-e37d.13",
+      "depends_on_id": "broadside-e37d",
+      "type": "parent-child",
+      "created_at": "2026-07-17T22:39:00.134993515Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-e37d.13",
+      "depends_on_id": "broadside-e37d.5",
+      "type": "blocks",
+      "created_at": "2026-07-17T22:39:20.08726953Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-e37d.13",
+      "depends_on_id": "broadside-e37d.6",
+      "type": "blocks",
+      "created_at": "2026-07-17T22:39:20.117077207Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

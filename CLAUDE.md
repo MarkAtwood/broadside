@@ -50,6 +50,10 @@ bd close <id>         # Complete work
 <!-- END BEADS INTEGRATION -->
 
 
+## Code Review Gate
+
+**MANDATORY**: After every logical chunk of code is generated or modified, immediately run `/codereview` against it **3 times** before moving on. A "logical chunk" is a function, module, endpoint, or coherent set of changes — not individual lines. All findings from `/codereview` must be filed as beads issues (tagged with `codereview`). Do not proceed to the next chunk until all 3 review passes are complete and findings are addressed or tracked.
+
 ## Build & Test
 
 _Add your build and test commands here_

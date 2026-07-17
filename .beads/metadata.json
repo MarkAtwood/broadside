@@ -1,7 +1,5 @@
 {
+  "backend": "flatfile",
   "database": "dolt",
-  "backend": "dolt",
-  "dolt_mode": "embedded",
-  "dolt_database": "broadside",
   "project_id": "10867a74-3673-4bfb-8ca3-66bd9016a638"
 }

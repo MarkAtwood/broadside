@@ -1,0 +1,14 @@
+{
+  "auto_compact_enabled": "false",
+  "compact_batch_size": "50",
+  "compact_parallel_workers": "5",
+  "compact_tier1_days": "30",
+  "compact_tier1_dep_levels": "2",
+  "compact_tier2_commits": "100",
+  "compact_tier2_days": "90",
+  "compact_tier2_dep_levels": "5",
+  "compaction_enabled": "false",
+  "issue_prefix": "broadside",
+  "kv.memory.code-review-gate-every-logical-chunk-of-code": "Code review gate: every logical chunk of code generated or modified must be run through /codereview 3 times before proceeding. This is a hard rule in both AGENTS.md and CLAUDE.md.",
+  "kv.memory.codereview-findings-must-be-filed-as-beads-issues": "Codereview findings must be filed as beads issues tagged codereview. Never discard or ignore review findings — they get tracked."
+}

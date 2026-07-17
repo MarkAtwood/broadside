@@ -1,0 +1,42 @@
+{
+  "id": "broadside-e37d.11",
+  "title": "Inbox handler (Follow, Undo Follow, discard)",
+  "description": "POST /users/{username}/inbox and POST /inbox (shared inbox). Verify HTTP signature on every request. For Follow: insert followers row (actor_uri, inbox_uri, shared_inbox_uri from actor doc fetch), send Accept{Follow} back to follower's inbox. For Undo{Follow}: delete followers row. For everything else: return 202 Accepted, do nothing. Reject unsigned or invalid-signature requests with 401.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "assignee": "Mark Atwood",
+  "owner": "mark@wolfssl.com",
+  "created_at": "2026-07-17T22:38:54.947308041Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T22:58:36.130381566Z",
+  "started_at": "2026-07-17T22:56:21.774798208Z",
+  "closed_at": "2026-07-17T22:58:36.130381566Z",
+  "close_reason": "Delivery worker with retry/backoff/circuit-breaker, fan-out, queue CLI, inbox Follow/Accept/Undo all implemented",
+  "dependencies": [
+    {
+      "issue_id": "broadside-e37d.11",
+      "depends_on_id": "broadside-e37d",
+      "type": "parent-child",
+      "created_at": "2026-07-17T22:38:54.952273313Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-e37d.11",
+      "depends_on_id": "broadside-e37d.7",
+      "type": "blocks",
+      "created_at": "2026-07-17T22:39:19.883936003Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-e37d.11",
+      "depends_on_id": "broadside-e37d.9",
+      "type": "blocks",
+      "created_at": "2026-07-17T22:39:19.922614422Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

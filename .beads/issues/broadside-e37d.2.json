@@ -1,0 +1,34 @@
+{
+  "id": "broadside-e37d.2",
+  "title": "SQLite schema and migrations",
+  "description": "Implement the 6-table schema using sqlx migrations: personas, followers, posts, post_media, delivery_queue (with idx_delivery_pending index), feed_state. Use TEXT PRIMARY KEY with snowflake IDs. All timestamps as ISO 8601 TEXT with SQLite strftime defaults. WAL mode enabled on connection.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "assignee": "Mark Atwood",
+  "owner": "mark@wolfssl.com",
+  "created_at": "2026-07-17T22:38:18.125587326Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T22:51:40.218574826Z",
+  "started_at": "2026-07-17T22:51:01.465561064Z",
+  "closed_at": "2026-07-17T22:51:40.218574826Z",
+  "close_reason": "Schema in db.rs, ID gen in id.rs, config parsing with validation in config.rs",
+  "dependencies": [
+    {
+      "issue_id": "broadside-e37d.2",
+      "depends_on_id": "broadside-e37d",
+      "type": "parent-child",
+      "created_at": "2026-07-17T22:38:18.132288669Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-e37d.2",
+      "depends_on_id": "broadside-e37d.1",
+      "type": "blocks",
+      "created_at": "2026-07-17T22:39:19.575305944Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

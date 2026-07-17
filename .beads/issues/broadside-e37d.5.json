@@ -1,0 +1,34 @@
+{
+  "id": "broadside-e37d.5",
+  "title": "Post creation, media handling, and CLI",
+  "description": "Implement broadside post --persona=NAME CONTENT with options: --markdown (read stdin, render via pulldown-cmark), --media=PATH (multiple allowed). Media processing: validate image MIME (sniff, not trust extension), enforce 10MB max, strip EXIF, compute blurhash, store in media/ dir. Insert posts and post_media rows. Generate snowflake IDs. Dedup via source_ref UNIQUE constraint.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "assignee": "Mark Atwood",
+  "owner": "mark@wolfssl.com",
+  "created_at": "2026-07-17T22:38:27.713286469Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-17T22:56:13.255922166Z",
+  "started_at": "2026-07-17T22:54:34.813402583Z",
+  "closed_at": "2026-07-17T22:56:13.255922166Z",
+  "close_reason": "Post creation, WebFinger/NodeInfo, actor/outbox/followers endpoints all implemented and smoke-tested",
+  "dependencies": [
+    {
+      "issue_id": "broadside-e37d.5",
+      "depends_on_id": "broadside-e37d",
+      "type": "parent-child",
+      "created_at": "2026-07-17T22:38:27.720405875Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-e37d.5",
+      "depends_on_id": "broadside-e37d.4",
+      "type": "blocks",
+      "created_at": "2026-07-17T22:39:19.708621515Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}
