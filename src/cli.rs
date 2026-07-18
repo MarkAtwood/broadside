@@ -144,15 +144,26 @@ impl Cli {
                         header,
                         fields,
                     } => {
-                        broadside::persona::update(
-                            &pool,
-                            &username,
-                            display_name.as_deref(),
-                            bio.as_deref(),
-                            avatar.as_deref(),
-                            header.as_deref(),
-                        )
-                        .await?;
+                        let has_profile_update = display_name.is_some()
+                            || bio.is_some()
+                            || avatar.is_some()
+                            || header.is_some();
+                        if !has_profile_update && fields.is_empty() {
+                            anyhow::bail!(
+                                "nothing to update — specify --display-name, --bio, --avatar, --header, or --field"
+                            );
+                        }
+                        if has_profile_update {
+                            broadside::persona::update(
+                                &pool,
+                                &username,
+                                display_name.as_deref(),
+                                bio.as_deref(),
+                                avatar.as_deref(),
+                                header.as_deref(),
+                            )
+                            .await?;
+                        }
                         if !fields.is_empty() {
                             let metadata: Vec<serde_json::Value> = fields
                                 .iter()

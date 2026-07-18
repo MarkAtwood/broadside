@@ -1,0 +1,4 @@
+{"id":"019f7662-61b5-7826-bd71-f516fd5a9915","issue_id":"broadside-ec6y.3","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:59:46.869534942Z"}
+{"id":"019f7662-61b7-7883-9172-f8bbae9aa6cc","issue_id":"broadside-ec6y.3","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: efficiency","created_at":"2026-07-18T17:59:46.871558504Z"}
+{"id":"019f7662-61b9-7918-abc1-5854dd2519c3","issue_id":"broadside-ec6y.3","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:59:46.873596607Z"}
+{"id":"019f7674-4044-75fa-9ba9-d4b3b2985964","issue_id":"broadside-ec6y.3","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Same fix as ec6y.2 — post query hoisted into per-post cache block","created_at":"2026-07-18T18:19:17.956392335Z"}

@@ -98,6 +98,7 @@ pub fn verify_signature(
 }
 
 /// Parsed components of an HTTP Signature header.
+#[derive(Debug)]
 pub struct SignatureParts {
     pub key_id: String,
     pub headers: String,

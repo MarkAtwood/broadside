@@ -1,0 +1,29 @@
+{
+  "id": "broadside-ec6y.10",
+  "title": "is_private_host_resolved uses for loop instead of .any()",
+  "description": "server.rs:1219-1224: The for-loop pattern:\n  for addr in addrs {\n      if is_private_ip(addr.ip()) { return true; }\n  }\n  false\nis a textbook case for addrs.any(|addr| is_private_ip(addr.ip())). The iterator combinator is shorter, idiomatic, and communicates intent directly.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T18:00:16.275421718Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T18:19:17.839502201Z",
+  "closed_at": "2026-07-18T18:19:17.839502201Z",
+  "close_reason": "is_private_host_resolved now uses .any() instead of for loop",
+  "labels": [
+    "idiomatic-rust",
+    "iterators",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ec6y.10",
+      "depends_on_id": "broadside-ec6y",
+      "type": "parent-child",
+      "created_at": "2026-07-18T18:00:16.291022464Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

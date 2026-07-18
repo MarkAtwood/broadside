@@ -1,0 +1,4 @@
+{"id":"019f7664-55fb-7c63-af54-5cf52bc732aa","issue_id":"broadside-ec6y.16","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T18:01:54.939812628Z"}
+{"id":"019f7664-55ff-752c-a0c6-fb2a79cecd84","issue_id":"broadside-ec6y.16","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-18T18:01:54.943350144Z"}
+{"id":"019f7664-5602-7f2b-82c1-2a70163bed28","issue_id":"broadside-ec6y.16","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T18:01:54.946995513Z"}
+{"id":"019f7674-3f61-7728-901f-f5a92c182432","issue_id":"broadside-ec6y.16","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"CLI now checks has_profile_update before calling persona::update(), allowing --field-only invocations","created_at":"2026-07-18T18:19:17.729469815Z"}

@@ -9,7 +9,7 @@ use subtle::ConstantTimeEq;
 use crate::sanitize;
 use crate::server::AppState;
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct WebhookPayload {
     content: String,
     #[serde(default = "default_content_type")]
@@ -18,7 +18,7 @@ pub struct WebhookPayload {
     pub media: Vec<WebhookMedia>,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct WebhookMedia {
     pub url: String,
     #[serde(default)]

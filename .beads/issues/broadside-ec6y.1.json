@@ -1,0 +1,28 @@
+{
+  "id": "broadside-ec6y.1",
+  "title": "process_content called redundantly on every outbox page view and delivery",
+  "description": "process_content() (regex-based hashtag/mention/URL linkification) is called on every post every time it is rendered: once during delivery fan-out (delivery.rs:194), once per outbox page view (server.rs:455), and once per profile HTML view (server.rs:1072). The processed HTML is never cached — it is recomputed from content_html each time. For the outbox endpoint, this means 20 regex scans per page load. For delivery, the same post is re-processed for every inbox in the batch. The fix is to store processed_html and tags at post-creation time (or lazily cache on first compute). This matters because outbox and profile pages are public unauthenticated endpoints that can be polled frequently by crawlers.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:59:36.442317304Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T18:18:38.679835916Z",
+  "closed_at": "2026-07-18T18:18:38.679835916Z",
+  "close_reason": "process_content is called once per post render. For a broadcast server with 20 posts/page max, this is microseconds. Caching would require invalidation logic that adds complexity for no measurable benefit.",
+  "labels": [
+    "efficiency",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ec6y.1",
+      "depends_on_id": "broadside-ec6y",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:59:36.457776417Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

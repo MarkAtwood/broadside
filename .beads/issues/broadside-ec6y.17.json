@@ -1,0 +1,29 @@
+{
+  "id": "broadside-ec6y.17",
+  "title": "delivery.rs attempts column read as u32 but written back as i32",
+  "description": "The pass-1 fix changed process_batch (line 138) to read attempts as u32, but handle_retry (line 341) casts next_attempt back to i32 via `next_attempt as i32` before binding. Meanwhile, inspect() on line 376 still reads attempts as i32.\n\nWhat goes wrong: a contributor sees u32 in one path and i32 in the other, and may extend MAX_ATTEMPTS beyond i32::MAX (unlikely but the inconsistency is a trap). More practically, someone adding a new query against attempts will have to guess which type to use.\n\nFix: pick one type (u32 is semantically correct since attempts cannot be negative) and use it consistently across all three sites: process_batch read, handle_retry write, and inspect read.\n\nLocations:\n- /home/mark/PROJECT/broadside/src/delivery.rs line 138 (reads u32)\n- /home/mark/PROJECT/broadside/src/delivery.rs line 341 (writes as i32)\n- /home/mark/PROJECT/broadside/src/delivery.rs line 376 (reads i32)",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T18:02:02.061092607Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T18:19:17.782801345Z",
+  "closed_at": "2026-07-18T18:19:17.782801345Z",
+  "close_reason": "Unified attempts type to i32 throughout (query, handle_retry, bind). MAX_ATTEMPTS also i32.",
+  "labels": [
+    "risk",
+    "maintainer-burden",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ec6y.17",
+      "depends_on_id": "broadside-ec6y",
+      "type": "parent-child",
+      "created_at": "2026-07-18T18:02:02.086523294Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

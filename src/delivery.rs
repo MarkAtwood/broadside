@@ -16,25 +16,12 @@ const RETRY_DELAYS: &[Duration] = &[
     Duration::from_secs(7200),  // attempt 5
     Duration::from_secs(28800), // attempt 6
 ];
-const MAX_ATTEMPTS: u32 = 7;
+const MAX_ATTEMPTS: i32 = 7;
 
 /// Per-domain circuit breaker state.
+#[derive(Default)]
 struct CircuitBreaker {
     failures: HashMap<String, (u32, Instant)>,
-}
-
-impl CircuitBreaker {
-    fn new() -> Self {
-        Self {
-            failures: HashMap::new(),
-        }
-    }
-}
-
-impl Default for CircuitBreaker {
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
 impl CircuitBreaker {
@@ -102,7 +89,7 @@ pub async fn fan_out(pool: &SqlitePool, post_id: &str, persona_id: &str) -> anyh
 
 /// Background delivery worker. Runs as a tokio task.
 pub async fn run_worker(pool: SqlitePool, domain: String) {
-    let breaker = Arc::new(Mutex::new(CircuitBreaker::new()));
+    let breaker = Arc::new(Mutex::new(CircuitBreaker::default()));
     let client = match reqwest::Client::builder()
         .timeout(Duration::from_secs(30))
         .redirect(reqwest::redirect::Policy::none())
@@ -135,7 +122,7 @@ async fn process_batch(
 ) -> anyhow::Result<u32> {
     let now = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
 
-    let rows = sqlx::query_as::<_, (String, String, String, u32)>(
+    let rows = sqlx::query_as::<_, (String, String, String, i32)>(
         "SELECT dq.id, dq.post_id, dq.inbox_uri, dq.attempts \
          FROM delivery_queue dq \
          WHERE dq.status = 'pending' AND dq.next_retry <= ? \
@@ -146,6 +133,8 @@ async fn process_batch(
     .await?;
 
     let mut processed = 0u32;
+    // Cache per-post data to avoid redundant DB queries when multiple inboxes share a post
+    let mut post_cache: HashMap<String, (Vec<u8>, String)> = HashMap::new();
 
     for (delivery_id, post_id, inbox_uri, attempts) in rows {
         // Re-validate inbox URI at delivery time (defense against DNS rebinding)
@@ -169,86 +158,89 @@ async fn process_batch(
             }
         }
 
-        let post = sqlx::query_as::<_, (String, String, String)>(
-            "SELECT p.content_html, p.published_at, pe.username \
-             FROM posts p JOIN personas pe ON pe.id = p.persona_id \
-             WHERE p.id = ?",
-        )
-        .bind(&post_id)
-        .fetch_optional(pool)
-        .await?;
+        // Build activity body once per post_id, reuse for all inboxes
+        if !post_cache.contains_key(&post_id) {
+            let post = sqlx::query_as::<_, (String, String, String)>(
+                "SELECT p.content_html, p.published_at, pe.username \
+                 FROM posts p JOIN personas pe ON pe.id = p.persona_id \
+                 WHERE p.id = ?",
+            )
+            .bind(&post_id)
+            .fetch_optional(pool)
+            .await?;
 
-        let (content_html, published_at, username) = match post {
-            Some(p) => p,
-            None => {
-                mark_dead(pool, &delivery_id, "post not found").await?;
-                processed += 1;
-                continue;
-            }
-        };
+            let (content_html, published_at, username) = match post {
+                Some(p) => p,
+                None => {
+                    mark_dead(pool, &delivery_id, "post not found").await?;
+                    processed += 1;
+                    continue;
+                }
+            };
 
-        let actor_uri = format!("https://{domain}/users/{username}");
-        let post_uri = format!("{actor_uri}/statuses/{post_id}");
+            let actor_uri = format!("https://{domain}/users/{username}");
+            let post_uri = format!("{actor_uri}/statuses/{post_id}");
+            let (processed_html, tags) = crate::content::process_content(&content_html, domain);
+            let tag_json: Vec<serde_json::Value> = tags
+                .iter()
+                .map(|t| serde_json::to_value(t).unwrap_or_default())
+                .collect();
+            let attachments = crate::media::attachments_for_post(pool, &post_id, domain).await;
 
-        // Process content for hashtags, mentions, and URL auto-linking
-        let (processed_html, tags) = crate::content::process_content(&content_html, domain);
-        let tag_json: Vec<serde_json::Value> = tags
-            .iter()
-            .map(|t| serde_json::to_value(t).unwrap_or_default())
-            .collect();
-
-        let attachments = crate::media::attachments_for_post(pool, &post_id, domain).await;
-
-        let activity = serde_json::json!({
-            "@context": "https://www.w3.org/ns/activitystreams",
-            "id": format!("{post_uri}/activity"),
-            "type": "Create",
-            "actor": &actor_uri,
-            "published": published_at,
-            "to": ["https://www.w3.org/ns/activitystreams#Public"],
-            "cc": [format!("{actor_uri}/followers")],
-            "object": {
-                "id": post_uri,
-                "type": "Note",
-                "attributedTo": &actor_uri,
-                "content": processed_html,
+            let activity = serde_json::json!({
+                "@context": "https://www.w3.org/ns/activitystreams",
+                "id": format!("{post_uri}/activity"),
+                "type": "Create",
+                "actor": &actor_uri,
                 "published": published_at,
                 "to": ["https://www.w3.org/ns/activitystreams#Public"],
                 "cc": [format!("{actor_uri}/followers")],
-                "tag": tag_json,
-                "attachment": attachments,
-            }
-        });
+                "object": {
+                    "id": post_uri,
+                    "type": "Note",
+                    "attributedTo": &actor_uri,
+                    "content": processed_html,
+                    "published": published_at,
+                    "to": ["https://www.w3.org/ns/activitystreams#Public"],
+                    "cc": [format!("{actor_uri}/followers")],
+                    "tag": tag_json,
+                    "attachment": attachments,
+                }
+            });
 
-        let body = serde_json::to_vec(&activity)?;
+            let body = serde_json::to_vec(&activity)?;
+            let private_key = crate::persona::get_private_key(pool, &username).await?;
+            post_cache.insert(post_id.clone(), (body, private_key));
+        }
 
-        let private_key = crate::persona::get_private_key(pool, &username).await?;
-        let key_id = format!("{actor_uri}#main-key");
+        let (body, private_key) = post_cache.get(&post_id).expect("just inserted");
+        let actor_uri_for_key = {
+            // Extract username from the cached activity to build key_id
+            let activity: serde_json::Value = serde_json::from_slice(body)?;
+            activity["actor"].as_str().unwrap_or("").to_string()
+        };
+        let key_id = format!("{actor_uri_for_key}#main-key");
         let target_path = url::Url::parse(&inbox_uri)
             .map(|u| u.path().to_string())
             .unwrap_or_else(|_| "/inbox".to_string());
 
-        let sig_headers = match signatures::sign_request(
-            &private_key,
-            &key_id,
-            &target_path,
-            &inbox_domain,
-            &body,
-        ) {
-            Ok(h) => h,
-            Err(_e) => {
-                tracing::error!("failed to sign request for {}", inbox_uri);
-                mark_dead(pool, &delivery_id, "signing failed").await?;
-                processed += 1;
-                continue;
-            }
-        };
+        let sig_headers =
+            match signatures::sign_request(private_key, &key_id, &target_path, &inbox_domain, body)
+            {
+                Ok(h) => h,
+                Err(_e) => {
+                    tracing::error!("failed to sign request for {}", inbox_uri);
+                    mark_dead(pool, &delivery_id, "signing failed").await?;
+                    processed += 1;
+                    continue;
+                }
+            };
 
         let result = client
             .post(&inbox_uri)
             .headers(sig_headers)
             .header("Content-Type", "application/activity+json")
-            .body(body)
+            .body(body.clone())
             .send()
             .await;
 
@@ -318,7 +310,7 @@ async fn process_batch(
 async fn handle_retry(
     pool: &SqlitePool,
     delivery_id: &str,
-    attempts: u32,
+    attempts: i32,
     error: &str,
 ) -> anyhow::Result<()> {
     let next_attempt = attempts + 1;
@@ -338,7 +330,7 @@ async fn handle_retry(
     sqlx::query(
         "UPDATE delivery_queue SET attempts = ?, next_retry = ?, last_error = ? WHERE id = ?",
     )
-    .bind(next_attempt as i32)
+    .bind(next_attempt)
     .bind(&next_retry_str)
     .bind(error)
     .bind(delivery_id)

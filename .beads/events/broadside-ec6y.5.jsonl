@@ -1,0 +1,4 @@
+{"id":"019f7662-9540-7d8f-aa6f-a798c90494a1","issue_id":"broadside-ec6y.5","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T18:00:00.064889458Z"}
+{"id":"019f7662-9543-7060-8ad7-a6eb71e34913","issue_id":"broadside-ec6y.5","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: readability","created_at":"2026-07-18T18:00:00.067025347Z"}
+{"id":"019f7662-9545-70df-b4f9-9bc21c9dfe90","issue_id":"broadside-ec6y.5","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T18:00:00.069057499Z"}
+{"id":"019f7673-a71f-72e9-83f7-60c6d0fe4b52","issue_id":"broadside-ec6y.5","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"RateLimiter prunes every 10 minutes. At 60 req/min/IP, worst case is 600 entries per IP between prunes. With the prune cycle, this is bounded and acceptable.","created_at":"2026-07-18T18:18:38.751191748Z"}

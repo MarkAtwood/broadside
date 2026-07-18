@@ -1,0 +1,27 @@
+{
+  "id": "broadside-ec6y.13",
+  "title": "SSRF defense: consistent DNS-rebind checks at all outbound request points",
+  "description": "The codebase applies is_private_host_resolved() checks at every point where an outbound HTTP request is made from attacker-influenced input: follower inbox fetching (server.rs:741-745, 793-799), actor key fetching (actor_cache.rs:46-52), media URL fetching (media.rs:54-59), delivery inbox validation (delivery.rs:152-162), and shared inbox validation (server.rs:779-785). Redirect following is disabled on all HTTP clients. The check resolves DNS and blocks private IPs, and fails closed (returns blocked if DNS fails). This is thorough and consistent.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "decision",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T18:00:27.420298177Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T18:15:46.294637174Z",
+  "closed_at": "2026-07-18T18:15:46.294637174Z",
+  "close_reason": "Closed",
+  "labels": [
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ec6y.13",
+      "depends_on_id": "broadside-ec6y",
+      "type": "parent-child",
+      "created_at": "2026-07-18T18:00:27.436982406Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

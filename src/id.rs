@@ -5,8 +5,9 @@ static SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 /// Generate a snowflake-style ID: millisecond timestamp + sequence counter.
 ///
-/// Format: "{millis}-{seq}" as text. Lexicographically sortable within a
-/// single process. Good enough for a single-binary server; no node ID needed.
+/// Format: "{millis}-{seq}" as text. Roughly chronological; sequence counter
+/// uses `Relaxed` ordering so cross-thread IDs within the same millisecond
+/// may not be strictly monotonic. Good enough for a single-binary server.
 pub fn gen_id() -> String {
     let millis = SystemTime::now()
         .duration_since(UNIX_EPOCH)

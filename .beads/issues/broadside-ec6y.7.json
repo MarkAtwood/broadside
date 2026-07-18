@@ -1,0 +1,29 @@
+{
+  "id": "broadside-ec6y.7",
+  "title": "CircuitBreaker has redundant manual Default impl and split impl blocks",
+  "description": "delivery.rs:27-38 and 34-38: CircuitBreaker has a new() that just creates HashMap::new(), then a separate manual Default impl that calls new(). #[derive(Default)] produces identical behavior. The two separate impl blocks (lines 27 and 40) should also be merged into one. Clippy lint: new_without_default already catches the inverse of this pattern.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T18:00:10.439769439Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T18:19:18.010959591Z",
+  "closed_at": "2026-07-18T18:19:18.010959591Z",
+  "close_reason": "CircuitBreaker now uses #[derive(Default)], split impl blocks merged",
+  "labels": [
+    "idiomatic-rust",
+    "clippy-level",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ec6y.7",
+      "depends_on_id": "broadside-ec6y",
+      "type": "parent-child",
+      "created_at": "2026-07-18T18:00:10.459037574Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

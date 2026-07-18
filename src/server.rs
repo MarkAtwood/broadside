@@ -1215,14 +1215,7 @@ pub async fn is_private_host_resolved(host: &str) -> bool {
         return true;
     }
     match tokio::net::lookup_host(format!("{host}:443")).await {
-        Ok(addrs) => {
-            for addr in addrs {
-                if is_private_ip(addr.ip()) {
-                    return true;
-                }
-            }
-            false
-        }
+        Ok(mut addrs) => addrs.any(|addr| is_private_ip(addr.ip())),
         Err(_) => true,
     }
 }

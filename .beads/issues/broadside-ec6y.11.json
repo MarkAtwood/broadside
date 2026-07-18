@@ -1,0 +1,27 @@
+{
+  "id": "broadside-ec6y.11",
+  "title": "Inbox verification: signature, digest, date freshness, actor match",
+  "description": "The handle_inbox function in server.rs (lines 555-919) implements a thorough verification chain: requires Signature header, parses it, requires 'digest' and 'date' in the signed headers list, fetches the actor's public key (with SSRF guards and cache), verifies the cryptographic signature, verifies the Digest header against SHA-256 of the body, checks Date freshness within 5 minutes, and confirms the activity's actor matches the signer. On signature failure, it invalidates the cache and retries once for key rotation. This is a well-structured defense-in-depth implementation that correctly addresses replay attacks, body substitution, and actor spoofing.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "decision",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T18:00:18.628998697Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T18:15:46.233139958Z",
+  "closed_at": "2026-07-18T18:15:46.233139958Z",
+  "close_reason": "Closed",
+  "labels": [
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ec6y.11",
+      "depends_on_id": "broadside-ec6y",
+      "type": "parent-child",
+      "created_at": "2026-07-18T18:00:18.643424414Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

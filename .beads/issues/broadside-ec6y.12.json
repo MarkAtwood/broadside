@@ -1,0 +1,27 @@
+{
+  "id": "broadside-ec6y.12",
+  "title": "Private key String not zeroized on drop",
+  "description": "File: src/persona.rs, Lines: 20-22, 135-143. Severity: LOW.\n\npersona::generate_keypair() correctly notes that private_pem is Zeroizing\u003cString\u003e from the rsa crate, but the .to_string() call on line 22 copies the PEM into a plain String that is NOT zeroized on drop. Similarly, get_private_key() returns a plain String. The private key also lives as a plain String in SQLite's memory and in the delivery worker's stack (delivery.rs:225). The zeroize crate is not in Cargo.toml.\n\nImpact: If the process memory is dumped (core dump, /proc/pid/mem, cold boot attack), private keys may be recoverable from freed heap memory. This is a defense-in-depth issue, not an exploitable vulnerability in normal operation.\n\nFix: Add zeroize to Cargo.toml. Use Zeroizing\u003cString\u003e (or secrecy::SecretString) for get_private_key return type and all variables holding private key PEM data. This ensures keys are overwritten when they go out of scope.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T18:00:21.806867925Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T18:15:46.458281825Z",
+  "closed_at": "2026-07-18T18:15:46.458281825Z",
+  "close_reason": "Already addressed in pass 1 as broadside-goj2.30: rsa crate doesn't impl Zeroize on parsed keys, wrapping PEM string alone is insufficient.",
+  "labels": [
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ec6y.12",
+      "depends_on_id": "broadside-ec6y",
+      "type": "parent-child",
+      "created_at": "2026-07-18T18:00:21.825451451Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

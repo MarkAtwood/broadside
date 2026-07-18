@@ -11,5 +11,6 @@
   "issue_prefix": "broadside",
   "kv.memory.broadside-v0-1-0-built-and-live-tested": "Broadside v0.1.0 built and live-tested against mastodon.social 2026-07-17. Full federation working: Follow/Accept, signed Create{Note} delivery, hashtags, mentions, URL auto-linking. 20 source files, 12 tests, 3 fuzz targets. Profile page with content negotiation and auto dark mode. 184 beads tracked, 120+ security findings fixed across 6 codereview passes, 1 pentest, 1 Hati scan, fuzzing, and cargo audit.",
   "kv.memory.code-review-gate-every-logical-chunk-of-code": "Code review gate: every logical chunk of code generated or modified must be run through /codereview 3 times before proceeding. This is a hard rule in both AGENTS.md and CLAUDE.md.",
-  "kv.memory.codereview-findings-must-be-filed-as-beads-issues": "Codereview findings must be filed as beads issues tagged codereview. Never discard or ignore review findings — they get tracked."
+  "kv.memory.codereview-findings-must-be-filed-as-beads-issues": "Codereview findings must be filed as beads issues tagged codereview. Never discard or ignore review findings — they get tracked.",
+  "kv.memory.pass2-review-2-findings-filed-under-broadside-ec6y": "pass2-review: 2 findings filed under broadside-ec6y. P0: --field alone bails (ec6y.16). P1: attempts type inconsistency (ec6y.17). All 7 pass-1 fix areas verified correct. No regressions. Confidence: 10pct missed-bug chance."
 }

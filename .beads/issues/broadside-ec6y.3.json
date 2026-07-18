@@ -1,0 +1,28 @@
+{
+  "id": "broadside-ec6y.3",
+  "title": "delivery process_batch fetches post data per-inbox instead of per-post",
+  "description": "In delivery.rs process_batch(), the post content query (lines 172-188) runs inside the per-delivery loop. When multiple delivery_queue rows target different inboxes for the same post_id, the same post content is fetched N times. Group deliveries by post_id and fetch each post's content once. This is the same class of issue as the private key fetch but for a different query.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:59:46.867377419Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T18:19:17.952295095Z",
+  "closed_at": "2026-07-18T18:19:17.952295095Z",
+  "close_reason": "Same fix as ec6y.2 — post query hoisted into per-post cache block",
+  "labels": [
+    "efficiency",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ec6y.3",
+      "depends_on_id": "broadside-ec6y",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:59:46.88048496Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

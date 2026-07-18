@@ -1,0 +1,28 @@
+{
+  "id": "broadside-ec6y.16",
+  "title": "persona update --field without other flags bails before fields are processed",
+  "description": "In cli.rs lines 147-171, `persona::update()` is called before the `--field` processing block. When only `--field` is passed (no `--display-name`, `--bio`, `--avatar`, or `--header`), `persona::update()` bails at persona.rs line 87-88 with 'nothing to update' before the fields code on cli.rs line 156 ever runs.\n\nWhat goes wrong: `broadside persona update myuser --field \"Website=https://example.com\"` errors out with 'nothing to update' instead of setting the metadata field. Users must always pass a dummy `--display-name` (or similar) alongside `--field`, which is unintuitive.\n\nFix: either move the `--field` processing into `persona::update()`, or in cli.rs check `fields.is_empty()` before calling `persona::update()` and skip it when only fields are provided.\n\nLocations:\n- /home/mark/PROJECT/broadside/src/cli.rs lines 147-171\n- /home/mark/PROJECT/broadside/src/persona.rs lines 87-88",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T18:01:54.93769167Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T18:19:17.722657907Z",
+  "closed_at": "2026-07-18T18:19:17.722657907Z",
+  "close_reason": "CLI now checks has_profile_update before calling persona::update(), allowing --field-only invocations",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ec6y.16",
+      "depends_on_id": "broadside-ec6y",
+      "type": "parent-child",
+      "created_at": "2026-07-18T18:01:54.956247284Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

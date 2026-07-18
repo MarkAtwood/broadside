@@ -1,0 +1,19 @@
+{
+  "id": "broadside-ec6y",
+  "title": "Review: broadside 2026-07-18 pass 2",
+  "notes": "Review confidence: 10% chance of missed bug.\nLeast confident areas: content.rs process_content interaction with nested HTML (e.g. \u003cp\u003e\u003ca\u003etext\u003c/a\u003e #hashtag\u003c/p\u003e edge cases), delivery worker batch concurrency under heavy load.\nWould raise confidence if: fuzz target covered process_content with adversarial HTML containing overlapping URL/hashtag/mention patterns.\n\nPass 2 summary: 1 P0, 2 P1, 5 P2, 9 P3 (4 of which are 'good decisions'). Significantly cleaner than pass 1 (4 P0, 22 P1). The P0 is a real user-facing bug in the CLI persona update flow.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "epic",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:57:51.894130458Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T18:19:18.181520057Z",
+  "started_at": "2026-07-18T17:57:59.156023054Z",
+  "closed_at": "2026-07-18T18:19:18.181520057Z",
+  "close_reason": "Pass 2 complete. 8 fixed, 4 closed with rationale, 5 decisions.",
+  "labels": [
+    "review"
+  ]
+}

@@ -71,7 +71,7 @@ pub async fn count_for_persona(pool: &SqlitePool, persona_id: &str) -> anyhow::R
     Ok(count)
 }
 
-#[derive(sqlx::FromRow)]
+#[derive(Debug, sqlx::FromRow)]
 pub struct PostRow {
     pub id: String,
     pub persona_id: String,

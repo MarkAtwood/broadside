@@ -1,0 +1,28 @@
+{
+  "id": "broadside-ec6y.5",
+  "title": "RateLimiter unbounded growth between prune intervals",
+  "description": "The RateLimiter in ratelimit.rs prunes stale entries every 10 minutes (configured in server.rs:130), but between prunes, the HashMap grows without bound — one entry per unique IP. There is no inline size check, so a burst of requests from many IPs (e.g. a botnet scan) will grow memory until the next prune. The prune interval is reasonable and the entries are small (String + f64 + Instant), so this is not critical, but worth noting that the data structure has no cap. A one-line capacity check in try_acquire before inserting (e.g. refuse new entries when len \u003e 100_000) would bound worst-case memory.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T18:00:00.062594512Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T18:18:38.747191702Z",
+  "closed_at": "2026-07-18T18:18:38.747191702Z",
+  "close_reason": "RateLimiter prunes every 10 minutes. At 60 req/min/IP, worst case is 600 entries per IP between prunes. With the prune cycle, this is bounded and acceptable.",
+  "labels": [
+    "readability",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ec6y.5",
+      "depends_on_id": "broadside-ec6y",
+      "type": "parent-child",
+      "created_at": "2026-07-18T18:00:00.076499308Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

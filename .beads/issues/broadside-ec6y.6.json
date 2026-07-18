@@ -1,0 +1,28 @@
+{
+  "id": "broadside-ec6y.6",
+  "title": "persona update builds SQL via string concatenation of conditionals",
+  "description": "In persona.rs update() (lines 100-128), the UPDATE query is built by conditionally pushing SQL fragments into a Vec then joining them, with bind parameters added in matching conditional order. This requires the if-let chain (lines 116-127) to exactly mirror the push order (lines 101-112) — a maintenance hazard. If a future change reorders one but not the other, binds will silently attach to wrong columns. A query builder or a fixed UPDATE with COALESCE (e.g. 'SET display_name = COALESCE(?, display_name)') would decouple the two.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T18:00:05.241377997Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T18:18:38.810388581Z",
+  "closed_at": "2026-07-18T18:18:38.810388581Z",
+  "close_reason": "The dynamic SQL in persona::update is 4 possible fields. The Vec\u003cclause\u003e/Vec\u003cvalue\u003e pattern is standard and readable. COALESCE would require passing all fields every time including unchanged ones.",
+  "labels": [
+    "elegance",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ec6y.6",
+      "depends_on_id": "broadside-ec6y",
+      "type": "parent-child",
+      "created_at": "2026-07-18T18:00:05.259326666Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}
