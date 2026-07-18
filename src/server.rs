@@ -10,6 +10,20 @@ use std::sync::Arc;
 
 use crate::config::Config;
 
+/// Base CSS shared by index and profile pages. Uses CSS custom properties for theming.
+const BASE_CSS: &str = "\
+:root { --text: #1d1d1f; --muted: #6e6e73; --bg: #fff; --card: #f5f5f7; --border: #d2d2d7; --link: #0066cc; }\
+* { box-sizing: border-box; margin: 0; padding: 0; }\
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; \
+color: var(--text); background: var(--bg); line-height: 1.6; }\
+main { max-width: 640px; margin: 0 auto; padding: 2rem 1.5rem; }\
+h1 { font-size: 1.75rem; font-weight: 600; margin-bottom: 0.5rem; }\
+a { color: var(--link); text-decoration: none; }\
+a:hover { text-decoration: underline; }\
+@media (prefers-color-scheme: dark) { \
+:root { --text: #f5f5f7; --muted: #98989d; --bg: #1d1d1f; --card: #2c2c2e; --border: #3a3a3c; --link: #2997ff; }\
+body { background: var(--bg); color: var(--text); } }";
+
 /// Shared application state passed to all route handlers.
 pub struct AppState {
     pub pool: SqlitePool,
@@ -969,13 +983,7 @@ async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{domain} — Broadside</title>
-    <style>
-        :root {{ --text: #1d1d1f; --muted: #6e6e73; --bg: #fff; --border: #d2d2d7; --link: #0066cc; }}
-        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-               color: var(--text); background: var(--bg); line-height: 1.6; }}
-        main {{ max-width: 640px; margin: 0 auto; padding: 2rem 1.5rem; }}
-        h1 {{ font-size: 1.75rem; font-weight: 600; margin-bottom: 0.5rem; }}
+    <style>{base_css}
         p {{ color: var(--muted); margin-bottom: 1.5rem; }}
         ul {{ list-style: none; }}
         li {{ padding: 0.75rem 0; border-bottom: 1px solid var(--border); }}
@@ -983,11 +991,6 @@ async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
         li a:hover {{ color: var(--link); }}
         li span {{ color: var(--muted); font-size: 0.9rem; margin-left: 0.5rem; }}
         footer {{ margin-top: 2rem; color: var(--muted); font-size: 0.8rem; }}
-        a {{ color: var(--link); }}
-        @media (prefers-color-scheme: dark) {{
-            :root {{ --text: #f5f5f7; --muted: #98989d; --bg: #1d1d1f; --border: #3a3a3c; --link: #2997ff; }}
-            body {{ background: var(--bg); color: var(--text); }}
-        }}
     </style>
     <style>{extra_css}</style>
 </head>
@@ -1000,6 +1003,7 @@ async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     </main>
 </body>
 </html>"#,
+        base_css = BASE_CSS,
         domain = state.domain,
         personas_html = personas_html,
         extra_css = state.extra_css,
@@ -1109,13 +1113,8 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@{username}@{domain} — {display_name}</title>
     <link rel="alternate" type="application/activity+json" href="{actor_uri}">
-    <style>
-        :root {{ --text: #1d1d1f; --muted: #6e6e73; --bg: #fff; --card: #f5f5f7; --border: #d2d2d7; --link: #0066cc; }}
-        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-               color: var(--text); background: var(--bg); line-height: 1.6; }}
-        main {{ max-width: 640px; margin: 0 auto; padding: 2rem 1.5rem; }}
-        h1 {{ font-size: 1.75rem; font-weight: 600; margin-bottom: 0.15rem; }}
+    <style>{base_css}
+        h1 {{ margin-bottom: 0.15rem; }}
         h2 {{ font-size: 1.1rem; font-weight: 600; color: var(--muted); text-transform: uppercase;
               letter-spacing: 0.05em; margin: 1.5rem 0 0.75rem; }}
         .handle {{ color: var(--muted); font-size: 0.95rem; margin-bottom: 1rem; }}
@@ -1130,12 +1129,6 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
         article {{ padding: 1rem 0; border-bottom: 1px solid var(--border); }}
         article p {{ margin-bottom: 0.5rem; }}
         article time {{ color: var(--muted); font-size: 0.8rem; }}
-        a {{ color: var(--link); text-decoration: none; }}
-        a:hover {{ text-decoration: underline; }}
-        @media (prefers-color-scheme: dark) {{
-            :root {{ --text: #f5f5f7; --muted: #98989d; --bg: #1d1d1f; --card: #2c2c2e; --border: #3a3a3c; --link: #2997ff; }}
-            body {{ background: var(--bg); color: var(--text); }}
-        }}
     </style>
     <style>{extra_css}</style>
 </head>
@@ -1152,6 +1145,7 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
     </main>
 </body>
 </html>"#,
+        base_css = BASE_CSS,
         username = ammonia::clean(username),
         domain = state.domain,
         display_name = ammonia::clean(&display_name),

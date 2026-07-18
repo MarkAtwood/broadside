@@ -11,6 +11,20 @@ fn token_to_var(name: &str) -> Option<&'static str> {
     }
 }
 
+/// Extract CSS variable declarations from a design tokens color group.
+fn vars_from_group(group: &serde_json::Map<String, serde_json::Value>) -> String {
+    let mut vars = String::new();
+    for (name, token) in group {
+        if let (Some(var), Some(value)) = (
+            token_to_var(name),
+            token.get("$value").and_then(|v| v.as_str()),
+        ) {
+            vars.push_str(&format!("{var}:{value};"));
+        }
+    }
+    vars
+}
+
 /// Load a W3C Design Tokens JSON file and return CSS custom property overrides.
 pub fn load_theme_css(path: &str) -> String {
     if path.is_empty() {
@@ -33,33 +47,15 @@ pub fn load_theme_css(path: &str) -> String {
 
     let mut css = String::new();
 
-    // Light mode from "color" group
     if let Some(colors) = doc.get("color").and_then(|v| v.as_object()) {
-        let mut vars = String::new();
-        for (name, token) in colors {
-            if let (Some(var), Some(value)) = (
-                token_to_var(name),
-                token.get("$value").and_then(|v| v.as_str()),
-            ) {
-                vars.push_str(&format!("{var}:{value};"));
-            }
-        }
+        let vars = vars_from_group(colors);
         if !vars.is_empty() {
             css.push_str(&format!(":root{{{vars}}}"));
         }
     }
 
-    // Dark mode from "color-dark" group
     if let Some(colors) = doc.get("color-dark").and_then(|v| v.as_object()) {
-        let mut vars = String::new();
-        for (name, token) in colors {
-            if let (Some(var), Some(value)) = (
-                token_to_var(name),
-                token.get("$value").and_then(|v| v.as_str()),
-            ) {
-                vars.push_str(&format!("{var}:{value};"));
-            }
-        }
+        let vars = vars_from_group(colors);
         if !vars.is_empty() {
             css.push_str(&format!(
                 "@media(prefers-color-scheme:dark){{:root{{{vars}}}}}"
