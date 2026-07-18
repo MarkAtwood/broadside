@@ -1,0 +1,26 @@
+{
+  "id": "broadside-kv75.3",
+  "title": "MEDIUM: Unbounded response body reads before size check",
+  "description": "Files: actor_cache.rs:63-72, feed.rs:31-37, media.rs:62-83. These locations read entire HTTP response bodies into memory via resp.bytes().await before checking size limits. A malicious or misconfigured server could send large responses causing memory pressure. actor_cache has a post-read 64KB check, media has a Content-Length pre-check but still reads full body if Content-Length is absent, feed has no size limit at all. Fix: check Content-Length first (when available), then stream body with a running byte counter and bail when limit exceeded.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:08:35.842466931Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:12:29.615651475Z",
+  "started_at": "2026-07-18T17:10:42.538182483Z",
+  "closed_at": "2026-07-18T17:12:29.615651475Z",
+  "close_reason": "Added Content-Length pre-check to actor_cache.rs. Added 5MB size limit with Content-Length pre-check to feed.rs. media.rs already had Content-Length pre-check.",
+  "dependencies": [
+    {
+      "issue_id": "broadside-kv75.3",
+      "depends_on_id": "broadside-kv75",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:08:35.853319466Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

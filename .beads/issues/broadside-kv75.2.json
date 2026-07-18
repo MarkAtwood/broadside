@@ -1,0 +1,26 @@
+{
+  "id": "broadside-kv75.2",
+  "title": "MEDIUM: Missing security response headers",
+  "description": "File: server.rs (all handlers). No X-Content-Type-Options: nosniff, X-Frame-Options: DENY, Referrer-Policy, Cache-Control, or Content-Security-Policy headers on any HTTP response. Enables MIME sniffing attacks on media, clickjacking on profile/index pages, and URL leakage via Referer. Fix: add an axum middleware layer that sets security headers on all responses.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:08:31.150937106Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:12:29.557608661Z",
+  "started_at": "2026-07-18T17:10:26.678758183Z",
+  "closed_at": "2026-07-18T17:12:29.557608661Z",
+  "close_reason": "Added security_headers middleware: X-Content-Type-Options nosniff, X-Frame-Options DENY, Referrer-Policy same-origin, CSP default-src none, Cache-Control no-store.",
+  "dependencies": [
+    {
+      "issue_id": "broadside-kv75.2",
+      "depends_on_id": "broadside-kv75",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:08:31.161957829Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

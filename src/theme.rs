@@ -37,9 +37,10 @@ pub fn load_theme_css(path: &str) -> String {
     if let Some(colors) = doc.get("color").and_then(|v| v.as_object()) {
         let mut vars = String::new();
         for (name, token) in colors {
-            if let (Some(var), Some(value)) =
-                (token_to_var(name), token.get("$value").and_then(|v| v.as_str()))
-            {
+            if let (Some(var), Some(value)) = (
+                token_to_var(name),
+                token.get("$value").and_then(|v| v.as_str()),
+            ) {
                 vars.push_str(&format!("{var}:{value};"));
             }
         }
@@ -52,9 +53,10 @@ pub fn load_theme_css(path: &str) -> String {
     if let Some(colors) = doc.get("color-dark").and_then(|v| v.as_object()) {
         let mut vars = String::new();
         for (name, token) in colors {
-            if let (Some(var), Some(value)) =
-                (token_to_var(name), token.get("$value").and_then(|v| v.as_str()))
-            {
+            if let (Some(var), Some(value)) = (
+                token_to_var(name),
+                token.get("$value").and_then(|v| v.as_str()),
+            ) {
                 vars.push_str(&format!("{var}:{value};"));
             }
         }

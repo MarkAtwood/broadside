@@ -147,7 +147,7 @@ async fn process_batch(
             continue;
         }
         let inbox_domain = extract_domain(&inbox_uri);
-        if crate::server::is_private_host(&inbox_domain) {
+        if crate::server::is_private_host_resolved(&inbox_domain).await {
             mark_dead(pool, &delivery_id, "inbox_uri resolves to private host").await?;
             processed += 1;
             continue;

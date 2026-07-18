@@ -53,7 +53,7 @@ pub async fn process_remote(
     // SSRF guard: block private/internal URLs
     if let Ok(parsed) = url::Url::parse(url) {
         if let Some(host) = parsed.host_str() {
-            if crate::server::is_private_host(host) {
+            if crate::server::is_private_host_resolved(host).await {
                 bail!("media URL points to private/internal host: {url}");
             }
         }

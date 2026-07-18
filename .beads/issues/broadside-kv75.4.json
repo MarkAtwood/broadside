@@ -1,0 +1,26 @@
+{
+  "id": "broadside-kv75.4",
+  "title": "LOW: No explicit JSON depth limit on inbox parse",
+  "description": "File: server.rs, Line: 657. serde_json::from_str(body) to Value relies on serde_json's built-in 128-level recursion limit (added in 1.0.111+). Body is already capped at 256KB. This is likely sufficient, but an explicit depth check would be defense-in-depth. Fix: verify Cargo.lock has serde_json \u003e= 1.0.111, add a comment documenting the reliance on the built-in limit.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "bug",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:08:38.676279093Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:12:29.675872903Z",
+  "started_at": "2026-07-18T17:11:07.526794817Z",
+  "closed_at": "2026-07-18T17:12:29.675872903Z",
+  "close_reason": "Verified serde_json 1.0.150 in Cargo.lock (built-in 128-level recursion limit since 1.0.111). Added documenting comment at parse site.",
+  "dependencies": [
+    {
+      "issue_id": "broadside-kv75.4",
+      "depends_on_id": "broadside-kv75",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:08:38.686322288Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

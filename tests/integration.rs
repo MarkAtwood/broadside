@@ -43,6 +43,7 @@ async fn test_server() -> (String, tempfile::TempDir) {
         http_client: http_client.clone(),
         inbox_limiter: std::sync::Arc::new(broadside::ratelimit::RateLimiter::new(1000, 60)),
         actor_cache: broadside::actor_cache::ActorKeyCache::new(http_client),
+        extra_css: String::new(),
     });
 
     let app = broadside::server::router(state);

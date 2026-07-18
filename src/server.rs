@@ -36,7 +36,27 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/health", get(health))
         // Body size limit: 256KB for all POST endpoints (inbox and webhook)
         .layer(axum::extract::DefaultBodyLimit::max(256 * 1024))
+        .layer(axum::middleware::from_fn(security_headers))
         .with_state(state)
+}
+
+async fn security_headers(
+    req: axum::http::Request<axum::body::Body>,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    let mut resp = next.run(req).await;
+    let h = resp.headers_mut();
+    h.insert("X-Content-Type-Options", "nosniff".parse().unwrap());
+    h.insert("X-Frame-Options", "DENY".parse().unwrap());
+    h.insert("Referrer-Policy", "same-origin".parse().unwrap());
+    h.insert(
+        "Content-Security-Policy",
+        "default-src 'none'; style-src 'unsafe-inline'; img-src https: data:; frame-ancestors 'none'"
+            .parse()
+            .unwrap(),
+    );
+    h.insert("Cache-Control", "no-store".parse().unwrap());
+    resp
 }
 
 pub async fn serve(config: &Config) -> anyhow::Result<()> {
@@ -653,7 +673,7 @@ async fn handle_inbox(
         return StatusCode::BAD_REQUEST;
     }
 
-    // Parse activity
+    // Parse activity (serde_json >= 1.0.111 enforces 128-level recursion limit)
     let activity: serde_json::Value = match serde_json::from_str(body) {
         Ok(v) => v,
         Err(_) => return StatusCode::BAD_REQUEST,
@@ -701,7 +721,7 @@ async fn handle_inbox(
             }
             if let Ok(parsed) = url::Url::parse(follower_actor) {
                 if let Some(host) = parsed.host_str() {
-                    if is_private_host(host) {
+                    if is_private_host_resolved(host).await {
                         return StatusCode::BAD_REQUEST;
                     }
                 }
@@ -734,23 +754,28 @@ async fn handle_inbox(
 
             let inbox_uri = actor_doc["inbox"].as_str().unwrap_or("").to_string();
             // Validate shared inbox URI — same SSRF rules
-            let shared_inbox_uri = actor_doc["endpoints"]["sharedInbox"]
+            let shared_inbox_uri = match actor_doc["endpoints"]["sharedInbox"]
                 .as_str()
                 .filter(|s| s.starts_with("https://"))
-                .filter(|s| {
-                    url::Url::parse(s)
+            {
+                Some(uri) => {
+                    let host = url::Url::parse(uri)
                         .ok()
-                        .and_then(|u| u.host_str().map(|h| !is_private_host(h)))
-                        .unwrap_or(false)
-                })
-                .map(|s| s.to_string());
+                        .and_then(|u| u.host_str().map(|h| h.to_string()));
+                    match host {
+                        Some(h) if !is_private_host_resolved(&h).await => Some(uri.to_string()),
+                        _ => None,
+                    }
+                }
+                None => None,
+            };
 
             if inbox_uri.is_empty() || !inbox_uri.starts_with("https://") {
                 return StatusCode::ACCEPTED;
             }
             if let Ok(parsed) = url::Url::parse(&inbox_uri) {
                 if let Some(host) = parsed.host_str() {
-                    if is_private_host(host) {
+                    if is_private_host_resolved(host).await {
                         return StatusCode::ACCEPTED;
                     }
                 }
@@ -1129,34 +1154,58 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
         .into_response()
 }
 
-/// Check if a hostname resolves to a private/loopback/link-local address.
-pub fn is_private_host(host: &str) -> bool {
+/// Check if an IP address is private/loopback/link-local.
+fn is_private_ip(ip: std::net::IpAddr) -> bool {
     use std::net::IpAddr;
-    if let Ok(ip) = host.parse::<IpAddr>() {
-        return match ip {
-            IpAddr::V4(v4) => {
-                v4.is_loopback()
-                    || v4.is_private()
-                    || v4.is_link_local()
-                    || v4.is_broadcast()
-                    || v4.is_unspecified()
-                    || v4.octets()[0] == 169 && v4.octets()[1] == 254
-            }
-            IpAddr::V6(v6) => {
-                v6.is_loopback()
-                    || v6.is_unspecified()
-                    || (v6.segments()[0] & 0xfe00) == 0xfc00
-                    || (v6.segments()[0] & 0xffc0) == 0xfe80
-                    || v6.to_ipv4_mapped().is_some_and(|v4| {
-                        v4.is_loopback()
-                            || v4.is_private()
-                            || v4.is_link_local()
-                            || v4.octets()[0] == 169 && v4.octets()[1] == 254
-                    })
-            }
-        };
+    match ip {
+        IpAddr::V4(v4) => {
+            v4.is_loopback()
+                || v4.is_private()
+                || v4.is_link_local()
+                || v4.is_broadcast()
+                || v4.is_unspecified()
+                || (v4.octets()[0] == 169 && v4.octets()[1] == 254)
+        }
+        IpAddr::V6(v6) => {
+            v6.is_loopback()
+                || v6.is_unspecified()
+                || (v6.segments()[0] & 0xfe00) == 0xfc00
+                || (v6.segments()[0] & 0xffc0) == 0xfe80
+                || v6.to_ipv4_mapped().is_some_and(|v4| {
+                    v4.is_loopback()
+                        || v4.is_private()
+                        || v4.is_link_local()
+                        || (v4.octets()[0] == 169 && v4.octets()[1] == 254)
+                })
+        }
+    }
+}
+
+/// Check if a hostname string is a known private/loopback name or IP literal.
+pub fn is_private_host(host: &str) -> bool {
+    if let Ok(ip) = host.parse::<std::net::IpAddr>() {
+        return is_private_ip(ip);
     }
     host == "localhost" || host.ends_with(".local") || host.ends_with(".internal")
+}
+
+/// Check if a hostname resolves to private/internal addresses via DNS.
+/// Fails closed: returns true (blocked) if DNS resolution fails.
+pub async fn is_private_host_resolved(host: &str) -> bool {
+    if is_private_host(host) {
+        return true;
+    }
+    match tokio::net::lookup_host(format!("{host}:443")).await {
+        Ok(addrs) => {
+            for addr in addrs {
+                if is_private_ip(addr.ip()) {
+                    return true;
+                }
+            }
+            false
+        }
+        Err(_) => true,
+    }
 }
 
 /// Extract keyId from a Signature header value using proper quoted-string parsing.

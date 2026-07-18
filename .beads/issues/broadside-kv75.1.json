@@ -1,0 +1,26 @@
+{
+  "id": "broadside-kv75.1",
+  "title": "HIGH: DNS rebinding bypasses SSRF host check",
+  "description": "File: server.rs, Lines: 1133-1160. is_private_host() only checks hostname strings and IP literals, not DNS-resolved addresses. An attacker domain like evil.com pointing to 127.0.0.1 or 169.254.169.254 bypasses all SSRF guards. Affects: inbox Follow handler (actor fetch), actor_cache (key fetch), media (remote image download), delivery worker (inbox delivery). Fix: add async DNS resolution check before outbound requests. Resolve hostname, verify all resolved IPs against private ranges, fail closed on DNS failure.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:08:27.847285208Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:12:29.506434016Z",
+  "started_at": "2026-07-18T17:08:43.100861258Z",
+  "closed_at": "2026-07-18T17:12:29.506434016Z",
+  "close_reason": "Added is_private_host_resolved() with async DNS lookup. All 6 SSRF check points now resolve hostnames and verify IPs against private ranges. Fails closed on DNS failure.",
+  "dependencies": [
+    {
+      "issue_id": "broadside-kv75.1",
+      "depends_on_id": "broadside-kv75",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:08:27.85487847Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -45,7 +45,7 @@ impl ActorKeyCache {
         }
         if let Ok(parsed) = url::Url::parse(actor_uri) {
             if let Some(host) = parsed.host_str() {
-                if crate::server::is_private_host(host) {
+                if crate::server::is_private_host_resolved(host).await {
                     anyhow::bail!("actor URI points to private host: {actor_uri}");
                 }
             }
@@ -60,6 +60,13 @@ impl ActorKeyCache {
             .await
             .with_context(|| format!("fetching actor {actor_uri}"))?;
 
+        if let Some(len) = resp.content_length() {
+            if len > 65536 {
+                anyhow::bail!(
+                    "actor document from {actor_uri} exceeds 64KB ({len} bytes, from Content-Length)"
+                );
+            }
+        }
         let body = resp
             .bytes()
             .await
