@@ -31,8 +31,8 @@ This document covers architecture, data model, protocol behavior, and implementa
 │  ┌────────▼─────────────────────────────────────────────▼──────────────┐   │
 │  │                        core domain                                  │   │
 │  │  create_post() ──▶ insert posts row ──▶ fan out to delivery_queue  │   │
-│  │  handle_follow() ──▶ insert followers row ──▶ send Accept          │   │
-│  │  handle_undo_follow() ──▶ delete followers row                     │   │
+│  │  handle_follow() ──▶ verify sig ──▶ insert follower ──▶ send Accept│   │
+│  │  handle_undo_follow() ──▶ verify sig ──▶ delete follower row       │   │
 │  └────────┬───────────────────────────────────────────────────────────┘   │
 │           │                                                                │
 │  ┌────────▼───────────────────────────────────────────────────────────┐   │
@@ -42,49 +42,52 @@ This document covers architecture, data model, protocol behavior, and implementa
 │           │                                                                │
 │  ┌────────▼──────────┐  ┌──────────────┐                                  │
 │  │  SQLite (WAL)     │  │  media/      │                                  │
-│  │  sqlx             │  │  filesystem  │                                  │
+│  │  sqlx + FK        │  │  filesystem  │                                  │
 │  └───────────────────┘  └──────────────┘                                  │
 └───────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Shared crate: fieldwork
+## Source layout
 
-The `fieldwork` crate is shared with smallhold. It provides:
+All code lives in a single `broadside` crate. Shared abstractions will be extracted into a `fieldwork` crate when a second consumer (smallhold) needs them.
 
 | Module | Responsibility |
 |---|---|
-| `fieldwork::signatures` | HTTP signature generation (POST) and verification (inbox) |
-| `fieldwork::delivery` | Delivery queue worker: dequeue, POST, retry, backoff, circuit breaker, dead-letter |
-| `fieldwork::actor` | Actor document serialization (JSON-LD), keypair generation (RSA 2048) |
-| `fieldwork::webfinger` | WebFinger response builder and `acct:` URI parsing |
-| `fieldwork::fetch` | Remote actor fetch, JSON-LD parsing, caching |
-| `fieldwork::db` | SQLite connection pool, migration runner, common query helpers |
-| `fieldwork::nodeinfo` | NodeInfo 2.0 and 2.1 response builder |
-
-fieldwork does NOT contain:
-- Mastodon Client API types (smallhold only)
-- OAuth (smallhold only)
-- Timeline computation (smallhold only)
-- Ingestion surfaces (broadside only)
-- Any application-level business logic
+| `signatures` | HTTP signature generation (POST) and verification (inbox) |
+| `delivery` | Delivery queue worker: dequeue, POST, retry, backoff, circuit breaker, dead-letter |
+| `actor_cache` | Remote actor public key fetch and cache (24h TTL, owner validation) |
+| `persona` | Persona CRUD, RSA 2048 keypair generation (OsRng) |
+| `post` | Post creation, text-to-HTML conversion |
+| `content` | Hashtag/mention/URL detection, AP `tag` array generation |
+| `media` | Image processing: MIME sniff, resize, EXIF strip, blurhash, decompression bomb limits |
+| `sanitize` | HTML sanitization (ammonia, Mastodon-compatible allowlist), markdown rendering |
+| `config` | `config.toml` parsing and validation |
+| `db` | SQLite connection pool (WAL, foreign keys), schema initialization |
+| `server` | Axum HTTP server: all routes, content negotiation, SSRF guards, rate limiting |
+| `webhook` | Webhook ingestion endpoint |
+| `feed` | RSS/Atom feed poller |
+| `watch` | Directory watcher (notify crate) |
+| `ratelimit` | Per-IP token bucket rate limiter |
+| `id` | Snowflake-style ID generation |
 
 ## Data model
 
-Six tables. No more.
+Six tables.
 
 ### personas
 
 ```sql
 CREATE TABLE personas (
-    id          TEXT PRIMARY KEY,  -- snowflake
-    username    TEXT NOT NULL UNIQUE,
+    id           TEXT PRIMARY KEY,
+    username     TEXT NOT NULL UNIQUE,
     display_name TEXT NOT NULL DEFAULT '',
-    bio         TEXT NOT NULL DEFAULT '',
-    avatar_path TEXT,
-    header_path TEXT,
-    private_key TEXT NOT NULL,     -- PEM, RSA 2048
-    public_key  TEXT NOT NULL,     -- PEM
-    created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+    bio          TEXT NOT NULL DEFAULT '',
+    avatar_path  TEXT,
+    header_path  TEXT,
+    metadata     TEXT NOT NULL DEFAULT '[]',  -- JSON array of {name, value}
+    private_key  TEXT NOT NULL,               -- PEM, RSA 2048
+    public_key   TEXT NOT NULL,               -- PEM
+    created_at   TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 ```
 
@@ -92,12 +95,12 @@ CREATE TABLE personas (
 
 ```sql
 CREATE TABLE followers (
-    id              TEXT PRIMARY KEY,
-    persona_id      TEXT NOT NULL REFERENCES personas(id),
-    actor_uri       TEXT NOT NULL,
-    inbox_uri       TEXT NOT NULL,
+    id               TEXT PRIMARY KEY,
+    persona_id       TEXT NOT NULL REFERENCES personas(id),
+    actor_uri        TEXT NOT NULL,
+    inbox_uri        TEXT NOT NULL,
     shared_inbox_uri TEXT,
-    followed_at     TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+    followed_at      TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
     UNIQUE(persona_id, actor_uri)
 );
 ```
@@ -106,12 +109,12 @@ CREATE TABLE followers (
 
 ```sql
 CREATE TABLE posts (
-    id            TEXT PRIMARY KEY,  -- snowflake
+    id            TEXT PRIMARY KEY,
     persona_id    TEXT NOT NULL REFERENCES personas(id),
     content_html  TEXT NOT NULL,
-    content_text  TEXT NOT NULL,     -- plain text for Atom, previews
+    content_text  TEXT NOT NULL,
     published_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
-    source_ref    TEXT,             -- dedup key: feed guid, webhook idempotency key, file path
+    source_ref    TEXT,
     UNIQUE(persona_id, source_ref)
 );
 ```
@@ -177,16 +180,19 @@ Broadside produces exactly two activity types:
     "id": "https://corp.example/users/announcements/statuses/123",
     "type": "Note",
     "attributedTo": "https://corp.example/users/announcements",
-    "content": "<p>We shipped v2.0 today.</p>",
+    "content": "<p>We shipped v2.0 today. <a href=\"https://corp.example/tags/release\" class=\"mention hashtag\" rel=\"tag\">#release</a></p>",
     "published": "2026-06-13T12:00:00Z",
     "to": ["https://www.w3.org/ns/activitystreams#Public"],
     "cc": ["https://corp.example/users/announcements/followers"],
+    "tag": [
+      {"type": "Hashtag", "href": "https://corp.example/tags/release", "name": "#release"}
+    ],
     "attachment": []
   }
 }
 ```
 
-**Accept{Follow}** — automatic response to every inbound Follow:
+**Accept{Follow}** — automatic response to every inbound Follow (sent asynchronously in a background task):
 ```json
 {
   "@context": "https://www.w3.org/ns/activitystreams",
@@ -203,28 +209,34 @@ No other outbound activities. No Update, no Delete, no Announce, no Like.
 
 | Activity | Behavior |
 |---|---|
-| `Follow` | Validate signature. Insert follower. Send `Accept`. |
-| `Undo{Follow}` | Validate signature. Delete follower row. |
-| Everything else | Validate signature. Return 202 Accepted. Do nothing. |
+| `Follow` | Require valid HTTP Signature + Digest + Date. Verify actor-keyId match. Insert follower. Send `Accept` asynchronously. |
+| `Undo{Follow}` | Require valid HTTP Signature. Delete follower row (keyed on signed actor, not body actor). |
+| Everything else | Require valid HTTP Signature. Return 202 Accepted. Do nothing. |
+| No Signature header | Return 401 Unauthorized. |
 
-Signature validation prevents spoofed unfollows. All other inbound activities are accepted to prevent remote servers from retrying, but are not processed or stored.
+### Actor document
+
+Served at `GET /users/{username}` with content negotiation:
+- `Accept: application/activity+json` → JSON-LD actor document
+- `Accept: text/html` → HTML profile page (for "view on original site" links)
+
+The actor document includes: `published` (join date), `discoverable`, `manuallyApprovesFollowers` (false), `endpoints.sharedInbox`, `publicKey`, and optional `icon`, `image`, and `attachment` (PropertyValue metadata fields).
 
 ### Endpoints
 
 | Path | Method | Purpose |
 |---|---|---|
+| `/` | GET | Index page listing all personas (HTML) |
 | `/.well-known/webfinger` | GET | Actor discovery |
 | `/.well-known/nodeinfo` | GET | NodeInfo discovery |
 | `/nodeinfo/2.0` | GET | NodeInfo document |
-| `/users/{username}` | GET | Actor document (JSON-LD) |
-| `/users/{username}/inbox` | POST | Per-actor inbox |
+| `/users/{username}` | GET | Actor document (JSON-LD) or profile page (HTML) |
+| `/users/{username}/inbox` | POST | Per-actor inbox (signed) |
 | `/users/{username}/outbox` | GET | Paginated outbox (public posts) |
 | `/users/{username}/followers` | GET | Followers collection (count only, no enumeration) |
-| `/inbox` | POST | Shared inbox |
-| `/hook/{persona}` | POST | Webhook ingestion (key-authenticated) |
+| `/inbox` | POST | Shared inbox (signed) |
+| `/hook/{persona}` | POST | Webhook ingestion (Bearer token authenticated) |
 | `/health` | GET | Health check (JSON) |
-
-The outbox endpoint is required for federation correctness — some servers fetch it to backfill content when a follow is established.
 
 ## Ingestion surfaces
 
@@ -254,11 +266,11 @@ poll_interval = "15m"
 Entry-to-Note mapping:
 - `<title>` → first line of content (bold)
 - `<description>` or `<content:encoded>` → body (sanitized HTML via ammonia)
-- `<enclosure>` or `<media:content>` with image MIME → media attachment
-- `<link>` → appended as footer link
-- `<id>` or `<guid>` → `source_ref` for dedup
+- `<enclosure>` or `<media:content>` with image MIME → media attachment (capped at 8 per entry)
+- `<link>` → appended as footer link (scheme-validated, sanitized)
+- `<id>` or `<guid>` → `source_ref` for dedup (INSERT OR IGNORE)
 
-Content length cap: 5000 characters after sanitization. Entries exceeding this are truncated with a "read more" link to the original.
+Content length cap: 5000 characters after sanitization. Entries exceeding this are truncated at a UTF-8 safe boundary, re-sanitized to close open tags, and appended with a "read more" link.
 
 ### Webhook
 
@@ -270,7 +282,7 @@ persona = "releases"
 key = "random-secret-here"
 ```
 
-Endpoint: `POST /hook/{persona}?key={secret}`
+Endpoint: `POST /hook/{persona}` with `Authorization: Bearer {key}` or `X-Webhook-Key: {key}` header.
 
 ```json
 {
@@ -284,7 +296,7 @@ Endpoint: `POST /hook/{persona}?key={secret}`
 
 `content_type` is optional, defaults to `text/plain`. If `text/markdown`, content is rendered to HTML via pulldown-cmark before sanitization.
 
-Media URLs are fetched, validated, cached locally. Timeout: 30 seconds. Max size: 10 MB. Image types only.
+Media URLs are fetched (with SSRF guard), validated, cached locally. Timeout: 30 seconds. Max size: 10 MB. Max 8 media items per post. Image types only.
 
 ### Directory watcher
 
@@ -298,17 +310,23 @@ published = "/var/spool/broadside/published/"
 pattern = "*.md"
 ```
 
-Uses `notify` crate for filesystem events. New files matching the pattern are:
+Uses `notify` crate for filesystem events. Symlinks are rejected. New files matching the pattern are:
 1. Read as markdown
-2. Rendered to HTML
+2. Rendered to HTML and sanitized
 3. Federated as a Note
-4. Moved to `published/` directory
+4. Moved to `published/` directory (even on dedup/error, to prevent stranding)
 
-If images are referenced as relative paths in the markdown, they are resolved relative to the incoming directory, validated, and attached.
+## Content processing
+
+All content (from any ingestion surface) passes through `content::process_content()` at delivery/outbox serialization time:
+
+1. **Bare URLs** → auto-linked as `<a>` tags
+2. **Hashtags** (`#word`) → linked as `<a class="mention hashtag" rel="tag">` with `tag` array entry (`type: Hashtag`)
+3. **Mentions** (`@user@domain`) → linked as `<span class="h-card"><a class="u-url mention">` with `tag` array entry (`type: Mention`)
+
+This ensures hashtags are clickable in Mastodon, mentions trigger notifications, and URLs are rendered correctly.
 
 ## Delivery
-
-Delivery is handled by the `fieldwork::delivery` module, shared with smallhold.
 
 ### Fan-out
 
@@ -326,28 +344,57 @@ When a post is created, broadside queries the followers table for the posting pe
 | 6 | 8 hours |
 | 7 | dead-letter |
 
-A `410 Gone` response marks the delivery dead immediately and removes the follower.
+A `410 Gone` response marks the delivery dead immediately and removes the follower (scoped to the posting persona only).
 
 ### Circuit breaker
 
-Per-domain. Ten consecutive failures to any inbox on a domain triggers a one-hour pause for all deliveries to that domain. The breaker state is in-memory (resets on restart, which is fine — the retry schedule handles persistence).
+Per-domain. Ten consecutive failures to any inbox on a domain triggers a one-hour pause for all deliveries to that domain. After the cooldown, the failure counter resets so the domain gets a fair retry window. The breaker state is in-memory (resets on restart, which is fine — the retry schedule handles persistence).
+
+### Delivery-time validation
+
+Inbox URIs are re-validated at delivery time (HTTPS required, private IPs blocked) to defend against DNS rebinding after the initial Follow-accept.
 
 ## Security
 
-### Attack surface
+### Inbox authentication
 
-Broadside's attack surface is deliberately minimal:
+All inbound inbox requests MUST include:
+- `Signature` header — verified against the actor's public key (fetched and cached with 24h TTL, owner validated)
+- `Digest` header — SHA-256 body hash verified (prevents body substitution)
+- `Date` header — must be within 5 minutes of server time (prevents replay)
+- Actor-keyId match — the signing key's actor URI must match the activity's `actor` field
 
-- **Inbox** — accepts signed HTTP POSTs. Signature verification rejects spoofed activities. Valid activities are accepted but only Follow and Undo Follow are processed; everything else is discarded. There is no stored-XSS risk because inbound content is never stored.
-- **Webhook** — pre-shared key authentication. Should be behind a firewall or reverse proxy with IP allowlisting.
-- **WebFinger / actor / outbox** — read-only GET endpoints serving deterministic content. No user input in responses.
-- **Media** — images are validated on ingest (MIME sniffing, dimension limits, EXIF stripping). No user-uploaded media via HTTP (CLI and webhook only).
+Unsigned requests are rejected with 401. Failed verification is fail-closed (retry once after cache invalidation for key rotation).
 
-There is no OAuth, no client API, no admin UI, no login form, no session management.
+### SSRF protection
+
+Every outbound HTTP fetch (actor documents, media, Accept delivery) is guarded:
+- HTTPS required (no plaintext HTTP)
+- No automatic redirect following (reqwest `Policy::none()`)
+- Private/link-local/loopback IPs blocked (IPv4 + IPv6 + IPv4-mapped)
+- AWS metadata endpoint (169.254.x.x) blocked
+- Common private hostnames blocked (localhost, .local, .internal)
+- Actor document responses capped at 64 KB
 
 ### Content sanitization
 
-Outbound content from RSS feeds and webhook markdown is sanitized with ammonia before storage. The sanitization policy matches Mastodon's: allow `<p>`, `<br>`, `<a>`, `<span>`, basic formatting tags. Strip everything else.
+All HTML content (from RSS feeds, webhook markdown, and user input) is sanitized with ammonia before storage. The allowlist matches Mastodon's: `<p>`, `<br>`, `<a>` (href only), `<span>`, `<em>`, `<strong>`, `<del>`, `<blockquote>`, `<code>`, `<pre>`, `<ul>`, `<ol>`, `<li>`. Everything else is stripped.
+
+### Media validation
+
+Images are validated by magic-byte MIME sniffing (not extension trust), capped at 10 MB download and 64 MB decoded pixels (decompression bomb protection via `image::Limits`), stripped of EXIF metadata by re-encoding, and stored with computed blurhash.
+
+### Webhook authentication
+
+Webhook keys are transmitted via `Authorization: Bearer` header (not query string, to prevent leaking to access logs). Comparison uses SHA-256 hash then constant-time `ct_eq` to prevent both timing oracle and key-length leakage.
+
+### Rate limiting
+
+Per-IP token bucket on inbox endpoints (60 requests/minute). Keys on `X-Real-IP` header (must be set by reverse proxy). Stale buckets pruned every 10 minutes.
+
+### Operational
+
+The server warns at startup if `broadside.db` or `config.toml` are world-readable. Signing error messages are sanitized before storage in the delivery queue to prevent key material leakage.
 
 ## Configuration
 
@@ -379,26 +426,26 @@ pattern = "*.md"
 ## CLI commands
 
 ```
-broadside init <data_dir>                    # create data dir, empty DB, sample config
-broadside persona add <username>             # generate keypair, create actor
-broadside persona list                       # list personas with follower counts
-broadside persona update <username>          # update display name, bio, avatar
-broadside post --persona=<name> <content>    # publish a post
-broadside post --persona=<name> --markdown   # read markdown from stdin
-broadside queue inspect                      # show pending/dead deliveries
-broadside queue retry                        # retry all dead-lettered deliveries
-broadside queue stats                        # delivery success/failure counts
-broadside followers list --persona=<name>    # list followers
-broadside followers count                    # follower counts per persona
-broadside feed poll                          # one-shot poll of all configured feeds
-broadside status                             # overall health: personas, followers, queue
-broadside serve                              # start HTTP server
+broadside init <data_dir>                           # create data dir, empty DB, sample config
+broadside persona add <username>                    # generate RSA 2048 keypair, create actor
+broadside persona list                              # list personas with follower counts
+broadside persona update <username> [options]       # update display name, bio, avatar, metadata
+broadside post --persona=<name> <content>           # publish a post
+broadside post --persona=<name> --markdown          # read markdown from stdin
+broadside post --persona=<name> --media=<path> ...  # attach images
+broadside queue inspect                             # show pending/dead deliveries
+broadside queue retry                               # retry all dead-lettered deliveries
+broadside queue stats                               # delivery success/failure counts
+broadside followers list --persona=<name>           # list followers
+broadside followers count                           # follower counts per persona
+broadside feed-poll                                 # one-shot poll of all configured feeds
+broadside status                                    # overall health: personas, followers, queue
+broadside serve                                     # start HTTP server
 ```
 
-## Build phases
+## Known limitations
 
-1. **fieldwork crate** — extract shared code from smallhold (or build fresh if smallhold hasn't started). HTTP signatures, delivery worker, actor, WebFinger, SQLite utilities.
-2. **Core** — data model, persona management, post creation, delivery fan-out. CLI `init`, `persona`, `post`, `queue`, `serve`.
-3. **Federation** — inbox handler (Follow, Undo Follow, accept-and-discard), outbox endpoint, WebFinger, NodeInfo.
-4. **Ingestion** — RSS/Atom poller, webhook endpoint, directory watcher. Each is independent and can be built in parallel.
-5. **Hardening** — rate limiting on inbox, signature verification edge cases, media validation, integration tests against mastodon.social.
+- **RSA 2048 key size**: the `rsa` crate has a known timing side-channel advisory (RUSTSEC-2023-0071, Marvin Attack). Broadside only uses signing (not decryption), limiting exposure. No upstream fix is available. Monitor for a fix or consider migration to ed25519 when the ActivityPub ecosystem supports it.
+- **DNS rebinding**: SSRF guards check the hostname string before DNS resolution. A hostname that resolves to a private IP after the initial check could bypass the guard. Full mitigation requires resolver-level DNS rebinding protection.
+- **No Delete activity**: posts cannot be retracted once federated. A future version may add Delete support.
+- **Private keys stored plaintext**: RSA private keys are stored as PEM text in SQLite. File permissions on the database file are the primary protection. At-rest encryption would require passphrase or HSM integration.
