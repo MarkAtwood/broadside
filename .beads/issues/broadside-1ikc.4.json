@@ -1,0 +1,30 @@
+{
+  "id": "broadside-1ikc.4",
+  "title": "Delivery: fanout public posts to relay inboxes",
+  "description": "When delivering a public post (to: as:Public), add all active relay inbox URLs to the delivery target list alongside follower inboxes. This is the outbound half — ensures our posts reach the relay for redistribution. Approximately 20 lines in the delivery fanout logic.",
+  "status": "open",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T23:43:33.107367065Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T23:43:33.107367065Z",
+  "dependencies": [
+    {
+      "issue_id": "broadside-1ikc.4",
+      "depends_on_id": "broadside-1ikc",
+      "type": "parent-child",
+      "created_at": "2026-07-18T23:43:33.116881107Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-1ikc.4",
+      "depends_on_id": "broadside-1ikc.1",
+      "type": "blocks",
+      "created_at": "2026-07-18T23:43:38.749014477Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

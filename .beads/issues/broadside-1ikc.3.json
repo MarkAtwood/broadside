@@ -1,0 +1,30 @@
+{
+  "id": "broadside-1ikc.3",
+  "title": "Inbox: handle relay Accept/Reject",
+  "description": "When a relay Accepts our Follow, update the relay subscription status to active. When it Rejects, mark as rejected. The Accept/Reject handler in handle_inbox already exists for follower Accepts — extend it to recognize relay actors.",
+  "status": "open",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T23:43:33.04849038Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T23:43:33.04849038Z",
+  "dependencies": [
+    {
+      "issue_id": "broadside-1ikc.3",
+      "depends_on_id": "broadside-1ikc",
+      "type": "parent-child",
+      "created_at": "2026-07-18T23:43:33.062899949Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-1ikc.3",
+      "depends_on_id": "broadside-1ikc.1",
+      "type": "blocks",
+      "created_at": "2026-07-18T23:43:38.694769773Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}
