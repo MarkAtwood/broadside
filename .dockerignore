@@ -1,0 +1,8 @@
+target/
+.beads/
+.git/
+.claude/
+fuzz/
+*.db
+*.db-wal
+*.db-shm
