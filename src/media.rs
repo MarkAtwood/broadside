@@ -69,25 +69,9 @@ pub async fn process_remote(
         bail!("media fetch failed: HTTP {}", resp.status());
     }
 
-    // Check Content-Length header first if available
-    if let Some(len) = resp.content_length() {
-        if len > MAX_FILE_SIZE {
-            bail!("media from {url} exceeds 10MB limit ({len} bytes)");
-        }
-    }
-
-    // Stream body with size limit
-    let bytes = resp
-        .bytes()
+    let bytes = crate::http::read_body_limited(resp, MAX_FILE_SIZE as usize)
         .await
         .with_context(|| format!("reading media body from {url}"))?;
-
-    if bytes.len() as u64 > MAX_FILE_SIZE {
-        bail!(
-            "media from {url} exceeds 10MB limit ({} bytes)",
-            bytes.len()
-        );
-    }
 
     sniff_image_mime(&bytes)?;
     store_processed_image(pool, post_id, &bytes, data_dir, description).await

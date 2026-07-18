@@ -60,23 +60,9 @@ impl ActorKeyCache {
             .await
             .with_context(|| format!("fetching actor {actor_uri}"))?;
 
-        if let Some(len) = resp.content_length() {
-            if len > 65536 {
-                anyhow::bail!(
-                    "actor document from {actor_uri} exceeds 64KB ({len} bytes, from Content-Length)"
-                );
-            }
-        }
-        let body = resp
-            .bytes()
+        let body = crate::http::read_body_limited(resp, 65536)
             .await
             .with_context(|| format!("reading actor document from {actor_uri}"))?;
-        if body.len() > 65536 {
-            anyhow::bail!(
-                "actor document from {actor_uri} exceeds 64KB ({} bytes)",
-                body.len()
-            );
-        }
         let actor_doc: serde_json::Value = serde_json::from_slice(&body)
             .with_context(|| format!("parsing actor document from {actor_uri}"))?;
 

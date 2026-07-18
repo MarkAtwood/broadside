@@ -865,13 +865,12 @@ async fn handle_inbox(
                 .await
             {
                 Ok(resp) if resp.status().is_success() => {
-                    let body = match resp.bytes().await {
-                        Ok(b) if b.len() <= 65536 => b,
-                        Ok(b) => {
-                            tracing::warn!(size = b.len(), "actor document too large");
+                    let body = match crate::http::read_body_limited(resp, 65536).await {
+                        Ok(b) => b,
+                        Err(e) => {
+                            tracing::warn!("actor document fetch failed: {e}");
                             return StatusCode::ACCEPTED;
                         }
-                        Err(_) => return StatusCode::ACCEPTED,
                     };
                     match serde_json::from_slice::<serde_json::Value>(&body) {
                         Ok(v) => v,

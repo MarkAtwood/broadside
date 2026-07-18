@@ -332,19 +332,33 @@ impl Cli {
 
                 let url = format!("https://the-federation.info/register/{domain}");
                 match client.get(&url).send().await {
-                    Ok(resp) => println!("  the-federation.info: {} {}", resp.status(), if resp.status().is_success() { "OK" } else { "FAILED" }),
+                    Ok(resp) => println!(
+                        "  the-federation.info: {} {}",
+                        resp.status(),
+                        if resp.status().is_success() {
+                            "OK"
+                        } else {
+                            "FAILED"
+                        }
+                    ),
                     Err(e) => println!("  the-federation.info: FAILED ({e})"),
                 }
 
                 let url = format!("https://fedidb.org/software/broadside");
                 match client.get(&url).send().await {
-                    Ok(resp) => println!("  fedidb.org: {} (crawler will pick up NodeInfo)", resp.status()),
+                    Ok(resp) => println!(
+                        "  fedidb.org: {} (crawler will pick up NodeInfo)",
+                        resp.status()
+                    ),
                     Err(e) => println!("  fedidb.org: FAILED ({e})"),
                 }
 
                 let url = format!("https://fediverse.observer/api/v1/instance/{domain}");
                 match client.get(&url).send().await {
-                    Ok(resp) => println!("  fediverse.observer: {} (crawler will discover via peers)", resp.status()),
+                    Ok(resp) => println!(
+                        "  fediverse.observer: {} (crawler will discover via peers)",
+                        resp.status()
+                    ),
                     Err(e) => println!("  fediverse.observer: FAILED ({e})"),
                 }
 

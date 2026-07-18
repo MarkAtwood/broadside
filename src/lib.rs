@@ -4,6 +4,7 @@ pub mod content;
 pub mod db;
 pub mod delivery;
 pub mod feed;
+pub mod http;
 pub mod id;
 pub mod media;
 pub mod persona;

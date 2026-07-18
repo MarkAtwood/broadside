@@ -34,20 +34,10 @@ pub async fn poll_feed(
         .await
         .with_context(|| format!("fetching feed {}", config.url))?;
 
-    const MAX_FEED_SIZE: u64 = 5 * 1024 * 1024; // 5 MB
-    if let Some(len) = resp.content_length() {
-        if len > MAX_FEED_SIZE {
-            anyhow::bail!("feed {} exceeds 5MB limit ({len} bytes)", config.url);
-        }
-    }
-    let body = resp.bytes().await?;
-    if body.len() as u64 > MAX_FEED_SIZE {
-        anyhow::bail!(
-            "feed {} exceeds 5MB limit ({} bytes)",
-            config.url,
-            body.len()
-        );
-    }
+    const MAX_FEED_SIZE: usize = 5 * 1024 * 1024; // 5 MB
+    let body = crate::http::read_body_limited(resp, MAX_FEED_SIZE)
+        .await
+        .with_context(|| format!("reading feed {}", config.url))?;
 
     let feed = feed_rs::parser::parse(&body[..])
         .with_context(|| format!("parsing feed {}", config.url))?;
