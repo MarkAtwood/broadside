@@ -123,8 +123,13 @@ pub async fn serve(config: &Config) -> anyhow::Result<()> {
     } else {
         std::fs::read_to_string(&config.server.custom_css_path).unwrap_or_default()
     };
-    // Strip </style> to prevent style tag breakout from operator-supplied CSS
-    let extra_css = format!("{theme_css}{custom_css}").replace("</style>", "");
+    // Strip </style> (case-insensitive) to prevent style tag breakout from operator-supplied CSS
+    let extra_css = regex::RegexBuilder::new("</style>")
+        .case_insensitive(true)
+        .build()
+        .unwrap()
+        .replace_all(&format!("{theme_css}{custom_css}"), "")
+        .into_owned();
 
     let state = Arc::new(AppState {
         pool: pool.clone(),
