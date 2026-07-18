@@ -142,6 +142,13 @@ Both paths are optional. Without them, broadside uses a clean default with autom
 
 ## Deployment
 
+### Docker
+
+```bash
+docker pull fallenpegasus/broadside:latest
+docker run -v broadside-data:/data -p 3000:3000 fallenpegasus/broadside
+```
+
 ### Requirements
 
 - A domain with DNS pointing to your server

@@ -1,5 +1,5 @@
 # Build stage — compile the release binary
-FROM rust:1.96-bookworm AS builder
+FROM docker.io/library/rust:1.96-bookworm AS builder
 
 WORKDIR /build
 COPY Cargo.toml Cargo.lock ./
@@ -9,7 +9,7 @@ COPY src/ src/
 RUN cargo build --release && strip target/release/broadside
 
 # Runtime stage — minimal image
-FROM debian:bookworm-slim AS runtime
+FROM docker.io/library/debian:bookworm-slim AS runtime
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates && \
