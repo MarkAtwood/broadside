@@ -1,0 +1,19 @@
+{
+  "id": "broadside-gjiz",
+  "title": "Serve HTML profile page for browser visitors (content negotiation)",
+  "description": "GET /users/{username} currently always returns application/activity+json. When Accept header prefers text/html (browser visit, 'view on original site' link in Mastodon), serve a simple HTML profile page showing display name, bio, recent posts, and metadata fields. Use content negotiation: Accept: application/activity+json → JSON-LD, Accept: text/html → HTML page.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "feature",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T02:53:40.917678695Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T02:57:07.552787619Z",
+  "started_at": "2026-07-18T02:53:47.538205688Z",
+  "closed_at": "2026-07-18T02:57:07.552787619Z",
+  "close_reason": "HTML profile page served via content negotiation. Browser gets styled HTML with display name, bio, metadata fields, recent posts. AP clients get JSON-LD. Same URL.",
+  "labels": [
+    "federation"
+  ]
+}

@@ -259,7 +259,18 @@ async fn nodeinfo(State(state): State<Arc<AppState>>) -> Json<serde_json::Value>
 async fn actor(
     State(state): State<Arc<AppState>>,
     Path(username): Path<String>,
+    headers: HeaderMap,
 ) -> impl IntoResponse {
+    // Content negotiation: if the client prefers HTML, serve a profile page
+    let wants_html = headers
+        .get("accept")
+        .and_then(|v| v.to_str().ok())
+        .map(|v| v.contains("text/html") && !v.contains("application/activity+json"))
+        .unwrap_or(false);
+
+    if wants_html {
+        return serve_profile_html(&state, &username).await;
+    }
     let row = sqlx::query_as::<_, (String, String, String, String, String, Option<String>, Option<String>, String, String)>(
         "SELECT id, username, display_name, bio, public_key, avatar_path, header_path, created_at, metadata \
          FROM personas WHERE username = ?",
@@ -875,6 +886,117 @@ async fn health(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
         "personas": persona_count,
         "pending_deliveries": pending
     }))
+}
+
+/// Serve a simple HTML profile page for browser visitors.
+async fn serve_profile_html(state: &AppState, username: &str) -> axum::response::Response {
+    let row = sqlx::query_as::<_, (String, String, String, String)>(
+        "SELECT display_name, bio, created_at, metadata FROM personas WHERE username = ?",
+    )
+    .bind(username)
+    .fetch_optional(&state.pool)
+    .await;
+
+    let (display_name, bio, created_at, metadata_json) = match row {
+        Ok(Some(r)) => r,
+        _ => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
+    };
+
+    let persona_id = match crate::persona::get_id(&state.pool, username).await {
+        Ok(id) => id,
+        Err(_) => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
+    };
+
+    let posts = crate::post::list_for_persona(&state.pool, &persona_id, 20, 0)
+        .await
+        .unwrap_or_default();
+
+    let actor_uri = format!("https://{}/users/{}", state.domain, username);
+
+    // Build metadata fields HTML
+    let mut fields_html = String::new();
+    if let Ok(fields) = serde_json::from_str::<Vec<serde_json::Value>>(&metadata_json) {
+        for f in &fields {
+            let name = f["name"].as_str().unwrap_or("");
+            let value = f["value"].as_str().unwrap_or("");
+            fields_html.push_str(&format!(
+                "<dt>{}</dt><dd>{}</dd>",
+                ammonia::clean(name),
+                ammonia::clean(value)
+            ));
+        }
+    }
+
+    // Build posts HTML
+    let mut posts_html = String::new();
+    for p in &posts {
+        let (processed, _) = crate::content::process_content(&p.content_html, &state.domain);
+        posts_html.push_str(&format!(
+            r#"<article class="post">
+                <div class="content">{}</div>
+                <time datetime="{}">{}</time>
+            </article>"#,
+            processed, p.published_at, p.published_at
+        ));
+    }
+
+    let bio_html = if bio.is_empty() {
+        String::new()
+    } else {
+        format!("<div class=\"bio\">{}</div>", ammonia::clean(&bio))
+    };
+
+    let html = format!(
+        r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@{username}@{domain} — {display_name}</title>
+    <link rel="alternate" type="application/activity+json" href="{actor_uri}">
+    <style>
+        body {{ max-width: 600px; margin: 2em auto; padding: 0 1em; font-family: system-ui, sans-serif; color: #1a1a1a; }}
+        .profile {{ border-bottom: 1px solid #ccc; padding-bottom: 1em; margin-bottom: 1.5em; }}
+        h1 {{ margin-bottom: 0.2em; }}
+        .handle {{ color: #666; margin-top: 0; }}
+        .bio {{ margin: 0.5em 0; }}
+        .joined {{ color: #888; font-size: 0.9em; }}
+        dl {{ display: grid; grid-template-columns: auto 1fr; gap: 0.3em 1em; margin: 0.8em 0; }}
+        dt {{ font-weight: bold; color: #555; }}
+        .post {{ border-bottom: 1px solid #eee; padding: 1em 0; }}
+        .post time {{ color: #888; font-size: 0.85em; }}
+        a {{ color: #2b6cb0; }}
+    </style>
+</head>
+<body>
+    <div class="profile">
+        <h1>{display_name}</h1>
+        <p class="handle">@{username}@{domain}</p>
+        {bio_html}
+        <dl>{fields_html}</dl>
+        <p class="joined">Joined {created_at}</p>
+    </div>
+    <div class="posts">
+        {posts_html}
+    </div>
+</body>
+</html>"#,
+        username = ammonia::clean(username),
+        domain = state.domain,
+        display_name = ammonia::clean(&display_name),
+        actor_uri = actor_uri,
+        bio_html = bio_html,
+        fields_html = fields_html,
+        created_at = &created_at[..10], // just the date part
+        posts_html = posts_html,
+    );
+
+    (
+        StatusCode::OK,
+        [(axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8")],
+        html,
+    )
+        .into_response()
 }
 
 /// Check if a hostname resolves to a private/loopback/link-local address.
