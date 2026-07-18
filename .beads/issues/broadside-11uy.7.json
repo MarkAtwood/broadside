@@ -1,0 +1,29 @@
+{
+  "id": "broadside-11uy.7",
+  "title": "Backslash retained in parsed Signature header values (spec deviation)",
+  "description": "Both extract_key_id_from_sig (server.rs:824) and split_signature_params (signatures.rs:142) push the backslash character into the current token before setting escape_next. This means a quoted value containing a backslash escape (e.g. keyId=\"foo\\\"bar\") retains the backslash in the extracted string ('foo\\\"bar' rather than 'foo\"bar'). Per RFC 7230 quoted-string grammar, the backslash should be stripped from the decoded value. In practice, keyId values are URLs and never contain backslashes, and no known ActivityPub implementation sends them, so this is not currently exploitable. However it is a spec deviation that could cause subtle failures if the grammar is reused for other fields. Flag for correctness.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:27:32.477979342Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:30:26.143507814Z",
+  "closed_at": "2026-07-18T00:30:26.143507814Z",
+  "close_reason": "Fixed: redirect::Policy::none on all clients, require Digest+Date headers, corrected body limit comment",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-11uy.7",
+      "depends_on_id": "broadside-11uy",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:27:32.507224653Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

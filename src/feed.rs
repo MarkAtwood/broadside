@@ -180,6 +180,7 @@ pub async fn run_poller(
     let interval = config.interval();
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
+        .redirect(reqwest::redirect::Policy::none())
         .build()
         .unwrap_or_default();
 
@@ -202,6 +203,7 @@ pub async fn poll_all(
 ) -> anyhow::Result<()> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
+        .redirect(reqwest::redirect::Policy::none())
         .build()
         .unwrap_or_default();
     for feed in feeds {

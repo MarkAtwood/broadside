@@ -1,0 +1,29 @@
+{
+  "id": "broadside-11uy.1",
+  "title": "Delivery worker HTTP client follows redirects",
+  "description": "The delivery worker in src/delivery.rs:98 builds its own reqwest::Client with only a timeout — no redirect::Policy::none(). The shared http_client in AppState has redirect::Policy::none() (server.rs:53), but the delivery worker creates a separate client that will silently follow HTTP redirects. This bypasses the SSRF defense at delivery time: a malicious follower whose inbox responds with a 301 to an internal IP gets followed. Fix: pass redirect::Policy::none() to the delivery worker client builder, same as the main client.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:26:53.837081148Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:30:26.036455775Z",
+  "closed_at": "2026-07-18T00:30:26.036455775Z",
+  "close_reason": "Fixed: redirect::Policy::none on all clients, require Digest+Date headers, corrected body limit comment",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-11uy.1",
+      "depends_on_id": "broadside-11uy",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:26:53.865134167Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

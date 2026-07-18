@@ -1,0 +1,29 @@
+{
+  "id": "broadside-11uy.3",
+  "title": "Actor document fetch has no response body size limit",
+  "description": "actor_cache.rs:62 calls resp.json::\u003cserde_json::Value\u003e().await with no size cap. A remote actor server that is SSRF-reachable (public IP, passes is_private_host) can return a multi-hundred-MB JSON body, which is fully buffered in memory before parsing. Identical gap exists at server.rs:604 for the Follow handler's actor doc fetch. The 10MB limit in media.rs is not applied here. Fix: read bytes() with an explicit cap (e.g. 1MB) before JSON-parsing, or use reqwest .bytes_stream() with a hard stop. This is distinct from the decompression bomb fix in media.rs.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:27:04.782372509Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:30:26.072215341Z",
+  "closed_at": "2026-07-18T00:30:26.072215341Z",
+  "close_reason": "Fixed: redirect::Policy::none on all clients, require Digest+Date headers, corrected body limit comment",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-11uy.3",
+      "depends_on_id": "broadside-11uy",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:27:04.808982198Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

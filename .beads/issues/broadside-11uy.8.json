@@ -1,0 +1,28 @@
+{
+  "id": "broadside-11uy.8",
+  "title": "Confirmed correct: Signature required, actor-keyId match, SSRF re-check at delivery, symlink rejection, decompression limits, webhook key in header",
+  "description": "The following pentest fixes are correctly implemented and have no regressions found:\\n\\n1. Signature required: server.rs:457-464 rejects unsigned inbox requests with 401. Tests confirm this (test_inbox_rejects_unsigned, test_inbox_rejects_unsigned_activity, test_shared_inbox_rejects_unsigned).\\n\\n2. Actor-keyId match: server.rs:549-558 compares activity[actor] against the actor_uri derived from keyId. The derivation (split at #) is correct.\\n\\n3. actor_cache publicKey.owner validation: actor_cache.rs:73-78 requires owner == actor_uri, failing closed. Correct.\\n\\n4. Delivery SSRF re-check: delivery.rs:142-153 re-validates inbox_uri at delivery time against is_private_host. Correct.\\n\\n5. Symlink rejection: watch.rs:59-64 checks symlink_metadata before processing watched files. Correctly uses symlink_metadata (not regular metadata) so it cannot be TOCTOU-bypassed by race on the symlink itself (the check is on the symlink node, not what it points to).\\n\\n6. Decompression bomb limits: media.rs:205-211 sets Limits::default() with max_alloc=64MB and uses reader.limits(). Correct. The 10MB network cap (content_length check + post-download check) also correct.\\n\\n7. Webhook key in header: webhook.rs:38-44 reads from Authorization: Bearer or X-Webhook-Key, never from query string. Correct. Constant-time compare via SHA-256 hashes (webhook.rs:55-58) avoids timing side-channel.\\n\\n8. Date freshness: server.rs:531-538 rejects requests where |age| \u003e 300s. Uses unsigned_abs() correctly to catch both stale and future-dated requests.\\n\\n9. is_private_host covers loopback, RFC1918, link-local, broadcast, IPv6 ULA/link-local, IPv4-mapped IPv6, localhost/.local/.internal names. Coverage is solid for the defined threat model.\\n\\n10. Follow handler SSRF: follower_actor URL is validated (https only, not private) before fetching. shared_inbox_uri from the actor document is also filtered. inbox_uri is validated before storing.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "decision",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:27:58.414022954Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:30:26.159646211Z",
+  "closed_at": "2026-07-18T00:30:26.159646211Z",
+  "close_reason": "Fixed: redirect::Policy::none on all clients, require Digest+Date headers, corrected body limit comment",
+  "labels": [
+    "review",
+    "codereview"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-11uy.8",
+      "depends_on_id": "broadside-11uy",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:27:58.439067409Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

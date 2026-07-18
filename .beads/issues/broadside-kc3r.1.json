@@ -1,0 +1,30 @@
+{
+  "id": "broadside-kc3r.1",
+  "title": "Actor document fetch has no body size limit",
+  "description": "actor_cache.rs line 62 and server.rs Follow handler line 621 both call .json::\u003cserde_json::Value\u003e() on the actor document response with no body size cap. A malicious remote server can stream an unbounded response body, exhausting process memory.\n\nThe media fetch path (media.rs) correctly caps at 10MB via Content-Length check and bytes() streaming check. The same pattern needs to be applied here.\n\nFix: call .bytes_limited(MAX_ACTOR_DOC_SIZE) (or equivalent) before .json() deserialization, or use a response size cap middleware. A reasonable limit is 64KB — actor documents have no legitimate reason to exceed that.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:31:28.24506321Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:32:51.383941662Z",
+  "closed_at": "2026-07-18T00:32:51.383941662Z",
+  "close_reason": "Actor doc body capped at 64KB in both actor_cache and Follow handler",
+  "labels": [
+    "security",
+    "pentest",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-kc3r.1",
+      "depends_on_id": "broadside-kc3r",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:31:28.28146756Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

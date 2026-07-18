@@ -1,0 +1,29 @@
+{
+  "id": "broadside-11uy.2",
+  "title": "Feed poller HTTP clients follow redirects",
+  "description": "src/feed.rs builds two separate reqwest clients (run_poller:181 and poll_all:203) with only a timeout, no redirect::Policy::none(). A malicious RSS/Atom feed server can respond with a redirect to an internal address, bypassing the SSRF guard. Fix: add .redirect(reqwest::redirect::Policy::none()) to both client builders in feed.rs, matching the main http_client.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:26:57.646567345Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:30:26.054964297Z",
+  "closed_at": "2026-07-18T00:30:26.054964297Z",
+  "close_reason": "Fixed: redirect::Policy::none on all clients, require Digest+Date headers, corrected body limit comment",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-11uy.2",
+      "depends_on_id": "broadside-11uy",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:26:57.672052259Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

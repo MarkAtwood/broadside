@@ -1,0 +1,29 @@
+{
+  "id": "broadside-11uy.6",
+  "title": "Body size limit comment is wrong — 256KB applies to webhook too",
+  "description": "server.rs:35-36 says 'webhook is capped by axum default (2MB)' but DefaultBodyLimit::max(256*1024) is a global layer on the entire router, including the /hook/{persona} route. Webhooks therefore get a 256KB cap, not 2MB. This is actually more secure than the comment claims, but the comment is false and could mislead future maintainers into thinking webhooks can receive up to 2MB. If 256KB is intentional for all routes, remove the misleading parenthetical. If webhooks legitimately need more headroom, the limit needs to be applied per-route.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:27:26.035837222Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:30:26.128584952Z",
+  "closed_at": "2026-07-18T00:30:26.128584952Z",
+  "close_reason": "Fixed: redirect::Policy::none on all clients, require Digest+Date headers, corrected body limit comment",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-11uy.6",
+      "depends_on_id": "broadside-11uy",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:27:26.064259531Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

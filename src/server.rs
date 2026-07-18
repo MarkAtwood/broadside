@@ -32,7 +32,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/inbox", post(shared_inbox))
         .route("/hook/{persona}", post(crate::webhook::handle_webhook))
         .route("/health", get(health))
-        // Body size limit: 256KB for inbox, webhook is capped by axum default (2MB)
+        // Body size limit: 256KB for all POST endpoints (inbox and webhook)
         .layer(axum::extract::DefaultBodyLimit::max(256 * 1024))
         .with_state(state)
 }
@@ -512,30 +512,47 @@ async fn handle_inbox(
         }
     }
 
-    // Verify Digest header if present (body integrity)
-    if let Some(digest_header) = headers.get("digest").and_then(|v| v.to_str().ok()) {
-        if let Some(expected_b64) = digest_header.strip_prefix("SHA-256=") {
-            use base64::engine::general_purpose::STANDARD as B64;
-            use base64::Engine;
-            use sha2::Digest;
-            let actual = sha2::Sha256::digest(body.as_bytes());
-            let actual_b64 = B64.encode(actual);
-            if actual_b64 != expected_b64 {
-                tracing::warn!("Digest mismatch");
-                return StatusCode::BAD_REQUEST;
-            }
+    // Verify Digest header — REQUIRED.
+    // The Digest header cryptographically binds the body to the signature
+    // (when 'digest' is in the signed headers). Without it, body substitution is trivial.
+    let digest_header = match headers.get("digest").and_then(|v| v.to_str().ok()) {
+        Some(d) => d.to_string(),
+        None => {
+            tracing::debug!("rejecting request without Digest header");
+            return StatusCode::BAD_REQUEST;
         }
+    };
+    if let Some(expected_b64) = digest_header.strip_prefix("SHA-256=") {
+        use base64::engine::general_purpose::STANDARD as B64;
+        use base64::Engine;
+        use sha2::Digest;
+        let actual = sha2::Sha256::digest(body.as_bytes());
+        let actual_b64 = B64.encode(actual);
+        if actual_b64 != expected_b64 {
+            tracing::warn!("Digest mismatch");
+            return StatusCode::BAD_REQUEST;
+        }
+    } else {
+        return StatusCode::BAD_REQUEST;
     }
 
-    // Verify Date freshness (reject requests older than 5 minutes)
-    if let Some(date_str) = headers.get("date").and_then(|v| v.to_str().ok()) {
-        if let Ok(date) = chrono::DateTime::parse_from_rfc2822(date_str) {
-            let age = chrono::Utc::now().signed_duration_since(date);
-            if age.num_seconds().unsigned_abs() > 300 {
-                tracing::debug!("rejecting stale request (age: {}s)", age.num_seconds());
-                return StatusCode::UNAUTHORIZED;
-            }
+    // Verify Date header freshness — REQUIRED.
+    // Date must be present and within 5 minutes to prevent replay attacks.
+    let date_str = match headers.get("date").and_then(|v| v.to_str().ok()) {
+        Some(d) => d.to_string(),
+        None => {
+            tracing::debug!("rejecting request without Date header");
+            return StatusCode::BAD_REQUEST;
         }
+    };
+    if let Ok(date) = chrono::DateTime::parse_from_rfc2822(&date_str) {
+        let age = chrono::Utc::now().signed_duration_since(date);
+        if age.num_seconds().unsigned_abs() > 300 {
+            tracing::debug!("rejecting stale request (age: {}s)", age.num_seconds());
+            return StatusCode::UNAUTHORIZED;
+        }
+    } else {
+        return StatusCode::BAD_REQUEST;
     }
 
     // Parse activity
@@ -601,7 +618,15 @@ async fn handle_inbox(
                 .await
             {
                 Ok(resp) if resp.status().is_success() => {
-                    match resp.json::<serde_json::Value>().await {
+                    let body = match resp.bytes().await {
+                        Ok(b) if b.len() <= 65536 => b,
+                        Ok(b) => {
+                            tracing::warn!(size = b.len(), "actor document too large");
+                            return StatusCode::ACCEPTED;
+                        }
+                        Err(_) => return StatusCode::ACCEPTED,
+                    };
+                    match serde_json::from_slice::<serde_json::Value>(&body) {
                         Ok(v) => v,
                         Err(_) => return StatusCode::ACCEPTED,
                     }

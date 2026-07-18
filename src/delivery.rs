@@ -97,6 +97,7 @@ pub async fn run_worker(pool: SqlitePool, domain: String) {
     let breaker = Arc::new(Mutex::new(CircuitBreaker::new()));
     let client = match reqwest::Client::builder()
         .timeout(Duration::from_secs(30))
+        .redirect(reqwest::redirect::Policy::none())
         .build()
     {
         Ok(c) => c,

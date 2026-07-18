@@ -1,0 +1,5 @@
+{"id":"019f729e-edd8-796a-85ab-4d87147d388d","issue_id":"broadside-11uy.6","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T00:27:26.04061754Z"}
+{"id":"019f729e-eddd-77fa-b5af-cd14ea28549c","issue_id":"broadside-11uy.6","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-18T00:27:26.045523356Z"}
+{"id":"019f729e-ede2-737f-9ca0-2bfc610c59f4","issue_id":"broadside-11uy.6","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: codereview","created_at":"2026-07-18T00:27:26.050229697Z"}
+{"id":"019f729e-ede6-7b51-966d-177b1373fd8a","issue_id":"broadside-11uy.6","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T00:27:26.054742387Z"}
+{"id":"019f72a1-ad55-7690-bab1-34d257bfe3e4","issue_id":"broadside-11uy.6","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: redirect::Policy::none on all clients, require Digest+Date headers, corrected body limit comment","created_at":"2026-07-18T00:30:26.133430646Z"}

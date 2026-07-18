@@ -51,16 +51,26 @@ impl ActorKeyCache {
             }
         }
 
-        // Fetch actor document
-        let actor_doc = self
+        // Fetch actor document with body size limit (64KB is sufficient for any actor doc)
+        let resp = self
             .client
             .get(actor_uri)
             .header("Accept", "application/activity+json")
             .send()
             .await
-            .with_context(|| format!("fetching actor {actor_uri}"))?
-            .json::<serde_json::Value>()
+            .with_context(|| format!("fetching actor {actor_uri}"))?;
+
+        let body = resp
+            .bytes()
             .await
+            .with_context(|| format!("reading actor document from {actor_uri}"))?;
+        if body.len() > 65536 {
+            anyhow::bail!(
+                "actor document from {actor_uri} exceeds 64KB ({} bytes)",
+                body.len()
+            );
+        }
+        let actor_doc: serde_json::Value = serde_json::from_slice(&body)
             .with_context(|| format!("parsing actor document from {actor_uri}"))?;
 
         let public_key_pem = actor_doc["publicKey"]["publicKeyPem"]

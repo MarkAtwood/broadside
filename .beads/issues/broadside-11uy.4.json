@@ -1,0 +1,29 @@
+{
+  "id": "broadside-11uy.4",
+  "title": "Digest header enforcement is optional — body integrity not required",
+  "description": "server.rs:516 checks the Digest header only if present: 'if let Some(digest_header)'. An attacker can omit the Digest header entirely. If date and digest are listed in the Signature headers= field (the default fallback in signatures.rs:122), the signature will still include a digest pseudo-header — but that digest is computed by the sender and included only in the signed string, not verified against the actual body unless the Digest header is also sent. In practice most ActivityPub implementations send Digest, so this gap rarely fires. However the Digest check was added to prevent body-swapping after signature verification; making it conditional lets an attacker sign a valid empty body and swap the actual payload. Fix: if the Digest header name appears in the Signature headers= field, require and verify the Digest header; reject if absent.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:27:12.174069398Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:30:26.092764893Z",
+  "closed_at": "2026-07-18T00:30:26.092764893Z",
+  "close_reason": "Fixed: redirect::Policy::none on all clients, require Digest+Date headers, corrected body limit comment",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-11uy.4",
+      "depends_on_id": "broadside-11uy",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:27:12.202479985Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}
