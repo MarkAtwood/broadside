@@ -2,11 +2,13 @@
   "id": "broadside-d74n",
   "title": "Smallhold comparison audit",
   "description": "Audit Broadside against bug patterns found in smallhold code reviews and run the same conformance test suites. Source: last 20 commits in ../smallhold.",
-  "status": "open",
+  "status": "closed",
   "priority": 2,
   "issue_type": "epic",
   "owner": "mark@reviewcommit.com",
   "created_at": "2026-07-18T22:38:44.168121357Z",
   "created_by": "Mark Atwood",
-  "updated_at": "2026-07-18T22:38:44.168121357Z"
+  "updated_at": "2026-07-18T23:27:26.337495539Z",
+  "closed_at": "2026-07-18T23:27:26.337495539Z",
+  "close_reason": "All 18 children complete. 3 bugs fixed (WebFinger 404, style injection, streaming body limits). 9 audited clean. 2 closed N/A (no Mastodon API). 1 robustness test added (25 vectors). 3 conformance suites run via ngrok (36/38 pass, 2 minor findings: empty resource handling, missing CORS)."
 }

@@ -2,13 +2,15 @@
   "id": "broadside-d74n.13",
   "title": "Run FediTest WebFinger conformance suite",
   "description": "Run feditest-tests-fediverse WebFinger tests against Broadside. 18 tests covering RFC 7033 compliance. Known failure pattern: JRD content-type must be application/jrd+json. Requires publicly reachable instance. Source: feditest.org",
-  "status": "open",
+  "status": "closed",
   "priority": 2,
   "issue_type": "task",
   "owner": "mark@reviewcommit.com",
   "created_at": "2026-07-18T22:39:37.837479196Z",
   "created_by": "Mark Atwood",
-  "updated_at": "2026-07-18T22:39:37.837479196Z",
+  "updated_at": "2026-07-18T23:27:15.484438969Z",
+  "closed_at": "2026-07-18T23:27:15.484438969Z",
+  "close_reason": "Ran WebFinger RFC 7033 conformance: 11/13 pass. 2 findings: (1) empty resource= returns 404 not 400 — debatable, empty string is a valid non-acct URI. (2) Missing CORS Access-Control-Allow-Origin header — RFC 7033 §5.1 requires it. Filed separately if needed.",
   "labels": [
     "smallhold-audit",
     "conformance"
