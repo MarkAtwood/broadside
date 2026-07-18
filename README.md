@@ -48,6 +48,7 @@ Hashtags (`#release`), mentions (`@user@instance`), and URLs are automatically l
 - Multiple personas per domain (`@engineering@`, `@blog@`, `@releases@`)
 - Media attachments with MIME validation, EXIF stripping, resize, and blurhash
 - Profile metadata fields (Website, GitHub, etc. — rendered on Mastodon profiles)
+- Brand theming via W3C Design Tokens (light/dark mode) or custom CSS
 - Delivery retry with exponential backoff and per-domain circuit breaker
 - Rate limiting, SSRF protection, Digest/Date verification
 - Graceful shutdown on SIGTERM/SIGINT
@@ -96,6 +97,47 @@ path = "/var/spool/broadside/incoming/"
 published = "/var/spool/broadside/published/"
 pattern = "*.md"
 ```
+
+## Brand theming
+
+Profile pages match your brand out of the box. Two options, composable:
+
+**W3C Design Tokens** — hand broadside a standard [design tokens](https://tr.designtokens.org/format/) JSON file exported from Figma, Style Dictionary, or any tokens tool. Broadside maps six named tokens to its UI, with automatic light/dark mode support.
+
+```toml
+[server]
+theme_tokens_path = "/var/lib/broadside/brand-tokens.json"
+```
+
+```json
+{
+  "color": {
+    "primary":    { "$value": "#0052CC" },
+    "background": { "$value": "#FFFFFF" },
+    "surface":    { "$value": "#F4F5F7" },
+    "text":       { "$value": "#172B4D" },
+    "muted":      { "$value": "#6B778C" },
+    "border":     { "$value": "#DFE1E6" }
+  },
+  "color-dark": {
+    "primary":    { "$value": "#4C9AFF" },
+    "background": { "$value": "#1B2638" },
+    "surface":    { "$value": "#253858" },
+    "text":       { "$value": "#E6EDFA" },
+    "muted":      { "$value": "#8993A4" },
+    "border":     { "$value": "#344563" }
+  }
+}
+```
+
+**Custom CSS** — for anything beyond colors (fonts, layout, logo), point to a CSS file. It layers on top of the design tokens.
+
+```toml
+[server]
+custom_css_path = "/var/lib/broadside/brand.css"
+```
+
+Both paths are optional. Without them, broadside uses a clean default with automatic dark mode.
 
 ## Deployment
 

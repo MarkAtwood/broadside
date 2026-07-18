@@ -10,7 +10,7 @@
 
 *Seattle, WA* — **Broadside** is an open-source server that lets any organization publish to the fediverse as a single binary with zero infrastructure dependencies. People on Mastodon, Misskey, GoToSocial, and any other ActivityPub service can follow an organization's broadside account and see its posts in their home timeline — no special client, no account on a corporate platform, no algorithm.
 
-Organizations post content through whichever surface fits their workflow: a CLI command, an RSS feed that broadside polls automatically, a webhook from a CI pipeline, or a markdown file dropped in a directory. Broadside federates the content to followers using standard ActivityPub. From a follower's perspective, the account looks and behaves like any other fediverse account — with a profile page, metadata fields, avatar, and clickable hashtags.
+Organizations post content through whichever surface fits their workflow: a CLI command, an RSS feed that broadside polls automatically, a webhook from a CI pipeline, or a markdown file dropped in a directory. Broadside federates the content to followers using standard ActivityPub. From a follower's perspective, the account looks and behaves like any other fediverse account — with a profile page, metadata fields, avatar, and clickable hashtags. Profile pages are brand-ready: organizations apply their visual identity through W3C Design Tokens or custom CSS, with automatic light and dark mode support.
 
 "Organizations keep asking how to 'get on Mastodon' and the answer is always 'run a full Mastodon stack or beg for an account on someone else's instance,'" said the project author. "Broadside is the third option: own your identity, publish your content, skip everything else."
 
@@ -63,6 +63,10 @@ A: Yes. `#hashtag` in your post content becomes a clickable hashtag in Mastodon.
 **Q: Can we add profile metadata like Website and GitHub links?**
 
 A: Yes. `broadside persona update NAME --field "Website=https://..." --field "GitHub=https://..."` sets metadata fields that appear on your Mastodon profile page.
+
+**Q: Can we match our brand guidelines?**
+
+A: Yes. Broadside accepts a W3C Design Tokens JSON file — the same format exported by Figma, Style Dictionary, and enterprise design systems. Define six color tokens (primary, background, surface, text, muted, border) for light and dark mode, and every profile page reflects your brand. For deeper customization (fonts, layout, logo), add a custom CSS file. Both options compose and both are optional — the default is a clean, dark-mode-aware design that works out of the box.
 
 **Q: Can we schedule posts?**
 
@@ -122,7 +126,7 @@ A: Yes, and more naturally than a full Mastodon hosting service. Each customer g
 
 **Q: What's the competitive landscape?**
 
-A: Nothing does exactly this. Mastodon, GoToSocial, Pleroma, and Misskey are all interactive social servers. Honk and snac are minimal but still assume a human user. WordPress plugins (ActivityPub for WordPress) federate blog posts but require WordPress. Broadside is the first purpose-built broadcast-only ActivityPub server.
+A: Nothing does exactly this. Mastodon, GoToSocial, Pleroma, and Misskey are all interactive social servers. Honk and snac are minimal but still assume a human user. WordPress plugins (ActivityPub for WordPress) federate blog posts but require WordPress. None of these offer brand-consistent profile theming through standard design token workflows. Broadside is the first purpose-built broadcast-only ActivityPub server with enterprise brand integration.
 
 **Q: What's v2?**
 
