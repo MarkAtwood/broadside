@@ -1,0 +1,26 @@
+{
+  "id": "broadside-d74n.15",
+  "title": "Run go-fed AP compliance tests",
+  "description": "Run test.activitypub.dev against Broadside. 12 tests covering: WebFinger, actor document shape, content negotiation, outbox, collections, inbox HTTP Signatures, NodeInfo, host-meta, featured collection, publicKey. Hosted test runner, no local install needed.",
+  "status": "open",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T22:39:40.562370507Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T22:39:40.562370507Z",
+  "labels": [
+    "smallhold-audit",
+    "conformance"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-d74n.15",
+      "depends_on_id": "broadside-d74n",
+      "type": "parent-child",
+      "created_at": "2026-07-18T22:39:40.590132991Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

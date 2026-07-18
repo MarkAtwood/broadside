@@ -1,0 +1,3 @@
+{"id":"019f7762-5b56-77e8-b729-c57b599b80f5","issue_id":"broadside-d74n.5","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T22:39:22.454518952Z"}
+{"id":"019f7762-5b5b-7939-a9e9-1a1155b26af3","issue_id":"broadside-d74n.5","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: smallhold-audit","created_at":"2026-07-18T22:39:22.4596051Z"}
+{"id":"019f7768-86c9-7218-878f-81f623d02a34","issue_id":"broadside-d74n.5","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Not vulnerable: content.rs uses position-based right-to-left replace_range from pre-collected matches. No .replace() on content strings.","created_at":"2026-07-18T22:46:06.793138037Z"}

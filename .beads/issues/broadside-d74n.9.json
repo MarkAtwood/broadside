@@ -1,0 +1,28 @@
+{
+  "id": "broadside-d74n.9",
+  "title": "No Content-Length guard on remote fetches",
+  "description": "Unbounded resp.bytes().await on actor/WebFinger fetches allows a malicious remote to send multi-gigabyte responses. Must check Content-Length against a cap (e.g. 1MB) before reading. Audit all outbound fetch call sites.",
+  "notes": "CONFIRMED: 4 call sites buffer .bytes().await before post-hoc size check. Sites: actor_cache.rs:70, server.rs:863, feed.rs:43, media.rs:80. Fix requires streaming reader with byte cap (resp.bytes_stream() with accumulation limit). Content-Length pre-checks exist but are advisory only (server can omit/lie).",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T22:39:33.670145937Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T23:01:34.753307291Z",
+  "closed_at": "2026-07-18T23:01:34.753307291Z",
+  "close_reason": "Fixed: new src/http.rs read_body_limited() streams chunks via resp.chunk() with hard byte cap. Aborts immediately when limit exceeded — never allocates unbounded memory. Updated all 4 call sites: actor_cache.rs, server.rs (Follow handler), feed.rs, media.rs. All 13 tests passing.",
+  "labels": [
+    "smallhold-audit"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-d74n.9",
+      "depends_on_id": "broadside-d74n",
+      "type": "parent-child",
+      "created_at": "2026-07-18T22:39:33.691819581Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

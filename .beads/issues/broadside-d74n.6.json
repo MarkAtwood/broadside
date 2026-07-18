@@ -1,0 +1,27 @@
+{
+  "id": "broadside-d74n.6",
+  "title": "Snowflake ID: relaxed memory ordering on CAS",
+  "description": "Using Ordering::Relaxed on atomic load and compare_exchange for ID generation permits stale reads and duplicate/non-monotonic IDs on ARM. Correct pairing: Acquire on load, AcqRel on CAS. Check Broadside's ID generator.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T22:39:25.209794648Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T22:46:06.852179467Z",
+  "closed_at": "2026-07-18T22:46:06.852179467Z",
+  "close_reason": "Not vulnerable: id.rs uses fetch_add (indivisible RMW), not a CAS loop. Relaxed ordering is safe for uniqueness with fetch_add. Non-monotonic ordering within same millisecond is documented and benign.",
+  "labels": [
+    "smallhold-audit"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-d74n.6",
+      "depends_on_id": "broadside-d74n",
+      "type": "parent-child",
+      "created_at": "2026-07-18T22:39:25.232075691Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

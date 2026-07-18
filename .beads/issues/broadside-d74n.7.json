@@ -1,0 +1,27 @@
+{
+  "id": "broadside-d74n.7",
+  "title": "Debug derive leaks secret_key in logs",
+  "description": "Any config struct with a secret_key field that derives Debug will print the key in plaintext when debug-logged. Must use manual Debug impl with [REDACTED]. Audit Broadside's structs with secret fields.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T22:39:27.179447235Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T22:42:17.388812778Z",
+  "closed_at": "2026-07-18T22:42:17.388812778Z",
+  "close_reason": "Not vulnerable: WebhookConfig has manual Debug impl with [REDACTED]. Private keys stored as bare strings, never in Debug-derived structs. AppState has no Debug derive.",
+  "labels": [
+    "smallhold-audit"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-d74n.7",
+      "depends_on_id": "broadside-d74n",
+      "type": "parent-child",
+      "created_at": "2026-07-18T22:39:27.20227507Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

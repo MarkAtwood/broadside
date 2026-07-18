@@ -1,0 +1,27 @@
+{
+  "id": "broadside-d74n.3",
+  "title": "UTF-8 panic: byte-index string truncation",
+  "description": "Using \u0026str[..N] for byte-index slicing panics if a multi-byte character straddles the boundary. Any truncation of user-generated Unicode text (OG descriptions, summaries, etc.) must use .chars().take(N). Audit all string truncation in Broadside.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T22:39:17.688200897Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T22:42:17.272440869Z",
+  "closed_at": "2026-07-18T22:42:17.272440869Z",
+  "close_reason": "Not vulnerable: feed.rs:truncate_utf8 already uses is_char_boundary for safe UTF-8 truncation. No byte-index slicing on user text found.",
+  "labels": [
+    "smallhold-audit"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-d74n.3",
+      "depends_on_id": "broadside-d74n",
+      "type": "parent-child",
+      "created_at": "2026-07-18T22:39:17.709760921Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

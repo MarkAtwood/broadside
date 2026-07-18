@@ -1,0 +1,27 @@
+{
+  "id": "broadside-d74n.2",
+  "title": "Tag names: strip # prefix in Mastodon API responses",
+  "description": "AP tag objects use name: #rust but the Mastodon REST API must use name: rust (no #). Conflating them causes clients to render ##rust. Check Broadside's tag serialization in API responses vs AP objects.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T22:39:14.947798435Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T22:42:17.208254546Z",
+  "closed_at": "2026-07-18T22:42:17.208254546Z",
+  "close_reason": "N/A: Broadside has no Mastodon REST API yet. AP tag serialization correctly uses # prefix. If Mastodon API is added, must strip # in API tag objects.",
+  "labels": [
+    "smallhold-audit"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-d74n.2",
+      "depends_on_id": "broadside-d74n",
+      "type": "parent-child",
+      "created_at": "2026-07-18T22:39:14.968488223Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

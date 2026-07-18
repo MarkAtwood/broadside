@@ -1,0 +1,28 @@
+{
+  "id": "broadside-d74n.1",
+  "title": "WebFinger: return 404 not 400 for non-acct: URIs",
+  "description": "Per RFC 7033, WebFinger queries with non-acct: schemes (https:, mailto:) must get 404 Not Found, not 400 Bad Request. FediTest catches this. Check Broadside's WebFinger handler.",
+  "notes": "CONFIRMED: src/server.rs:256 returns StatusCode::BAD_REQUEST for non-acct: URIs. Fix: change to StatusCode::NOT_FOUND and update error message to 'resource not found'. Also add integration test for non-acct: URI expecting 404.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T22:39:12.582881485Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T22:44:05.701195205Z",
+  "closed_at": "2026-07-18T22:44:05.701195205Z",
+  "close_reason": "Fixed: src/server.rs:256 now returns 404 Not Found instead of 400 Bad Request for non-acct: URI schemes. Added integration test test_webfinger_non_acct_uri. All 13 tests passing.",
+  "labels": [
+    "smallhold-audit"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-d74n.1",
+      "depends_on_id": "broadside-d74n",
+      "type": "parent-child",
+      "created_at": "2026-07-18T22:39:12.604841298Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

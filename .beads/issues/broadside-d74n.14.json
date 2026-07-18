@@ -1,0 +1,25 @@
+{
+  "id": "broadside-d74n.14",
+  "title": "instance.contact_account returns null",
+  "description": "Both /api/v1/instance and /api/v2/instance should return a real Account object for contact_account, not null. Clients display this on About screen. v1: contact_account field, v2: contact.account nested field.",
+  "status": "open",
+  "priority": 3,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T22:39:39.588819586Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T22:39:39.588819586Z",
+  "labels": [
+    "smallhold-audit"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-d74n.14",
+      "depends_on_id": "broadside-d74n",
+      "type": "parent-child",
+      "created_at": "2026-07-18T22:39:39.609737099Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

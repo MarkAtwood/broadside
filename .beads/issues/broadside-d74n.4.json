@@ -1,0 +1,27 @@
+{
+  "id": "broadside-d74n.4",
+  "title": "HTTP Sig: require Date and Digest headers",
+  "description": "HTTP Signature verification must require both Date and Digest headers per the Mastodon HTTP Signature profile. Using if let Some(...) silently passes when either is missing. Check Broadside's signature verification.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T22:39:19.759275263Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T22:42:17.331523678Z",
+  "closed_at": "2026-07-18T22:42:17.331523678Z",
+  "close_reason": "Not vulnerable: server.rs:699-798 enforces both Date and Digest as mandatory with hard 400 rejections. Uses match/None pattern, not if-let-Some.",
+  "labels": [
+    "smallhold-audit"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-d74n.4",
+      "depends_on_id": "broadside-d74n",
+      "type": "parent-child",
+      "created_at": "2026-07-18T22:39:19.779695442Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

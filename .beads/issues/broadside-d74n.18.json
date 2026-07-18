@@ -1,0 +1,26 @@
+{
+  "id": "broadside-d74n.18",
+  "title": "Run ActivityPub.Academy live federation test",
+  "description": "Create account at activitypub.academy and test follow/post/reply/boost/like/delete round-trips with Broadside. Validates end-to-end federation plumbing against a known-good Mastodon instance. Manual smoke test.",
+  "status": "open",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T22:39:48.345291203Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T22:39:48.345291203Z",
+  "labels": [
+    "smallhold-audit",
+    "conformance"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-d74n.18",
+      "depends_on_id": "broadside-d74n",
+      "type": "parent-child",
+      "created_at": "2026-07-18T22:39:48.374576323Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

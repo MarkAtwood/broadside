@@ -1,0 +1,3 @@
+{"id":"019f7762-790a-7584-a529-09e67e9391a8","issue_id":"broadside-d74n.8","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T22:39:30.058362148Z"}
+{"id":"019f7762-790f-7677-97a8-c74ee3cc46ac","issue_id":"broadside-d74n.8","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: smallhold-audit","created_at":"2026-07-18T22:39:30.063424248Z"}
+{"id":"019f7768-8749-7b34-91ca-939dba1ea95a","issue_id":"broadside-d74n.8","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Not vulnerable: webhook.rs uses subtle::ConstantTimeEq with SHA-256 pre-hash. No OAuth endpoints exist. The only secret comparison is already constant-time.","created_at":"2026-07-18T22:46:06.92173528Z"}

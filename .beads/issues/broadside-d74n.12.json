@@ -1,0 +1,27 @@
+{
+  "id": "broadside-d74n.12",
+  "title": "Style tag injection in custom CSS",
+  "description": "If custom CSS or theme tokens are interpolated into a style block, a \u003c/style\u003e sequence breaks out of the tag. Must strip \u003c/style\u003e (case-insensitive) before rendering. Check Broadside's profile/theme CSS rendering.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T22:39:37.547880848Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T22:46:46.784354819Z",
+  "closed_at": "2026-07-18T22:46:46.784354819Z",
+  "close_reason": "Fixed: server.rs line 127 now uses case-insensitive regex to strip all variants of \u003c/style\u003e (\u003c/STYLE\u003e, \u003c/Style\u003e, etc.). All 13 tests passing.",
+  "labels": [
+    "smallhold-audit"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-d74n.12",
+      "depends_on_id": "broadside-d74n",
+      "type": "parent-child",
+      "created_at": "2026-07-18T22:39:37.571430783Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

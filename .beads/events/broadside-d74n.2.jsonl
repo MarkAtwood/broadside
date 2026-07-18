@@ -1,0 +1,3 @@
+{"id":"019f7762-3e08-7e3c-ad8d-d147784c699d","issue_id":"broadside-d74n.2","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T22:39:14.952933978Z"}
+{"id":"019f7762-3e0e-7075-b3fb-3d5dbddef8e6","issue_id":"broadside-d74n.2","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: smallhold-audit","created_at":"2026-07-18T22:39:14.958030657Z"}
+{"id":"019f7765-05fe-774c-a28a-e998019df31c","issue_id":"broadside-d74n.2","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"N/A: Broadside has no Mastodon REST API yet. AP tag serialization correctly uses # prefix. If Mastodon API is added, must strip # in API tag objects.","created_at":"2026-07-18T22:42:17.214479597Z"}

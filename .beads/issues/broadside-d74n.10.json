@@ -1,0 +1,27 @@
+{
+  "id": "broadside-d74n.10",
+  "title": "Missing security response headers",
+  "description": "Check for X-Content-Type-Options: nosniff, X-Frame-Options: DENY, Referrer-Policy: strict-origin-when-cross-origin on all responses. Add as axum middleware layer if missing.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T22:39:33.931618324Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T22:46:06.976389289Z",
+  "closed_at": "2026-07-18T22:46:06.976389289Z",
+  "close_reason": "Not vulnerable: server.rs has global security_headers middleware setting X-Content-Type-Options: nosniff, X-Frame-Options: DENY, Referrer-Policy: same-origin, and CSP on all responses.",
+  "labels": [
+    "smallhold-audit"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-d74n.10",
+      "depends_on_id": "broadside-d74n",
+      "type": "parent-child",
+      "created_at": "2026-07-18T22:39:33.955374377Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}
