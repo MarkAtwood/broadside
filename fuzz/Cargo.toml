@@ -1,0 +1,36 @@
+[package]
+name = "broadside-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+reqwest = "0.12"
+
+[dependencies.broadside]
+path = ".."
+
+[[bin]]
+name = "fuzz_signature_parser"
+path = "fuzz_targets/fuzz_signature_parser.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_sanitize"
+path = "fuzz_targets/fuzz_sanitize.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_image_sniff"
+path = "fuzz_targets/fuzz_image_sniff.rs"
+test = false
+doc = false
+bench = false

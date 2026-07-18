@@ -218,8 +218,9 @@ async fn process_batch(
         ) {
             Ok(h) => h,
             Err(e) => {
+                // Don't store full error chain in DB — could contain key-related info
                 tracing::error!(error = %e, "failed to sign request");
-                mark_dead(pool, &delivery_id, &e.to_string()).await?;
+                mark_dead(pool, &delivery_id, "signing failed").await?;
                 processed += 1;
                 continue;
             }

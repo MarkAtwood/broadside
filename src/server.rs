@@ -38,6 +38,25 @@ pub fn router(state: Arc<AppState>) -> Router {
 }
 
 pub async fn serve(config: &Config) -> anyhow::Result<()> {
+    // Warn about insecure file permissions on sensitive files
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        let data_dir = std::path::Path::new(&config.server.data_dir);
+        for name in &["broadside.db", "config.toml"] {
+            let path = data_dir.join(name);
+            if let Ok(meta) = std::fs::metadata(&path) {
+                if meta.mode() & 0o077 != 0 {
+                    tracing::warn!(
+                        file = %path.display(),
+                        mode = format!("{:o}", meta.mode() & 0o777),
+                        "sensitive file is readable by other users — recommend chmod 600"
+                    );
+                }
+            }
+        }
+    }
+
     let pool = crate::db::connect(std::path::Path::new(&config.server.data_dir)).await?;
     let domain = config.server.domain.clone();
 

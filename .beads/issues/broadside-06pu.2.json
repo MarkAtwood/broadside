@@ -1,0 +1,29 @@
+{
+  "id": "broadside-06pu.2",
+  "title": "RUSTSEC-2024-0384: instant crate unmaintained (transitive via notify)",
+  "description": "The instant crate v0.1.13 is unmaintained. It's a transitive dependency via notify→notify-types→instant. No security vulnerability, just maintenance risk. Mitigation: monitor for notify crate update that removes this dependency.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T01:02:05.278898052Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T01:11:10.506987333Z",
+  "closed_at": "2026-07-18T01:11:10.506987333Z",
+  "close_reason": "Cargo audit: rsa/instant accepted as known risk. Fuzz: ammonia panic fixed, 3 fuzz targets created. Ops: file permission warning at startup, quality gates in CLAUDE.md, signing error sanitized in last_error.",
+  "labels": [
+    "dependency",
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-06pu.2",
+      "depends_on_id": "broadside-06pu",
+      "type": "parent-child",
+      "created_at": "2026-07-18T01:02:05.300551796Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

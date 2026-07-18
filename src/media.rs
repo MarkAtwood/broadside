@@ -181,7 +181,7 @@ pub fn max_media_per_post() -> usize {
 }
 
 /// Sniff image MIME type from magic bytes.
-fn sniff_image_mime(bytes: &[u8]) -> anyhow::Result<&'static str> {
+pub fn sniff_image_mime(bytes: &[u8]) -> anyhow::Result<&'static str> {
     if bytes.len() < 4 {
         bail!("file too small to identify");
     }

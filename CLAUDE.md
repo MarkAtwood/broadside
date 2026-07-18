@@ -56,12 +56,11 @@ bd close <id>         # Complete work
 
 ## Build & Test
 
-_Add your build and test commands here_
-
 ```bash
-# Example:
-# npm install
-# npm test
+cargo fmt --all
+cargo clippy -- -D warnings
+cargo test
+cargo audit
 ```
 
 ## Architecture Overview

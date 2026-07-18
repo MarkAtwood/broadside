@@ -1,0 +1,29 @@
+{
+  "id": "broadside-06pu.3",
+  "title": "Fuzz finding: ammonia panics on rel attribute in tag_attributes (sanitize.rs)",
+  "description": "Fuzzing fuzz_sanitize found that ammonia 4.x panics with an assertion failure when rel is included in tag_attributes for the a tag. ammonia 4.x manages rel internally (adds noopener noreferrer automatically). Fix: remove rel from the allowed attribute set. This panic is reachable on any code path that calls sanitize_html(), which includes all inbound content processing.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T01:07:53.002493121Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T01:11:10.519698789Z",
+  "closed_at": "2026-07-18T01:11:10.519698789Z",
+  "close_reason": "Cargo audit: rsa/instant accepted as known risk. Fuzz: ammonia panic fixed, 3 fuzz targets created. Ops: file permission warning at startup, quality gates in CLAUDE.md, signing error sanitized in last_error.",
+  "labels": [
+    "security",
+    "pentest",
+    "fuzz"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-06pu.3",
+      "depends_on_id": "broadside-06pu",
+      "type": "parent-child",
+      "created_at": "2026-07-18T01:07:53.065668911Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -22,7 +22,8 @@ pub fn sanitize_html(html: &str) -> String {
     .collect();
 
     let mut attrs = std::collections::HashMap::new();
-    let a_attrs: HashSet<&str> = ["href", "rel"].into_iter().collect();
+    // ammonia 4.x manages rel= on <a> tags internally (adds noopener noreferrer)
+    let a_attrs: HashSet<&str> = ["href"].into_iter().collect();
     attrs.insert("a", a_attrs);
 
     Builder::new()

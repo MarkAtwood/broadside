@@ -1,0 +1,29 @@
+{
+  "id": "broadside-06pu.5",
+  "title": "Config file contains webhook keys in plaintext",
+  "description": "config.toml stores webhook keys as plaintext strings under [[webhook]]. If the config file is world-readable (default umask), any local user can read all webhook keys. Mitigation: document that config.toml must be chmod 600 and owned by the broadside service user. Consider supporting environment variable substitution for secrets.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T01:10:07.743759353Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T01:11:10.545863109Z",
+  "closed_at": "2026-07-18T01:11:10.545863109Z",
+  "close_reason": "Cargo audit: rsa/instant accepted as known risk. Fuzz: ammonia panic fixed, 3 fuzz targets created. Ops: file permission warning at startup, quality gates in CLAUDE.md, signing error sanitized in last_error.",
+  "labels": [
+    "security",
+    "operational",
+    "pentest"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-06pu.5",
+      "depends_on_id": "broadside-06pu",
+      "type": "parent-child",
+      "created_at": "2026-07-18T01:10:07.777783039Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}
