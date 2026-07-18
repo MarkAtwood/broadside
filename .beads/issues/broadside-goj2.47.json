@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.47",
+  "title": "watch.rs matches_pattern allocates on every check",
+  "description": "src/watch.rs:116 — Inside matches_pattern:\n\n    return file_name.ends_with(\u0026format!(\".{ext}\"));\n\nThis allocates a String for every file event just to check a suffix. Use:\n\n    file_name.ends_with(ext) \u0026\u0026 file_name.as_bytes().get(file_name.len() - ext.len() - 1) == Some(\u0026b'.')\n\nOr more readably:\n\n    file_name.rsplit_once('.').is_some_and(|(_, e)| e == ext)\n\nImpact: Unnecessary allocation per filesystem event. Minor in practice since events are infrequent, but the fix is simpler than the current code.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:31:09.051663101Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:50:07.833261563Z",
+  "closed_at": "2026-07-18T17:50:07.833261563Z",
+  "close_reason": "Closed",
+  "labels": [
+    "rust-standards",
+    "ownership",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.47",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:31:09.093656666Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

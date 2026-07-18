@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.25",
+  "title": "config.rs stores paths as String instead of PathBuf",
+  "description": "src/config.rs — ServerConfig.data_dir, ServerConfig.theme_tokens_path, ServerConfig.custom_css_path are all String. WatchConfig.path, WatchConfig.published are also String for filesystem paths.\n\nThese are filesystem paths and should be PathBuf. Using String requires repeated Path::new(\u0026self.data_dir) conversions throughout the codebase:\n- src/server.rs:67,82,134 — Path::new(\u0026config.server.data_dir)\n- src/server.rs:103 — config.server.custom_css_path.is_empty()\n- src/cli.rs:317 — Path::new(\u0026config.server.data_dir)\n- src/watch.rs:18-19 — PathBuf::from(\u0026config.path), PathBuf::from(\u0026config.published)\n- src/webhook.rs:92 — Path::new(\u0026state.data_dir)\n\nPer standards: 'Take \u0026Path not PathBuf in function parameters.' Using PathBuf for owned path storage is the correct counterpart.\n\nImpact: Each conversion site is a place where non-UTF-8 paths would silently fail or require special handling. PathBuf natively handles all valid OS paths.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:52.418974567Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:51:48.195757739Z",
+  "closed_at": "2026-07-18T17:51:48.195757739Z",
+  "close_reason": "Large cascade (config, server, cli, feed, watch, tests) for marginal type safety. All usage sites already convert to Path. Not worth the churn.",
+  "labels": [
+    "idiomatic-rust",
+    "ownership",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.25",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:52.445693675Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

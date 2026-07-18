@@ -1,0 +1,5 @@
+{"id":"019f7647-f2c8-794e-ba6c-611e75cbf1d3","issue_id":"broadside-goj2.44","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:30:54.536611615Z"}
+{"id":"019f7647-f2cd-79b2-919e-4812ef3cd22d","issue_id":"broadside-goj2.44","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: rust-standards","created_at":"2026-07-18T17:30:54.541636506Z"}
+{"id":"019f7647-f2d2-74df-8c97-dd7eabce59e2","issue_id":"broadside-goj2.44","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: clippy-idiom","created_at":"2026-07-18T17:30:54.546320206Z"}
+{"id":"019f7647-f2d7-71be-8559-c7d2160f1d25","issue_id":"broadside-goj2.44","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:30:54.551115018Z"}
+{"id":"019f7649-d1d7-76a1-bcf8-df1f9f44fce3","issue_id":"broadside-goj2.44","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Duplicate of broadside-goj2.13 (same finding, same fix)","created_at":"2026-07-18T17:32:57.175435541Z"}

@@ -1,0 +1,27 @@
+{
+  "id": "broadside-goj2.24",
+  "title": "SSRF defense-in-depth is well-layered",
+  "description": "The SSRF protection across the codebase is genuinely well done and worth defending against simplification:\n\n1. is_private_host() catches known private hostnames (localhost, .local, .internal) and IP literals\n2. is_private_host_resolved() does actual DNS resolution and checks all returned addresses against is_private_ip(), failing closed on DNS failure\n3. reqwest client is configured with redirect::Policy::none() everywhere (server.rs:93, delivery.rs:100, feed.rs:197) preventing open-redirect SSRF\n4. Checks are applied consistently at every outbound fetch point: actor cache (actor_cache.rs:47), media fetch (media.rs:56), inbox delivery (delivery.rs:150), and follower actor fetch (server.rs:722-778)\n5. IPv6 handling includes mapped-v4 checks (server.rs:1174) and ULA/link-local ranges\n\nThis is three independent layers (hostname check, DNS resolution check, no-redirect policy) applied at four trust boundaries. Any one of them would be insufficient alone.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "decision",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:52.194943842Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:46:05.866409127Z",
+  "closed_at": "2026-07-18T17:46:05.866409127Z",
+  "close_reason": "Closed",
+  "labels": [
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.24",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:52.22578079Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

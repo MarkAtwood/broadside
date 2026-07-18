@@ -1,0 +1,28 @@
+{
+  "id": "broadside-goj2.8",
+  "title": "Signature does not require digest in signed headers",
+  "description": "server.rs inbox handler verifies: (1) the HTTP Signature is valid, and (2) the Digest header matches the body hash. But it never verifies that 'digest' is listed in the signature's headers= parameter. An attacker who intercepts a legitimately signed request can replace the body and Digest header while keeping the original signature valid, as long as the original signature only covered e.g. '(request-target) host date'. The parse_signature_header() function even provides a default headers list including 'digest', but an attacker can explicitly send headers=\"(request-target) host date\" to exclude it. Fix: after parsing the signature, reject requests where the signed headers list does not include 'digest'.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:02.273814859Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:30:40.155350741Z",
+  "closed_at": "2026-07-18T17:30:40.155350741Z",
+  "close_reason": "Duplicate of broadside-goj2.18",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.8",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:02.303505471Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

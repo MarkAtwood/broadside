@@ -1,0 +1,5 @@
+{"id":"019f7646-39c2-78a7-b7de-596136c66ca0","issue_id":"broadside-goj2.7","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:29:01.634568769Z"}
+{"id":"019f7646-39c8-769b-a775-dfdfb9332add","issue_id":"broadside-goj2.7","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-18T17:29:01.640434396Z"}
+{"id":"019f7646-39cc-7782-a242-8b27dc9680da","issue_id":"broadside-goj2.7","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: type-design","created_at":"2026-07-18T17:29:01.644493401Z"}
+{"id":"019f7646-39d0-77d5-86b4-f30bfcd56ab4","issue_id":"broadside-goj2.7","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:29:01.648515298Z"}
+{"id":"019f765a-edbc-7f06-9faa-815717edeb9b","issue_id":"broadside-goj2.7","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Tag.tag_type replaced with TagType enum (Hashtag, Mention)","created_at":"2026-07-18T17:51:38.428985828Z"}

@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.43",
+  "title": "CircuitBreaker should impl Default",
+  "description": "src/delivery.rs:27-31 — CircuitBreaker::new() is a plain constructor that creates an empty HashMap:\n\n    fn new() -\u003e Self {\n        Self { failures: HashMap::new() }\n    }\n\nPer standards: 'Default where there is an obvious zero/empty state.' This type has a clear empty state and should derive or impl Default, allowing Arc::new(Mutex::new(CircuitBreaker::default())).\n\nImpact: Minor idiom violation. Default is a standard Rust signal that a type has a meaningful zero value.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:30:44.391166181Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:50:35.589853997Z",
+  "closed_at": "2026-07-18T17:50:35.589853997Z",
+  "close_reason": "Closed",
+  "labels": [
+    "rust-standards",
+    "trait-impls",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.43",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:30:44.422944117Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

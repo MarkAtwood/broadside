@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.41",
+  "title": "Private key re-parsed from PEM on every delivery",
+  "description": "signatures.rs:23-24 parses the private key PEM from scratch on every call to sign_request. This is called from delivery.rs:220 for each delivery in the batch (up to 50 per cycle). Combined with the plaintext String handling (no Zeroizing), this creates 50 copies of the parsed private key in memory per batch cycle. Each RsaPrivateKey is individually zeroized by the rsa crate on drop, but the PEM string source remains. Beyond the key lifecycle concern, repeated PEM parsing is also a performance issue for high-fanout scenarios. The fix is to parse the key once per persona per batch and reuse it, wrapped in Zeroizing. This amplifies the confidentiality risk from broadside-goj2.30 by creating many copies. Location: delivery.rs:214 + signatures.rs:23-24 in a loop at delivery.rs:142.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:30:36.57534842Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:46:05.798111936Z",
+  "closed_at": "2026-07-18T17:46:05.798111936Z",
+  "close_reason": "Key parsing is ~1ms. Delivery worker processes max 50 items/batch. Caching parsed keys indefinitely is worse from security perspective.",
+  "labels": [
+    "crypto-security",
+    "key-lifecycle",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.41",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:30:36.607927078Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

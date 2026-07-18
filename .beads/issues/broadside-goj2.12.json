@@ -1,0 +1,30 @@
+{
+  "id": "broadside-goj2.12",
+  "title": "Panic on short date strings via unchecked slice indexing",
+  "description": "Two locations slice strings without bounds checking:\n- server.rs:1055: let date_display = \u0026p.published_at[..10];\n- server.rs:1145: created_at = \u0026created_at[..10],\nIf published_at or created_at is shorter than 10 bytes (corrupted DB row, manual DB edit, or future migration that changes the format), this panics at runtime, crashing the request handler. While the DB schema has defaults that produce ISO 8601 timestamps, these are not enforced constraints. Fix: use .get(..10).unwrap_or(\u0026created_at) or similar.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:17.69634527Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:51:38.816049837Z",
+  "started_at": "2026-07-18T17:46:10.643679399Z",
+  "closed_at": "2026-07-18T17:51:38.816049837Z",
+  "close_reason": "Date slicing now uses .get(..10).unwrap_or() to prevent panic",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.12",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:17.724375078Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

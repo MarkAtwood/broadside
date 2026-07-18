@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.39",
+  "title": "Signing error logged with full error chain may leak key info",
+  "description": "delivery.rs:230 logs tracing::error\\!(error = %e, 'failed to sign request') where 'e' is the error from signatures::sign_request. The error chain includes 'parsing private key PEM' context (signatures.rs:24). While the rsa crate's error messages typically do not embed raw key bytes, certain parse failures (e.g., truncated PEM, wrong format) could include partial key material in the error Display output. The comment at delivery.rs:229 acknowledges this risk for DB storage but the tracing::error still emits the full chain. The fix is to log only a generic 'signing failed' message without the error chain, or validate that the rsa crate's error types never include key bytes. This is a confidentiality risk at P2 because real-world RSA error messages are unlikely to contain key bytes, but the code path exists. Location: delivery.rs:229-230.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:30:25.014405903Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:50:35.63103575Z",
+  "closed_at": "2026-07-18T17:50:35.63103575Z",
+  "close_reason": "Closed",
+  "labels": [
+    "crypto-security",
+    "logging",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.39",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:30:25.045989273Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

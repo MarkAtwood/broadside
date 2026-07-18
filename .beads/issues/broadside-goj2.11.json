@@ -1,0 +1,28 @@
+{
+  "id": "broadside-goj2.11",
+  "title": "Hashtag inside-link guard has broken operator precedence",
+  "description": "content.rs line 71:\n  if !before.ends_with(\"href=\\\"\") \u0026\u0026 !before.contains(\"\u003ca \") || before.contains(\"\u003c/a\u003e\")\nDue to \u0026\u0026 binding tighter than ||, this parses as:\n  (!ends_with_href \u0026\u0026 !contains_open_a) || contains_close_a\nThis means: if there is ANY \u003c/a\u003e anywhere earlier in the string, the hashtag will always be linked even if it is currently inside an \u003ca\u003e tag. The intended logic was likely:\n  !ends_with_href \u0026\u0026 (!contains_open_a || contains_close_a)\nTrigger: any HTML where a hashtag appears inside an anchor tag AND there is a prior \u003c/a\u003e close tag. The hashtag gets double-linked, producing malformed HTML like \u003ca href=...\u003e\u003ca href=...\u003e#tag\u003c/a\u003e.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:10.878091831Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:30:40.252015527Z",
+  "closed_at": "2026-07-18T17:30:40.252015527Z",
+  "close_reason": "Duplicate of broadside-goj2.16 (same finding, filed at higher priority; recommend upgrading goj2.16 to P0)",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.11",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:10.911991975Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

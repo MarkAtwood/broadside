@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.14",
+  "title": "Unjustified .unwrap() calls in non-test production code",
+  "description": "Multiple .unwrap() calls in production code paths without justification or .expect() messages:\n\n1. src/content.rs:6 — HASHTAG_RE regex .unwrap() — justified (known-good literal), but should use .expect('valid regex') for clarity per standards.\n2. src/content.rs:10 — MENTION_RE regex .unwrap() — same.\n3. src/content.rs:15 — URL_RE regex .unwrap() — same.\n4. src/media.rs:229 — blurhash::encode(...).unwrap_or_default() — acceptable (graceful fallback).\n5. src/server.rs:49-58 — Multiple header .parse().unwrap() calls in security_headers middleware. These are string literals so they cannot fail, but .expect() with a note would document why.\n6. src/delivery.rs:189 — serde_json::to_value(t).unwrap_or_default() — acceptable fallback.\n7. src/feed.rs:198 — reqwest::Client::builder()...build().unwrap_or_default() — acceptable fallback.\n8. src/delivery.rs:325 — chrono::Duration::from_std(delay).unwrap_or(...) — acceptable fallback.\n\nThe LazyLock regex unwraps (items 1-3) are the most important to address. If a regex literal is wrong, the program panics at first use with no indication of which regex failed. Use .expect('HASHTAG_RE regex') to make the panic message diagnostic.\n\nImpact: Unclear panic messages in production if invariant assumptions are violated.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:22.510506418Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:54:48.047840903Z",
+  "closed_at": "2026-07-18T17:54:48.047840903Z",
+  "close_reason": "LazyLock regex .unwrap() replaced with .expect() with descriptive message in content.rs. Remaining .unwrap() calls are on infallible operations (header parsing of static strings).",
+  "labels": [
+    "idiomatic-rust",
+    "error-handling",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.14",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:22.558949055Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

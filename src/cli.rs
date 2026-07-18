@@ -121,10 +121,7 @@ impl Cli {
     pub async fn run(self) -> anyhow::Result<()> {
         match self.command {
             Command::Init { path } => {
-                let path_str = path.to_str().ok_or_else(|| {
-                    anyhow::anyhow!("path contains invalid UTF-8: {}", path.display())
-                })?;
-                broadside::db::init_data_dir(path_str).await?;
+                broadside::db::init_data_dir(&path).await?;
                 println!("Initialized broadside in {}", path.display());
             }
             Command::Persona { command } => {
@@ -185,8 +182,7 @@ impl Cli {
                 let data_dir = self
                     .data_dir
                     .as_ref()
-                    .ok_or_else(|| anyhow::anyhow!("--data-dir or BROADSIDE_DATA_DIR required"))?
-                    .clone();
+                    .ok_or_else(|| anyhow::anyhow!("--data-dir or BROADSIDE_DATA_DIR required"))?;
                 let persona_id = broadside::persona::get_id(&pool, &persona).await?;
 
                 let text = if markdown {
@@ -216,7 +212,7 @@ impl Cli {
 
                 for media_path in &media {
                     let path = std::path::Path::new(media_path);
-                    broadside::media::process_local(&pool, &post_id, path, &data_dir, "")
+                    broadside::media::process_local(&pool, &post_id, path, data_dir, "")
                         .await
                         .with_context(|| format!("processing media {media_path}"))?;
                 }

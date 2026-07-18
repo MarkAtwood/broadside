@@ -5,11 +5,12 @@ use axum::routing::{get, post};
 use axum::Router;
 use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
+use std::fmt::Write;
 use std::sync::Arc;
 
 use crate::config::Config;
 
-/// Shared application state.
+/// Shared application state passed to all route handlers.
 pub struct AppState {
     pub pool: SqlitePool,
     pub domain: String,
@@ -105,7 +106,8 @@ pub async fn serve(config: &Config) -> anyhow::Result<()> {
     } else {
         std::fs::read_to_string(&config.server.custom_css_path).unwrap_or_default()
     };
-    let extra_css = format!("{theme_css}{custom_css}");
+    // Strip </style> to prevent style tag breakout from operator-supplied CSS
+    let extra_css = format!("{theme_css}{custom_css}").replace("</style>", "");
 
     let state = Arc::new(AppState {
         pool: pool.clone(),
@@ -210,9 +212,7 @@ async fn webfinger(
     Query(query): Query<WebfingerQuery>,
 ) -> impl IntoResponse {
     let prefix = "acct:";
-    let acct = if let Some(acct) = query.resource.strip_prefix(prefix) {
-        acct
-    } else {
+    let Some(acct) = query.resource.strip_prefix(prefix) else {
         return (StatusCode::BAD_REQUEST, "resource must start with acct:").into_response();
     };
 
@@ -448,36 +448,37 @@ async fn outbox(
         .unwrap_or_default();
 
     let actor_uri = format!("https://{}/users/{}", state.domain, username);
-    let items: Vec<serde_json::Value> = posts
-        .iter()
-        .map(|p| {
-            let post_uri = format!("{}/statuses/{}", actor_uri, p.id);
-            let (processed_html, tags) =
-                crate::content::process_content(&p.content_html, &state.domain);
-            let tag_json: Vec<serde_json::Value> = tags
-                .iter()
-                .map(|t| serde_json::to_value(t).unwrap_or_default())
-                .collect();
-            serde_json::json!({
-                "id": format!("{}/activity", post_uri),
-                "type": "Create",
-                "actor": actor_uri,
+    let mut items: Vec<serde_json::Value> = Vec::with_capacity(posts.len());
+    for p in &posts {
+        let post_uri = format!("{}/statuses/{}", actor_uri, p.id);
+        let (processed_html, tags) =
+            crate::content::process_content(&p.content_html, &state.domain);
+        let tag_json: Vec<serde_json::Value> = tags
+            .iter()
+            .map(|t| serde_json::to_value(t).unwrap_or_default())
+            .collect();
+        let attachments =
+            crate::media::attachments_for_post(&state.pool, &p.id, &state.domain).await;
+        items.push(serde_json::json!({
+            "id": format!("{}/activity", post_uri),
+            "type": "Create",
+            "actor": actor_uri,
+            "published": p.published_at,
+            "to": ["https://www.w3.org/ns/activitystreams#Public"],
+            "cc": [format!("{}/followers", actor_uri)],
+            "object": {
+                "id": post_uri,
+                "type": "Note",
+                "attributedTo": actor_uri,
+                "content": processed_html,
                 "published": p.published_at,
                 "to": ["https://www.w3.org/ns/activitystreams#Public"],
                 "cc": [format!("{}/followers", actor_uri)],
-                "object": {
-                    "id": post_uri,
-                    "type": "Note",
-                    "attributedTo": actor_uri,
-                    "content": processed_html,
-                    "published": p.published_at,
-                    "to": ["https://www.w3.org/ns/activitystreams#Public"],
-                    "cc": [format!("{}/followers", actor_uri)],
-                    "tag": tag_json,
-                }
-            })
-        })
-        .collect();
+                "tag": tag_json,
+                "attachment": attachments,
+            }
+        }));
+    }
 
     let doc = serde_json::json!({
         "@context": "https://www.w3.org/ns/activitystreams",
@@ -581,13 +582,29 @@ async fn handle_inbox(
         }
     };
 
-    // Extract keyId from Signature header
-    let key_id = match extract_key_id_from_sig(&sig_header) {
-        Some(k) => k,
-        None => return StatusCode::BAD_REQUEST,
+    // Parse Signature header and extract keyId, signed headers list
+    let sig_parts = match crate::signatures::parse_signature_header(&sig_header) {
+        Ok(p) => p,
+        Err(_) => return StatusCode::BAD_REQUEST,
     };
 
-    let actor_uri = key_id.split('#').next().unwrap_or(&key_id).to_string();
+    // Require digest and date in the signed headers to prevent body substitution and replay
+    let signed_header_names: Vec<&str> = sig_parts.headers.split_whitespace().collect();
+    if !signed_header_names.contains(&"digest") {
+        tracing::debug!("rejecting signature that does not cover digest header");
+        return StatusCode::BAD_REQUEST;
+    }
+    if !signed_header_names.contains(&"date") {
+        tracing::debug!("rejecting signature that does not cover date header");
+        return StatusCode::BAD_REQUEST;
+    }
+
+    let actor_uri = sig_parts
+        .key_id
+        .split('#')
+        .next()
+        .unwrap_or(&sig_parts.key_id)
+        .to_string();
 
     // Reconstruct the request path
     let path = if let Some(uname) = _username {
@@ -936,12 +953,13 @@ async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 
     let mut personas_html = String::new();
     for (username, display_name) in &rows {
-        personas_html.push_str(&format!(
+        let _ = write!(
+            personas_html,
             r#"<li><a href="/users/{u}"><strong>{dn}</strong> <span>@{u}@{domain}</span></a></li>"#,
             u = ammonia::clean(username),
             dn = ammonia::clean(display_name),
             domain = state.domain,
-        ));
+        );
     }
 
     let html = format!(
@@ -1029,7 +1047,6 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
             for f in &fields {
                 let name = f["name"].as_str().unwrap_or("");
                 let value = f["value"].as_str().unwrap_or("");
-                // Auto-link URLs in values
                 let value_html = if value.starts_with("https://") || value.starts_with("http://") {
                     format!(
                         r#"<a href="{v}" rel="nofollow noopener noreferrer">{v}</a>"#,
@@ -1038,11 +1055,12 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
                 } else {
                     ammonia::clean(value).to_string()
                 };
-                fields_html.push_str(&format!(
+                let _ = write!(
+                    fields_html,
                     "<tr><th>{}</th><td>{}</td></tr>",
                     ammonia::clean(name),
                     value_html
-                ));
+                );
             }
             fields_html.push_str("</table>");
         }
@@ -1052,8 +1070,9 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
     let mut posts_html = String::new();
     for p in &posts {
         let (processed, _) = crate::content::process_content(&p.content_html, &state.domain);
-        let date_display = &p.published_at[..10]; // YYYY-MM-DD
-        posts_html.push_str(&format!(
+        let date_display = p.published_at.get(..10).unwrap_or(&p.published_at);
+        let _ = write!(
+            posts_html,
             r#"<article class="post">
                 <div class="post-content">{content}</div>
                 <footer><time datetime="{ts}">{date}</time></footer>
@@ -1061,7 +1080,7 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
             content = processed,
             ts = p.published_at,
             date = date_display,
-        ));
+        );
     }
 
     let bio_html = if bio.is_empty() {
@@ -1142,7 +1161,7 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
         fields_html = fields_html,
         post_count = post_count,
         follower_count = follower_count,
-        created_at = &created_at[..10],
+        created_at = created_at.get(..10).unwrap_or(&created_at),
         posts_html = posts_html,
     );
 
@@ -1208,43 +1227,11 @@ pub async fn is_private_host_resolved(host: &str) -> bool {
     }
 }
 
-/// Extract keyId from a Signature header value using proper quoted-string parsing.
-fn extract_key_id_from_sig(sig_header: &str) -> Option<String> {
-    let mut in_quotes = false;
-    let mut escape_next = false;
-    let mut current = String::new();
-    let mut parts = Vec::new();
-
-    for c in sig_header.chars() {
-        if escape_next {
-            current.push(c);
-            escape_next = false;
-            continue;
-        }
-        match c {
-            '\\' if in_quotes => {
-                escape_next = true;
-                current.push(c);
-            }
-            '"' => {
-                in_quotes = !in_quotes;
-                current.push(c);
-            }
-            ',' if !in_quotes => {
-                parts.push(std::mem::take(&mut current));
-            }
-            _ => current.push(c),
-        }
-    }
-    if !current.is_empty() {
-        parts.push(current);
-    }
-
-    for part in &parts {
-        let trimmed = part.trim();
-        if let Some(val) = trimmed.strip_prefix("keyId=\"") {
-            return Some(val.strip_suffix('"').unwrap_or(val).to_string());
-        }
-    }
-    None
+/// Validate that a persona username contains only safe characters for ActivityPub URIs.
+pub fn is_valid_username(username: &str) -> bool {
+    !username.is_empty()
+        && username.len() <= 64
+        && username
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
 }

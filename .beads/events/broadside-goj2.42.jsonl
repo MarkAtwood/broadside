@@ -1,0 +1,5 @@
+{"id":"019f7647-aed1-73e4-8c72-b23988d28b47","issue_id":"broadside-goj2.42","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:30:37.137256307Z"}
+{"id":"019f7647-aed5-7ad4-838b-39a9fe1058fd","issue_id":"broadside-goj2.42","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: rust-standards","created_at":"2026-07-18T17:30:37.141711342Z"}
+{"id":"019f7647-aeda-719f-90f1-49cea3aa7c3a","issue_id":"broadside-goj2.42","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: type-design","created_at":"2026-07-18T17:30:37.146107408Z"}
+{"id":"019f7647-aede-77b7-93ad-f6093d16ab31","issue_id":"broadside-goj2.42","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:30:37.150506735Z"}
+{"id":"019f765b-1366-77c0-9f9a-5499e6a5d73f","issue_id":"broadside-goj2.42","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"SQLite stores TEXT — Rust enum would need string conversions at every query. Constants add no safety since SQL queries use literals.","created_at":"2026-07-18T17:51:48.07050893Z"}

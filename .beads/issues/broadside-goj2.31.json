@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.31",
+  "title": "DB schema not applied on server start, only on init",
+  "description": "db.rs connect() opens the SQLite database with create_if_missing(true) but does NOT run the schema SQL. The schema is only applied in init_data_dir(). If the database file exists but was created by an older version (missing tables/columns), or if someone runs 'broadside serve' before 'broadside init', the server will start but crash on the first query that touches a missing table. The connect-then-serve path in server.rs:serve() calls db::connect() directly without ensuring the schema exists. Fix: run the schema DDL (which uses CREATE TABLE IF NOT EXISTS) on every connect, or at least on server startup.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:30:04.214368608Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:51:38.684022872Z",
+  "closed_at": "2026-07-18T17:51:38.684022872Z",
+  "close_reason": "db::connect now runs CREATE TABLE IF NOT EXISTS schema on every connect",
+  "labels": [
+    "risk",
+    "maintainer-burden",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.31",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:30:04.264745002Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

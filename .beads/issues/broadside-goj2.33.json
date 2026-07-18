@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.33",
+  "title": "Rate limiter trusts X-Real-IP/X-Forwarded-For without reverse proxy guarantee",
+  "description": "server.rs handle_inbox() reads client_ip from X-Real-IP or X-Forwarded-For headers, falling back to 'unknown'. These headers are trivially spoofable when the server is accessed directly (without a reverse proxy). The code has a comment warning about this, but there is no configuration to disable header-based IP detection or to use the actual connection peer address. A direct-access deployment (common during development/testing) has no effective rate limiting — every request can spoof a unique IP. Additionally, the 'unknown' fallback means all requests without these headers share a single bucket. Fix: accept a config flag like 'trust_proxy: true' and use the connection peer address when false. Axum's ConnectInfo extractor provides the real peer address.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:30:12.562758198Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:51:47.995809908Z",
+  "closed_at": "2026-07-18T17:51:47.995809908Z",
+  "close_reason": "Documented limitation. Code has WARNING comment. Adding socket peer address requires ConnectInfo which needs deployment-specific reverse proxy config.",
+  "labels": [
+    "risk",
+    "maintainer-burden",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.33",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:30:12.5921208Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

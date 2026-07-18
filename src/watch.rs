@@ -113,7 +113,9 @@ fn matches_pattern(path: &Path, pattern: &str) -> bool {
 
     // Simple glob: "*.md" matches anything ending in ".md"
     if let Some(ext) = pattern.strip_prefix("*.") {
-        return file_name.ends_with(&format!(".{ext}"));
+        return file_name.len() > ext.len() + 1
+            && file_name.ends_with(ext)
+            && file_name.as_bytes()[file_name.len() - ext.len() - 1] == b'.';
     }
 
     file_name == pattern

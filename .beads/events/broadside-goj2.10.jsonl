@@ -1,0 +1,5 @@
+{"id":"019f7646-5a46-7252-986f-7269cd192e5c","issue_id":"broadside-goj2.10","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:29:09.958153563Z"}
+{"id":"019f7646-5a4a-7602-9ea4-3407c70dbddd","issue_id":"broadside-goj2.10","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-18T17:29:09.962395331Z"}
+{"id":"019f7646-5a4e-7727-844a-0a20df9d63e8","issue_id":"broadside-goj2.10","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: ownership","created_at":"2026-07-18T17:29:09.966470675Z"}
+{"id":"019f7646-5a52-782a-9e65-96da00c03884","issue_id":"broadside-goj2.10","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:29:09.970536743Z"}
+{"id":"019f765d-d11f-7546-a821-10a5fb833815","issue_id":"broadside-goj2.10","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"init_data_dir now takes \u0026Path instead of \u0026str","created_at":"2026-07-18T17:54:47.711346788Z"}

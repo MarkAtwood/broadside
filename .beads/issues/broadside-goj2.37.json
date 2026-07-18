@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.37",
+  "title": "Redundant format!+push_str can use write!",
+  "description": "Throughout the codebase, the pattern format!(...) + push_str is used to build strings incrementally. In several hot paths, std::fmt::Write + write!() would avoid intermediate String allocations:\n\nLocations:\n- src/server.rs:939-944 — personas_html.push_str(\u0026format!(...))\n- src/server.rs:1041-1045 — fields_html.push_str(\u0026format!(...))\n- src/server.rs:1056-1064 — posts_html.push_str(\u0026format!(...))\n- src/content.rs:47 — result = format!(\"{}{}{}\", ...) — repeated string rebuilding per URL match\n- src/content.rs:72-78 — same pattern for hashtag replacement\n- src/content.rs:108-113 — same pattern for mention replacement\n- src/theme.rs:44 — vars.push_str(\u0026format!(...))\n\nThe content.rs string replacement pattern (lines 39-50, 64-88, 101-114) is particularly concerning: it rebuilds the entire result string for each match via format!(\"{}{}{}\", before, replacement, after). For content with many URLs/hashtags/mentions, this is O(n*m) where n=content length and m=match count.\n\nImpact: Unnecessary allocations. The content.rs rebuild pattern is also a correctness concern — each replacement shifts indices, making subsequent find() calls work on a mutated string, which could cause double-linking or missed matches.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:30:21.087519906Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:54:47.934132709Z",
+  "closed_at": "2026-07-18T17:54:47.934132709Z",
+  "close_reason": "format\\!+push_str replaced with write\\! macro in server.rs HTML building",
+  "labels": [
+    "rust-standards",
+    "clippy-idiom",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.37",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:30:21.128911658Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

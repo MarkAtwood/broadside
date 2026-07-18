@@ -1,0 +1,5 @@
+{"id":"019f7647-0e17-7d83-b4ec-01f0b2f2cf08","issue_id":"broadside-goj2.27","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:29:55.99188668Z"}
+{"id":"019f7647-0e1c-79a4-9839-278d2fb0b4f2","issue_id":"broadside-goj2.27","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: risk","created_at":"2026-07-18T17:29:55.996632967Z"}
+{"id":"019f7647-0e21-7ad9-938f-d16d499383ba","issue_id":"broadside-goj2.27","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: maintainer-burden","created_at":"2026-07-18T17:29:56.001712003Z"}
+{"id":"019f7647-0e2a-7bd5-a1b7-9106fd5cd3fb","issue_id":"broadside-goj2.27","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:29:56.010776652Z"}
+{"id":"019f765a-ee7f-73db-a9a4-77246a5076b1","issue_id":"broadside-goj2.27","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"process_content rewritten with position-aware right-to-left replacement, skipping existing \u003ca\u003e tags","created_at":"2026-07-18T17:51:38.623253592Z"}

@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.53",
+  "title": "delivery.rs attempts uses i32 but should be u32",
+  "description": "src/delivery.rs — The 'attempts' field is queried as i32 (line 130, 142) and MAX_ATTEMPTS is i32 (line 19), but attempt counts are never negative. Using u32 would make the invariant explicit and avoid the 'attempts as usize' cast on line 321.\n\nSimilarly, the 'capacity' field in RateLimiter (src/ratelimit.rs:8) is u32 but is repeatedly cast to f64 (lines 23, 33, 38). This is fine numerically (u32 fits in f64 exactly) but the repeated 'as f64' casts could be avoided by storing capacity as f64 from the start, since it's only ever used in floating-point arithmetic.\n\nImpact: Minor type precision. The i32 for attempts means a negative attempt count would compile and run without complaint.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:32:13.726025217Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:50:35.613329604Z",
+  "closed_at": "2026-07-18T17:50:35.613329604Z",
+  "close_reason": "Closed",
+  "labels": [
+    "rust-standards",
+    "type-design",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.53",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:32:13.744149243Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

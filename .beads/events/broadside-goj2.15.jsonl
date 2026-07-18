@@ -1,0 +1,5 @@
+{"id":"019f7646-9e04-778b-a433-7f80720a2a5e","issue_id":"broadside-goj2.15","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:29:27.30049634Z"}
+{"id":"019f7646-9e09-70b8-aa06-ce76762bd744","issue_id":"broadside-goj2.15","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: risk","created_at":"2026-07-18T17:29:27.30504879Z"}
+{"id":"019f7646-9e0d-74e4-a6c9-3a0bd1f476ad","issue_id":"broadside-goj2.15","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: maintainer-burden","created_at":"2026-07-18T17:29:27.3093222Z"}
+{"id":"019f7646-9e12-77ad-b4ef-6d3663b2ee3a","issue_id":"broadside-goj2.15","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:29:27.314504831Z"}
+{"id":"019f765a-edfc-7292-8307-15fe60199192","issue_id":"broadside-goj2.15","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"extra_css now strips \u003c/style\u003e to prevent style tag breakout","created_at":"2026-07-18T17:51:38.492169195Z"}

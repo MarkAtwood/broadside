@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.19",
+  "title": "TOCTOU in SSRF guard: DNS resolved separately from HTTP request",
+  "description": "Multiple locations (server.rs handle_inbox Follow handler, delivery.rs process_batch, actor_cache.rs, media.rs) check is_private_host_resolved() before making an HTTP request. The check resolves DNS and blocks private IPs, but the subsequent HTTP request resolves DNS independently. An attacker controlling a DNS server can return a public IP for the first resolution and a private IP (e.g., 169.254.169.254) for the second, bypassing the SSRF guard (DNS rebinding attack). The redirect policy is set to none which mitigates redirect-based SSRF, but the rebinding window remains. This is a known-hard problem; documenting it here as a tracked risk. Mitigation: use a custom DNS resolver that caches the resolved IP and connects to it directly, or use a connect-level callback to reject private IPs at socket time.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:36.791117509Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:46:05.612385744Z",
+  "closed_at": "2026-07-18T17:46:05.612385744Z",
+  "close_reason": "Known TOCTOU limitation. Full fix requires custom DNS resolver in reqwest (hickory-dns). Current check is defense-in-depth with millisecond race window.",
+  "labels": [
+    "risk",
+    "maintainer-burden",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.19",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:36.823044368Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

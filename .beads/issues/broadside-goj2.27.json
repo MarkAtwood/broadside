@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.27",
+  "title": "content::process_content corrupts HTML with naive string find/replace",
+  "description": "process_content() in content.rs uses result.find() and string slicing to replace hashtags, mentions, and URLs. This approach has multiple corruption vectors:\n1. It replaces only the first occurrence of each URL/hashtag/mention, so the second identical URL in a post is left bare.\n2. After auto-linking a URL, the result string grows, but subsequent find() calls may match inside the just-inserted \u003ca href=\"...\"\u003e attribute text, producing nested/broken anchor tags.\n3. The URL auto-linker collects matches from the original result, then replaces one at a time, but each replacement shifts byte positions so later replacements hit the wrong offset.\n4. Hashtag regex captures from the original html but replacements target the already-URL-linked result string, causing mismatches.\nAll of these produce malformed HTML that Mastodon and other AP implementations may render incorrectly or reject. A proper fix requires an HTML-aware approach (e.g., walking DOM text nodes).",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:55.984734176Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:51:38.620710024Z",
+  "closed_at": "2026-07-18T17:51:38.620710024Z",
+  "close_reason": "process_content rewritten with position-aware right-to-left replacement, skipping existing \u003ca\u003e tags",
+  "labels": [
+    "risk",
+    "maintainer-burden",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.27",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:56.027424762Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.15",
+  "title": "extra_css injected raw into HTML templates enables style injection",
+  "description": "server.rs index() and serve_profile_html() interpolate state.extra_css directly into a \u003cstyle\u003e tag via format!():\n  \u003cstyle\u003e{extra_css}\u003c/style\u003e\nThe extra_css value comes from theme_tokens_path (parsed JSON values) and custom_css_path (raw file contents). Neither is sanitized for HTML special characters. A custom CSS file containing '\u003c/style\u003e\u003cscript\u003ealert(1)\u003c/script\u003e\u003cstyle\u003e' breaks out of the style block and injects arbitrary HTML/JS. While the config is operator-controlled today, this is a foot-gun for anyone adding user-facing theme customization, and the CSP header uses 'unsafe-inline' for styles which would not block it. Fix: HTML-escape the CSS string, or load it from a separate CSS file endpoint with proper Content-Type.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:27.296217355Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:51:38.489647Z",
+  "closed_at": "2026-07-18T17:51:38.489647Z",
+  "close_reason": "extra_css now strips \u003c/style\u003e to prevent style tag breakout",
+  "labels": [
+    "risk",
+    "maintainer-burden",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.15",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:27.331181449Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

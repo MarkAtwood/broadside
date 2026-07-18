@@ -1,0 +1,28 @@
+{
+  "id": "broadside-goj2.2",
+  "title": "content::process_content O(n*m) string rebuilds",
+  "description": "process_content in src/content.rs (lines 30-127) performs find-and-replace on the result string one match at a time. Each replacement rebuilds the entire string via format!(\"{}{}{}\", \u0026result[..pos], linked, \u0026result[pos + len..]). For N matches in a string of length M, this is O(N*M) total allocation+copy work.\n\nWith many hashtags, mentions, and bare URLs in a single post, this compounds. Each replacement also shifts all subsequent match positions, meaning find() on later iterations may silently skip or double-match.\n\nWhat goes wrong: posts with 20+ hashtags or many inline URLs will do 20+ full-string copies. More critically, the position-shifting means replacements can corrupt output (e.g., a URL that partially overlaps a hashtag match).\n\nFix: accumulate replacements as (start, end, replacement) spans, then build the final string in a single pass from left to right.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:28:40.942847047Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:30:34.803431044Z",
+  "closed_at": "2026-07-18T17:30:34.803431044Z",
+  "close_reason": "Duplicate of broadside-goj2.27",
+  "labels": [
+    "efficiency",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.2",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:28:40.977236476Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "broadside-goj2.38",
+  "title": "Inbox signature verification with cache-invalidation retry",
+  "description": "src/server.rs lines 600-631: the inbox handler verifies HTTP Signatures against cached actor public keys. On verification failure, it invalidates the cache and re-fetches the actor document to handle key rotation, then verifies again. This is the correct pattern because:\n\n1. Key rotation is a normal operational event in the fediverse — without the retry, a rotated key would permanently break follows until the 24-hour cache TTL expires\n2. The invalidation is targeted (only the failing actor, not a cache flush)\n3. If the second attempt also fails, it's a genuine rejection, not a stale-cache false negative\n4. The signature is verified BEFORE parsing the activity body, so malformed JSON can't bypass authentication\n\nThis two-attempt pattern is the same approach Mastodon uses and is worth preserving.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "decision",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:30:22.625040865Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:46:06.070253351Z",
+  "closed_at": "2026-07-18T17:46:06.070253351Z",
+  "close_reason": "Closed",
+  "labels": [
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.38",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:30:22.64351499Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

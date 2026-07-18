@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.22",
+  "title": "WebhookConfig derives Debug, leaking webhook keys",
+  "description": "config.rs:34 derives Debug on WebhookConfig which contains the 'key' field (webhook secret). Config (line 6) also derives Debug, so any {:?} formatting of the config (e.g., in error messages, logging, or future debug statements) would print webhook keys to logs. The fix is to remove Debug from WebhookConfig (or implement a manual Debug that redacts the key field), and remove Debug from Config or make it manually redact nested secrets. This is a confidentiality issue: webhook keys could appear in log output. Locations: config.rs:6 (Config derives Debug), config.rs:34 (WebhookConfig derives Debug with pub key: String field).",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:44.738505283Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:51:38.555372204Z",
+  "closed_at": "2026-07-18T17:51:38.555372204Z",
+  "close_reason": "WebhookConfig now has manual Debug impl that redacts key field",
+  "labels": [
+    "crypto-security",
+    "key-lifecycle",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.22",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:44.768310033Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

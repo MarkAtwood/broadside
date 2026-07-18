@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.7",
+  "title": "Tag.tag_type is stringly-typed",
+  "description": "src/content.rs:18-24 — Tag.tag_type is String, but only ever holds 'Hashtag' or 'Mention'. This is primitive obsession / stringly-typed design.\n\nImpact: Nothing prevents constructing a Tag with tag_type='Foo'. A TagKind enum {Hashtag, Mention} with a custom Serialize impl (or serde rename) would make invalid states unrepresentable and eliminate the repeated 'Hashtag'.to_string() / 'Mention'.to_string() allocations throughout content.rs.\n\nThe struct also lacks Debug and Clone on the right items (it has both, good), but is missing PartialEq/Eq which would make testing easier and is natural for a value type.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:01.63010561Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:51:38.424449461Z",
+  "closed_at": "2026-07-18T17:51:38.424449461Z",
+  "close_reason": "Tag.tag_type replaced with TagType enum (Hashtag, Mention)",
+  "labels": [
+    "idiomatic-rust",
+    "type-design",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.7",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:01.661038388Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

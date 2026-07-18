@@ -1,0 +1,5 @@
+{"id":"019f7648-ccd5-762a-a6c6-b440feebd064","issue_id":"broadside-goj2.51","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:31:50.357405107Z"}
+{"id":"019f7648-ccd8-7a7d-99cf-576048536f9c","issue_id":"broadside-goj2.51","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: rust-standards","created_at":"2026-07-18T17:31:50.360688313Z"}
+{"id":"019f7648-ccdb-7798-be49-fcd005ac0e99","issue_id":"broadside-goj2.51","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: trait-impls","created_at":"2026-07-18T17:31:50.363498407Z"}
+{"id":"019f7648-ccde-7385-94e3-37c4fa5e5eba","issue_id":"broadside-goj2.51","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:31:50.366231256Z"}
+{"id":"019f765b-13a4-7116-bc50-2afd1f1110e9","issue_id":"broadside-goj2.51","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"SignatureParts is now public (for server.rs). Borrowing would add lifetime parameter to public API for no caller benefit.","created_at":"2026-07-18T17:51:48.132072199Z"}

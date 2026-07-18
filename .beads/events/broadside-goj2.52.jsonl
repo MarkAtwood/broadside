@@ -1,0 +1,5 @@
+{"id":"019f7649-062e-78af-94f5-e784f8204197","issue_id":"broadside-goj2.52","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:32:05.038570043Z"}
+{"id":"019f7649-0631-78f3-bc5f-8d14d1e6d82a","issue_id":"broadside-goj2.52","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: rust-standards","created_at":"2026-07-18T17:32:05.041587653Z"}
+{"id":"019f7649-0634-74b0-9858-6b76823fc8ae","issue_id":"broadside-goj2.52","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: clippy-idiom","created_at":"2026-07-18T17:32:05.044307867Z"}
+{"id":"019f7649-0637-7219-aefc-ddcf5ba418e8","issue_id":"broadside-goj2.52","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:32:05.047138073Z"}
+{"id":"019f765d-d239-7e2d-a2fc-92d4ab723e20","issue_id":"broadside-goj2.52","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Webfinger uses let-else pattern","created_at":"2026-07-18T17:54:47.993929784Z"}

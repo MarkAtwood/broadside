@@ -1,0 +1,5 @@
+{"id":"019f7647-4ed7-785b-9b79-9a54e271ed78","issue_id":"broadside-goj2.33","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:30:12.567548653Z"}
+{"id":"019f7647-4edc-74d4-96fe-e64a20ab4c46","issue_id":"broadside-goj2.33","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: risk","created_at":"2026-07-18T17:30:12.572317083Z"}
+{"id":"019f7647-4ee1-70ef-8c6c-37d2959b5dc4","issue_id":"broadside-goj2.33","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: maintainer-burden","created_at":"2026-07-18T17:30:12.577061899Z"}
+{"id":"019f7647-4ee5-7c5a-93c3-bae9efd59158","issue_id":"broadside-goj2.33","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:30:12.581810503Z"}
+{"id":"019f765b-1320-735d-9ce7-dde8679ef2f2","issue_id":"broadside-goj2.33","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Documented limitation. Code has WARNING comment. Adding socket peer address requires ConnectInfo which needs deployment-specific reverse proxy config.","created_at":"2026-07-18T17:51:48.000221652Z"}

@@ -1,0 +1,27 @@
+{
+  "id": "broadside-goj2.34",
+  "title": "Delivery worker circuit breaker and retry backoff",
+  "description": "src/delivery.rs: the delivery subsystem has a well-designed failure handling strategy worth keeping:\n\n1. Exponential retry backoff (60s, 5m, 30m, 2h, 8h) with max 7 attempts before dead-lettering — prevents thundering herd on a down server\n2. Per-domain circuit breaker (10 consecutive failures trips for 1 hour) — prevents a single down domain from monopolizing the delivery worker\n3. 410 Gone handling automatically removes followers and cleans up the delivery queue — respects instance shutdown signals\n4. Breaker cooldown resets the counter, giving the domain a fresh retry window rather than permanent blacklisting\n5. Dead-letter queue with CLI tools (inspect, retry, stats) for operational visibility\n\nThe circuit breaker and retry schedule together mean a temporarily-down instance gets retried politely, a permanently-gone instance is cleaned up, and a flapping instance doesn't waste delivery cycles.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "decision",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:30:14.514184857Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:46:06.010135318Z",
+  "closed_at": "2026-07-18T17:46:06.010135318Z",
+  "close_reason": "Closed",
+  "labels": [
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.34",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:30:14.535968373Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

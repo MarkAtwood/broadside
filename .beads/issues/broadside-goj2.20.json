@@ -1,0 +1,28 @@
+{
+  "id": "broadside-goj2.20",
+  "title": "gen_id not lexicographically sortable as doc claims",
+  "description": "src/id.rs doc comment says 'Lexicographically sortable within a single process' but the format is \"{millis}-{seq:06}\". The millis field has no fixed width — it's currently 13 digits but will become 14 digits on 2286-11-20. More immediately, there's no guarantee it won't be fewer digits if system time is wrong.\n\nWhat goes wrong: nothing today (millis is 13 digits for the next 260 years), but the doc claim is technically false for the general case, and a reader trusting the doc might build ORDER BY on these IDs assuming lex sort = time sort, which works only by coincidence of current epoch.\n\nFix: either pad the millis field to a fixed width (e.g., {millis:016}) to make the claim true, or change the doc comment to say 'sortable within a single process for the current epoch (millis field is unpadded)'. The padding approach is better since it costs nothing.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:41.51505278Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:30:34.728927839Z",
+  "closed_at": "2026-07-18T17:30:34.728927839Z",
+  "close_reason": "Duplicate of broadside-goj2.23",
+  "labels": [
+    "readability",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.20",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:41.540788588Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

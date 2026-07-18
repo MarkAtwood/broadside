@@ -1,0 +1,31 @@
+{
+  "id": "broadside-goj2.18",
+  "title": "Signature does not require digest in signed headers",
+  "description": "In server.rs handle_inbox(), the Digest header is verified against the body (line 636-655), and the Signature is verified over whatever headers the sender declares in the 'headers=' parameter (signatures.rs:62-63). But there is no check that 'digest' is actually listed in the signed headers. An attacker who intercepts a legitimately signed request can replace the body AND the Digest header without invalidating the signature, because the Digest was never part of the signed string. The fix is to reject inbound requests where the Signature header's headers= parameter does not include 'digest'. This is an integrity issue: body substitution on signed requests. Locations: server.rs:608-655 (handle_inbox signature+digest verification), signatures.rs:62 (parse_signature_header returns headers field unchecked).",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:36.584275831Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:51:38.878843348Z",
+  "started_at": "2026-07-18T17:46:10.69695435Z",
+  "closed_at": "2026-07-18T17:51:38.878843348Z",
+  "close_reason": "Inbox now requires digest in signed headers list",
+  "labels": [
+    "crypto-security",
+    "untrusted-input",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.18",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:36.629179698Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

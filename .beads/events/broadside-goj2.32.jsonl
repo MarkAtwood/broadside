@@ -1,0 +1,5 @@
+{"id":"019f7647-42e6-73df-aa80-a8d9ea26b01e","issue_id":"broadside-goj2.32","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:30:09.510254444Z"}
+{"id":"019f7647-42eb-7117-95e6-200a0072e1b0","issue_id":"broadside-goj2.32","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: rust-standards","created_at":"2026-07-18T17:30:09.515072053Z"}
+{"id":"019f7647-42ef-7d39-b181-7eaee88916e2","issue_id":"broadside-goj2.32","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: type-design","created_at":"2026-07-18T17:30:09.5198675Z"}
+{"id":"019f7647-42f4-7de9-8f28-90bb1f2ed62b","issue_id":"broadside-goj2.32","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:30:09.525070786Z"}
+{"id":"019f7659-9e2c-7477-a5f8-3decdfdcbffc","issue_id":"broadside-goj2.32","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"String matching is appropriate for a private deserialization struct with 3 values","created_at":"2026-07-18T17:50:12.524293738Z"}

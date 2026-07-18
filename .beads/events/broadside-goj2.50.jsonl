@@ -1,0 +1,5 @@
+{"id":"019f7648-9f6d-7a40-b128-788da6202cf6","issue_id":"broadside-goj2.50","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:31:38.733673142Z"}
+{"id":"019f7648-9f70-7ab6-84ef-a815885d7c23","issue_id":"broadside-goj2.50","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: rust-standards","created_at":"2026-07-18T17:31:38.736702784Z"}
+{"id":"019f7648-9f73-7864-8388-bbfa2198ca4a","issue_id":"broadside-goj2.50","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: clippy-idiom","created_at":"2026-07-18T17:31:38.739550593Z"}
+{"id":"019f7648-9f76-73ae-93fb-9ad0187b7b41","issue_id":"broadside-goj2.50","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:31:38.742241947Z"}
+{"id":"019f7649-ef69-7c9e-9acc-55a0a6dd19b5","issue_id":"broadside-goj2.50","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Duplicate of broadside-goj2.27 (same finding about content.rs O(n*m) and fragile replacement)","created_at":"2026-07-18T17:33:04.745827519Z"}

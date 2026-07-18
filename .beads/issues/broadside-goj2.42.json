@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.42",
+  "title": "Delivery status uses magic strings",
+  "description": "src/delivery.rs and src/db.rs — Delivery queue status is stored and queried as magic strings ('pending', 'dead') throughout the codebase:\n\n- db.rs:55 — DEFAULT 'pending' in schema\n- delivery.rs:133 — WHERE dq.status = 'pending'\n- delivery.rs:348 — SET status = 'dead'\n- delivery.rs:409 — WHERE status = 'dead' / SET status = 'pending'\n- delivery.rs:424,429 — WHERE status = 'pending' / WHERE status = 'dead'\n- cli.rs:250,256 — WHERE status = 'pending' / WHERE status = 'dead'\n\nA DeliveryStatus enum {Pending, Dead} with Display/FromStr (or sqlx::Type) would catch typos at compile time. Currently a typo like 'pendig' would silently match zero rows.\n\nImpact: No compile-time safety for status values. A typo in any of these 10+ locations would be a silent bug.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:30:37.132947294Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:51:48.066502959Z",
+  "closed_at": "2026-07-18T17:51:48.066502959Z",
+  "close_reason": "SQLite stores TEXT — Rust enum would need string conversions at every query. Constants add no safety since SQL queries use literals.",
+  "labels": [
+    "rust-standards",
+    "type-design",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.42",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:30:37.162483608Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

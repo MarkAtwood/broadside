@@ -1,0 +1,5 @@
+{"id":"019f7645-d812-7264-9b0d-6f06d7ca4b9f","issue_id":"broadside-goj2.1","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:28:36.626163186Z"}
+{"id":"019f7645-d817-72c6-bbdc-25960317d228","issue_id":"broadside-goj2.1","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-18T17:28:36.631183117Z"}
+{"id":"019f7645-d81c-7068-956a-152268a9a530","issue_id":"broadside-goj2.1","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: documentation","created_at":"2026-07-18T17:28:36.636027473Z"}
+{"id":"019f7645-d820-7e45-8365-e4fe89422a50","issue_id":"broadside-goj2.1","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:28:36.640935763Z"}
+{"id":"019f765d-d2e0-78ae-bc92-7db500131393","issue_id":"broadside-goj2.1","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Key public items have doc comments. Adding comments to every private field/function is excessive for a 3.7K line application with clear naming.","created_at":"2026-07-18T17:54:48.160569779Z"}

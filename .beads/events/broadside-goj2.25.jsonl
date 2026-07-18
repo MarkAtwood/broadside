@@ -1,0 +1,5 @@
+{"id":"019f7647-0027-74d1-8d5f-1e4275f7be0c","issue_id":"broadside-goj2.25","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:29:52.423316678Z"}
+{"id":"019f7647-002b-7818-bdde-9afd7363cf5b","issue_id":"broadside-goj2.25","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-18T17:29:52.427531551Z"}
+{"id":"019f7647-002f-76a0-82b3-164da92360ad","issue_id":"broadside-goj2.25","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: ownership","created_at":"2026-07-18T17:29:52.431435024Z"}
+{"id":"019f7647-0033-7612-8254-14bba1e2990e","issue_id":"broadside-goj2.25","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:29:52.435398452Z"}
+{"id":"019f765b-13e6-7277-945a-13fd125bba5a","issue_id":"broadside-goj2.25","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Large cascade (config, server, cli, feed, watch, tests) for marginal type safety. All usage sites already convert to Path. Not worth the churn.","created_at":"2026-07-18T17:51:48.198162575Z"}

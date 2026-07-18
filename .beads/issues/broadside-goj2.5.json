@@ -1,0 +1,30 @@
+{
+  "id": "broadside-goj2.5",
+  "title": "Media attachments silently dropped in delivery and outbox",
+  "description": "Both the delivery worker (delivery.rs:192-210) and the outbox endpoint (server.rs:461-478) build ActivityPub Create/Note JSON without an 'attachment' field. The post_media table is populated by webhook, feed, and CLI media processing, but the data is never read when constructing outbound activities. media::attachments_for_post() exists but is never called. Result: followers never see images attached to posts. Every post with media is delivered as text-only.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:28:54.945469529Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:51:38.750243334Z",
+  "started_at": "2026-07-18T17:46:10.593526027Z",
+  "closed_at": "2026-07-18T17:51:38.750243334Z",
+  "close_reason": "Media attachments now included in delivery and outbox via attachments_for_post",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.5",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:28:54.970434598Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.46",
+  "title": "media::attachments_for_post silently swallows DB errors",
+  "description": "src/media.rs:152-153 — attachments_for_post uses .unwrap_or_default() to swallow database errors:\n\n    .fetch_all(pool)\n    .await\n    .unwrap_or_default();\n\nThe function signature returns Vec\u003cserde_json::Value\u003e (not Result), so callers have no way to know a DB error occurred. A post might appear to have no media when actually the database query failed.\n\nThe function should return anyhow::Result\u003cVec\u003c...\u003e\u003e and let callers decide how to handle the error (log and continue, or propagate).\n\nImpact: Silent data loss — a temporary DB error causes posts to be served without their media attachments, with no error logged and no way for callers to detect the problem.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:31:02.545697317Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:54:47.824281173Z",
+  "closed_at": "2026-07-18T17:54:47.824281173Z",
+  "close_reason": "attachments_for_post now logs warning on DB error instead of silent swallow",
+  "labels": [
+    "idiomatic-rust",
+    "error-handling",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.46",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:31:02.574448705Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

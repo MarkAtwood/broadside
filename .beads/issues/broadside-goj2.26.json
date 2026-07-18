@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.26",
+  "title": "Private keys stored as plaintext in SQLite",
+  "description": "db.rs:14 stores private_key as TEXT NOT NULL in the personas table with no encryption at rest. persona.rs:36-43 inserts the raw PEM string directly. While server.rs:64-80 warns about file permissions, the private key is fully readable by anyone who can access the SQLite file (DB backups, log shipping, disk forensics). This is a confidentiality risk for key material. Mitigation is partial (file permission warning), but the schema should at minimum document this as a known plaintext storage decision, or ideally encrypt private keys at rest using a passphrase or KDF-derived key. Locations: db.rs:14 (schema), persona.rs:31-43 (insert), persona.rs:129-137 (read back as plain String).",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:52.792636436Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:46:05.678745505Z",
+  "closed_at": "2026-07-18T17:46:05.678745505Z",
+  "close_reason": "Accepted per threat model: 'Trust the database, filesystem, and operator.' Encrypting at rest requires passphrase/HSM, out of scope for v0.1.",
+  "labels": [
+    "crypto-security",
+    "storage",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.26",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:52.822882476Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

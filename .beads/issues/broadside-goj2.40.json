@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.40",
+  "title": "Gratuitous .clone() on cli.rs data_dir",
+  "description": "src/cli.rs:189 — Inside Command::Post handler:\n\n    let data_dir = self\n        .data_dir\n        .as_ref()\n        .ok_or_else(|| anyhow::anyhow!(\"...\"))?\n        .clone();\n\nThe .clone() creates an owned PathBuf, but data_dir is only used by reference thereafter (passed to broadside::media::process_local as \u0026data_dir). The clone is unnecessary — a \u0026PathBuf (from as_ref()) would suffice.\n\nImpact: Unnecessary allocation. Per standards: 'Don't .clone() to escape the borrow checker. Clone is for when independent ownership is genuinely needed.'",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:30:28.585281277Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:54:47.763881032Z",
+  "closed_at": "2026-07-18T17:54:47.763881032Z",
+  "close_reason": "Removed .clone() on data_dir in cli.rs",
+  "labels": [
+    "idiomatic-rust",
+    "ownership",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.40",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:30:28.616519185Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{"id":"019f7647-aca4-7916-b9a3-cdd323b19aa3","issue_id":"broadside-goj2.41","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:30:36.580596854Z"}
+{"id":"019f7647-aca9-7bb1-9858-b92403ec9b71","issue_id":"broadside-goj2.41","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: crypto-security","created_at":"2026-07-18T17:30:36.585767619Z"}
+{"id":"019f7647-acae-7a78-8b09-994b326d809b","issue_id":"broadside-goj2.41","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: key-lifecycle","created_at":"2026-07-18T17:30:36.59068815Z"}
+{"id":"019f7647-acb3-77c4-9145-469ed3f5c51a","issue_id":"broadside-goj2.41","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:30:36.595510371Z"}
+{"id":"019f7655-da68-7630-8923-42002eef1430","issue_id":"broadside-goj2.41","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Key parsing is ~1ms. Delivery worker processes max 50 items/batch. Caching parsed keys indefinitely is worse from security perspective.","created_at":"2026-07-18T17:46:05.800406305Z"}

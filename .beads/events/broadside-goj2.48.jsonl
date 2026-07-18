@@ -1,0 +1,5 @@
+{"id":"019f7648-4f6e-79a6-9737-d3505220ebcc","issue_id":"broadside-goj2.48","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:31:18.254633297Z"}
+{"id":"019f7648-4f72-73bc-90d1-67c1ca16e5f2","issue_id":"broadside-goj2.48","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-18T17:31:18.258246413Z"}
+{"id":"019f7648-4f75-7d73-8080-9e872e8390bc","issue_id":"broadside-goj2.48","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: type-design","created_at":"2026-07-18T17:31:18.261882301Z"}
+{"id":"019f7648-4f79-7776-90ad-9b75869cf1f3","issue_id":"broadside-goj2.48","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:31:18.265489527Z"}
+{"id":"019f7659-9dc4-7d89-89e3-7bcce52ec4ff","issue_id":"broadside-goj2.48","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Closed","created_at":"2026-07-18T17:50:12.420888092Z"}

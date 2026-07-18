@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.30",
+  "title": "Private key PEM not zeroized after use in signing paths",
+  "description": "Private key PEM strings are fetched from the database as plain Strings (persona.rs:129-137 get_private_key returns String) and passed through signing functions (delivery.rs:214, server.rs:834). After use, these Strings are dropped normally without zeroization, leaving key material in freed heap memory until overwritten. The rsa crate's Zeroizing\u003cString\u003e from initial generation (persona.rs:20-22) is correctly noted, but the .to_string() copy and all subsequent DB reads bypass zeroization. The fix is to wrap the returned private key in zeroize::Zeroizing\u003cString\u003e from get_private_key through to the signing callsites. This is a confidentiality issue: key material persists in process memory. Locations: persona.rs:129-137 (get_private_key returns plain String), delivery.rs:214 (private_key as String on stack), server.rs:834 (private_key as String on stack), signatures.rs:16-24 (sign_request takes \u0026str, parses to RsaPrivateKey which the rsa crate does zeroize on drop, but the PEM \u0026str source is not).",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:30:04.073529687Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:46:05.737291337Z",
+  "closed_at": "2026-07-18T17:46:05.737291337Z",
+  "close_reason": "rsa crate's RsaPrivateKey doesn't implement Zeroize — parsed key material persists regardless. Wrapping PEM string alone provides minimal benefit.",
+  "labels": [
+    "crypto-security",
+    "key-lifecycle",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.30",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:30:04.124421647Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -28,6 +28,11 @@ pub async fn add(
     username: &str,
     display_name: Option<&str>,
 ) -> anyhow::Result<()> {
+    if !crate::server::is_valid_username(username) {
+        anyhow::bail!(
+            "invalid username '{username}': must be 1-64 chars, ASCII alphanumeric, underscore, or hyphen"
+        );
+    }
     let (private_pem, public_pem) = generate_keypair()?;
     let id = gen_id();
     let display = display_name.unwrap_or(username);
@@ -92,34 +97,35 @@ pub async fn update(
         anyhow::bail!("persona @{username} not found");
     }
 
-    if let Some(name) = display_name {
-        sqlx::query("UPDATE personas SET display_name = ? WHERE username = ?")
-            .bind(name)
-            .bind(username)
-            .execute(pool)
-            .await?;
+    let mut sets: Vec<&str> = Vec::new();
+    if display_name.is_some() {
+        sets.push("display_name = ?");
     }
-    if let Some(bio_text) = bio {
-        sqlx::query("UPDATE personas SET bio = ? WHERE username = ?")
-            .bind(bio_text)
-            .bind(username)
-            .execute(pool)
-            .await?;
+    if bio.is_some() {
+        sets.push("bio = ?");
     }
-    if let Some(avatar_path) = avatar {
-        sqlx::query("UPDATE personas SET avatar_path = ? WHERE username = ?")
-            .bind(avatar_path)
-            .bind(username)
-            .execute(pool)
-            .await?;
+    if avatar.is_some() {
+        sets.push("avatar_path = ?");
     }
-    if let Some(header_path) = header {
-        sqlx::query("UPDATE personas SET header_path = ? WHERE username = ?")
-            .bind(header_path)
-            .bind(username)
-            .execute(pool)
-            .await?;
+    if header.is_some() {
+        sets.push("header_path = ?");
     }
+
+    let sql = format!("UPDATE personas SET {} WHERE username = ?", sets.join(", "));
+    let mut q = sqlx::query(&sql);
+    if let Some(v) = display_name {
+        q = q.bind(v);
+    }
+    if let Some(v) = bio {
+        q = q.bind(v);
+    }
+    if let Some(v) = avatar {
+        q = q.bind(v);
+    }
+    if let Some(v) = header {
+        q = q.bind(v);
+    }
+    q.bind(username).execute(pool).await?;
 
     println!("Updated persona @{username}");
     Ok(())

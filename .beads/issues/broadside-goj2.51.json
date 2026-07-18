@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.51",
+  "title": "SignatureParts should use borrowed strings",
+  "description": "src/signatures.rs:100-103 — SignatureParts owns its data:\n\n    struct SignatureParts {\n        headers: String,\n        signature: String,\n    }\n\nThe struct is only used within parse_signature_header, which allocates new Strings via .to_string(). Since parse_signature_header takes \u0026str and the returned SignatureParts is consumed immediately in verify_signature, the struct could borrow from the input with lifetime annotations:\n\n    struct SignatureParts\u003c'a\u003e {\n        headers: \u0026'a str,  // or Cow\u003c'a, str\u003e for the default case\n        signature: \u0026'a str,\n    }\n\nThe headers field uses a default value ('(request-target) host date digest') when missing, so it would need Cow\u003c'a, str\u003e. The signature field always borrows from the input.\n\nImpact: Two unnecessary String allocations per signature verification. Minor performance, but the borrowed version better expresses the data flow.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:31:50.354141569Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:51:48.128657787Z",
+  "closed_at": "2026-07-18T17:51:48.128657787Z",
+  "close_reason": "SignatureParts is now public (for server.rs). Borrowing would add lifetime parameter to public API for no caller benefit.",
+  "labels": [
+    "rust-standards",
+    "trait-impls",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.51",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:31:50.37649707Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

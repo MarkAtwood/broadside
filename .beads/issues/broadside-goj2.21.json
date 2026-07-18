@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.21",
+  "title": "Push-loop HTML building in server.rs index/profile",
+  "description": "src/server.rs lines 937-945 (index fn) and lines 1025-1048, 1052-1065 (serve_profile_html fn) use push-loops to build HTML strings:\n\n    let mut personas_html = String::new();\n    for (username, display_name) in \u0026rows {\n        personas_html.push_str(\u0026format!(...));\n    }\n\nPer Rust standards: '.map().filter().collect() over push-loops.'\n\nThese would be clearer as:\n\n    let personas_html: String = rows.iter().map(|(u, d)| format!(...)).collect();\n\nImpact: Readability/idiom. The push-loop pattern is fine functionally but is non-idiomatic Rust. The same pattern appears in 3 locations in server.rs.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:43.052677848Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:54:47.880880166Z",
+  "closed_at": "2026-07-18T17:54:47.880880166Z",
+  "close_reason": "Push-loop HTML building replaced with std::fmt::Write",
+  "labels": [
+    "idiomatic-rust",
+    "iterators",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.21",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:43.080393774Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

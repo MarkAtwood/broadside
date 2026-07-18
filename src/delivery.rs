@@ -16,7 +16,7 @@ const RETRY_DELAYS: &[Duration] = &[
     Duration::from_secs(7200),  // attempt 5
     Duration::from_secs(28800), // attempt 6
 ];
-const MAX_ATTEMPTS: i32 = 7;
+const MAX_ATTEMPTS: u32 = 7;
 
 /// Per-domain circuit breaker state.
 struct CircuitBreaker {
@@ -29,7 +29,15 @@ impl CircuitBreaker {
             failures: HashMap::new(),
         }
     }
+}
 
+impl Default for CircuitBreaker {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl CircuitBreaker {
     fn record_failure(&mut self, domain: &str) {
         let entry = self
             .failures
@@ -127,7 +135,7 @@ async fn process_batch(
 ) -> anyhow::Result<u32> {
     let now = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
 
-    let rows = sqlx::query_as::<_, (String, String, String, i32)>(
+    let rows = sqlx::query_as::<_, (String, String, String, u32)>(
         "SELECT dq.id, dq.post_id, dq.inbox_uri, dq.attempts \
          FROM delivery_queue dq \
          WHERE dq.status = 'pending' AND dq.next_retry <= ? \
@@ -189,6 +197,8 @@ async fn process_batch(
             .map(|t| serde_json::to_value(t).unwrap_or_default())
             .collect();
 
+        let attachments = crate::media::attachments_for_post(pool, &post_id, domain).await;
+
         let activity = serde_json::json!({
             "@context": "https://www.w3.org/ns/activitystreams",
             "id": format!("{post_uri}/activity"),
@@ -206,6 +216,7 @@ async fn process_batch(
                 "to": ["https://www.w3.org/ns/activitystreams#Public"],
                 "cc": [format!("{actor_uri}/followers")],
                 "tag": tag_json,
+                "attachment": attachments,
             }
         });
 
@@ -225,9 +236,8 @@ async fn process_batch(
             &body,
         ) {
             Ok(h) => h,
-            Err(e) => {
-                // Don't store full error chain in DB — could contain key-related info
-                tracing::error!(error = %e, "failed to sign request");
+            Err(_e) => {
+                tracing::error!("failed to sign request for {}", inbox_uri);
                 mark_dead(pool, &delivery_id, "signing failed").await?;
                 processed += 1;
                 continue;
@@ -308,7 +318,7 @@ async fn process_batch(
 async fn handle_retry(
     pool: &SqlitePool,
     delivery_id: &str,
-    attempts: i32,
+    attempts: u32,
     error: &str,
 ) -> anyhow::Result<()> {
     let next_attempt = attempts + 1;
@@ -328,7 +338,7 @@ async fn handle_retry(
     sqlx::query(
         "UPDATE delivery_queue SET attempts = ?, next_retry = ?, last_error = ? WHERE id = ?",
     )
-    .bind(next_attempt)
+    .bind(next_attempt as i32)
     .bind(&next_retry_str)
     .bind(error)
     .bind(delivery_id)

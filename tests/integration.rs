@@ -4,10 +4,9 @@ use std::sync::Arc;
 /// Spin up a broadside server in-process on a random port for testing.
 async fn test_server() -> (String, tempfile::TempDir) {
     let tmp = tempfile::tempdir().unwrap();
-    let data_dir = tmp.path().to_str().unwrap();
 
     // Initialize the database
-    broadside::db::init_data_dir(data_dir).await.unwrap();
+    broadside::db::init_data_dir(tmp.path()).await.unwrap();
 
     // Create a test persona
     let pool = broadside::db::connect(tmp.path()).await.unwrap();
@@ -325,9 +324,7 @@ async fn test_post_dedup_via_source_ref() {
     let _ = base_url; // server not needed for this test
 
     let tmp = tempfile::tempdir().unwrap();
-    broadside::db::init_data_dir(tmp.path().to_str().unwrap())
-        .await
-        .unwrap();
+    broadside::db::init_data_dir(tmp.path()).await.unwrap();
     let pool = broadside::db::connect(tmp.path()).await.unwrap();
     broadside::persona::add(&pool, "dedup", None).await.unwrap();
     let pid = broadside::persona::get_id(&pool, "dedup").await.unwrap();

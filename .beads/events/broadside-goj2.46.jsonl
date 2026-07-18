@@ -1,0 +1,5 @@
+{"id":"019f7648-1216-7a52-aa9c-35bc0fb27498","issue_id":"broadside-goj2.46","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:31:02.550677754Z"}
+{"id":"019f7648-121b-757d-b6f4-9ac6e82b5080","issue_id":"broadside-goj2.46","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-18T17:31:02.555360346Z"}
+{"id":"019f7648-121f-7c22-9bb5-abe88fc51499","issue_id":"broadside-goj2.46","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: error-handling","created_at":"2026-07-18T17:31:02.559796108Z"}
+{"id":"019f7648-1224-79c6-94b0-eb9dd870e63a","issue_id":"broadside-goj2.46","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:31:02.56464283Z"}
+{"id":"019f765d-d194-74f8-aae3-822a43dc0bc1","issue_id":"broadside-goj2.46","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"attachments_for_post now logs warning on DB error instead of silent swallow","created_at":"2026-07-18T17:54:47.828326649Z"}

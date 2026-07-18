@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.50",
+  "title": "content.rs string replacement is O(n*m) and fragile",
+  "description": "src/content.rs:35-50, 64-88, 101-114 — process_content replaces URLs, hashtags, and mentions by finding each match with .find() on the progressively-mutated result string, then rebuilding the entire string with format!():\n\n    if let Some(pos) = result.find(url.as_str()) {\n        let before = \u0026result[..pos];\n        ...\n        result = format!(\"{}{}{}\", \u0026result[..pos], linked, \u0026result[pos + url.len()..]);\n    }\n\nProblems:\n1. O(n*m) — each replacement rebuilds the entire string.\n2. After the first replacement, subsequent .find() calls operate on the mutated string, which now contains HTML tags from previous replacements. This can cause false matches (e.g., a URL that appears in a href= attribute from a previous replacement).\n3. The guard 'if !before.ends_with(\"href=\\\"\")' on line 43 is fragile — it only checks the immediate prefix, not whether we're inside any attribute.\n\nA single-pass approach (iterate through matches by offset, build output incrementally) would be O(n+m) and avoid the mutation hazard.\n\nImpact: Correctness risk — content with multiple URLs where one URL is a prefix of another, or where replacement HTML contains text matching a later pattern, can produce malformed output.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:31:38.730164607Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:33:04.743706536Z",
+  "closed_at": "2026-07-18T17:33:04.743706536Z",
+  "close_reason": "Duplicate of broadside-goj2.27 (same finding about content.rs O(n*m) and fragile replacement)",
+  "labels": [
+    "rust-standards",
+    "clippy-idiom",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.50",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:31:38.752671737Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

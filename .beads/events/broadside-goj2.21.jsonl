@@ -1,0 +1,5 @@
+{"id":"019f7646-db91-7527-a33a-34e825a42dbf","issue_id":"broadside-goj2.21","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:29:43.057339227Z"}
+{"id":"019f7646-db95-7e85-a757-9d4650549026","issue_id":"broadside-goj2.21","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-18T17:29:43.061952228Z"}
+{"id":"019f7646-db9a-77c1-b357-57414bfa2277","issue_id":"broadside-goj2.21","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: iterators","created_at":"2026-07-18T17:29:43.066509282Z"}
+{"id":"019f7646-db9f-71f4-8459-eb4fc2101d2a","issue_id":"broadside-goj2.21","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:29:43.071128581Z"}
+{"id":"019f765d-d1cd-723d-aae0-3cabefddda2a","issue_id":"broadside-goj2.21","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Push-loop HTML building replaced with std::fmt::Write","created_at":"2026-07-18T17:54:47.885147688Z"}

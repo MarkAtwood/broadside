@@ -97,21 +97,26 @@ pub fn verify_signature(
     Ok(())
 }
 
-struct SignatureParts {
-    headers: String,
-    signature: String,
+/// Parsed components of an HTTP Signature header.
+pub struct SignatureParts {
+    pub key_id: String,
+    pub headers: String,
+    pub signature: String,
 }
 
 /// Parse a Signature header value into its components.
 ///
 /// Format: `keyId="...",algorithm="...",headers="...",signature="..."`
-fn parse_signature_header(header: &str) -> anyhow::Result<SignatureParts> {
+pub fn parse_signature_header(header: &str) -> anyhow::Result<SignatureParts> {
+    let mut key_id_val = None;
     let mut headers_val = None;
     let mut signature_val = None;
 
     for part in split_signature_params(header) {
         let part = part.trim();
-        if let Some(val) = part.strip_prefix("headers=\"") {
+        if let Some(val) = part.strip_prefix("keyId=\"") {
+            key_id_val = Some(val.strip_suffix('"').unwrap_or(val).to_string());
+        } else if let Some(val) = part.strip_prefix("headers=\"") {
             headers_val = Some(val.strip_suffix('"').unwrap_or(val).to_string());
         } else if let Some(val) = part.strip_prefix("signature=\"") {
             signature_val = Some(val.strip_suffix('"').unwrap_or(val).to_string());
@@ -119,6 +124,7 @@ fn parse_signature_header(header: &str) -> anyhow::Result<SignatureParts> {
     }
 
     Ok(SignatureParts {
+        key_id: key_id_val.context("missing keyId= in Signature header")?,
         headers: headers_val.unwrap_or_else(|| "(request-target) host date digest".to_string()),
         signature: signature_val.context("missing signature= in Signature header")?,
     })

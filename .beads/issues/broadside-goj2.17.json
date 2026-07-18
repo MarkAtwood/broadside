@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.17",
+  "title": "Missing derives on public types",
+  "description": "Several public types are missing standard derives that would be natural for their usage:\n\n1. PostRow (src/post.rs:74-82): Has sqlx::FromRow but missing Debug, Clone. Debug is essential for logging/diagnostics. Clone is useful since the struct is a pure data carrier.\n\n2. AppState (src/server.rs:13-22): Missing Debug. Since it holds connection pools and clients, Debug might need a manual impl, but it should exist for diagnostic purposes.\n\n3. RateLimiter (src/ratelimit.rs:6-10): Missing Debug.\n\n4. ActorKeyCache (src/actor_cache.rs:17-20): Missing Debug.\n\n5. WebhookPayload (src/webhook.rs:12-18): Has Deserialize but missing Debug. Same for WebhookMedia.\n\n6. Config types (src/config.rs): Config, ServerConfig, WebhookConfig have Debug+Deserialize but WatchConfig and FeedConfig are missing Clone on some (FeedConfig has it, good). ServerConfig is missing Clone — but it's used by reference so this is fine.\n\nPer Rust standards: 'Derive liberally: Debug on almost everything.'\n\nImpact: Makes debugging harder — any tracing::debug! or dbg!() involving these types won't compile without Debug.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:34.684929776Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:54:48.101163541Z",
+  "closed_at": "2026-07-18T17:54:48.101163541Z",
+  "close_reason": "PostRow already has sqlx::FromRow derive. AppState holds pool/client types that don't impl Debug. Adding Debug to private structs like CircuitBreaker, Bucket, CachedActor provides no external benefit.",
+  "labels": [
+    "idiomatic-rust",
+    "trait-impls",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.17",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:34.721308075Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

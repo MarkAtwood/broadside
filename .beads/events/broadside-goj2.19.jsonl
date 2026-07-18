@@ -1,0 +1,5 @@
+{"id":"019f7646-c31b-7726-aced-021de31c4b51","issue_id":"broadside-goj2.19","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:29:36.79547575Z"}
+{"id":"019f7646-c322-7839-8bc1-4a0ef5676b3f","issue_id":"broadside-goj2.19","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: risk","created_at":"2026-07-18T17:29:36.802540479Z"}
+{"id":"019f7646-c326-77f1-a3e5-333f2351f319","issue_id":"broadside-goj2.19","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: maintainer-burden","created_at":"2026-07-18T17:29:36.80652239Z"}
+{"id":"019f7646-c32a-7691-8b55-d04fa48fcd9c","issue_id":"broadside-goj2.19","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:29:36.810431921Z"}
+{"id":"019f7655-d9ae-7a5d-aa2c-9aed0d8b4899","issue_id":"broadside-goj2.19","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Known TOCTOU limitation. Full fix requires custom DNS resolver in reqwest (hickory-dns). Current check is defense-in-depth with millisecond race window.","created_at":"2026-07-18T17:46:05.614680179Z"}

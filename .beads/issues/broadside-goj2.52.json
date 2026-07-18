@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.52",
+  "title": "server.rs webfinger uses if-let instead of let-else",
+  "description": "src/server.rs:213-217 — webfinger handler uses an if-let-else for early return:\n\n    let acct = if let Some(acct) = query.resource.strip_prefix(prefix) {\n        acct\n    } else {\n        return (StatusCode::BAD_REQUEST, ...).into_response();\n    };\n\nThis is the exact pattern that let-else (stabilized in Rust 1.65, well within MSRV 1.80) was designed for:\n\n    let Some(acct) = query.resource.strip_prefix(prefix) else {\n        return (StatusCode::BAD_REQUEST, ...).into_response();\n    };\n\nSame pattern appears at line 220-222 with split_once.\n\nImpact: Readability. let-else is the idiomatic way to express 'unwrap or return early' in modern Rust.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:32:05.035516712Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:54:47.98997024Z",
+  "closed_at": "2026-07-18T17:54:47.98997024Z",
+  "close_reason": "Webfinger uses let-else pattern",
+  "labels": [
+    "rust-standards",
+    "clippy-idiom",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.52",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:32:05.059951672Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

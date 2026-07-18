@@ -1,9 +1,9 @@
 use ammonia::Builder;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
+use std::sync::LazyLock;
 
-/// Sanitize HTML to the Mastodon-compatible allowlist.
-pub fn sanitize_html(html: &str) -> String {
-    let tags: HashSet<&str> = [
+static SANITIZE_BUILDER: LazyLock<Builder<'static>> = LazyLock::new(|| {
+    let tags: HashSet<&'static str> = [
         "p",
         "br",
         "a",
@@ -21,16 +21,18 @@ pub fn sanitize_html(html: &str) -> String {
     .into_iter()
     .collect();
 
-    let mut attrs = std::collections::HashMap::new();
+    let mut attrs: HashMap<&'static str, HashSet<&'static str>> = HashMap::new();
     // ammonia 4.x manages rel= on <a> tags internally (adds noopener noreferrer)
-    let a_attrs: HashSet<&str> = ["href"].into_iter().collect();
-    attrs.insert("a", a_attrs);
+    attrs.insert("a", ["href"].into_iter().collect());
 
-    Builder::new()
-        .tags(tags)
-        .tag_attributes(attrs)
-        .clean(html)
-        .to_string()
+    let mut b = Builder::new();
+    b.tags(tags).tag_attributes(attrs);
+    b
+});
+
+/// Sanitize HTML to the Mastodon-compatible allowlist.
+pub fn sanitize_html(html: &str) -> String {
+    SANITIZE_BUILDER.clean(html).to_string()
 }
 
 /// Render markdown to sanitized HTML.

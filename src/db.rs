@@ -77,19 +77,19 @@ pub async fn connect(data_dir: &Path) -> anyhow::Result<SqlitePool> {
         .create_if_missing(true)
         .foreign_keys(true);
     let pool = SqlitePool::connect_with(options).await?;
+    // Ensure schema exists (CREATE TABLE IF NOT EXISTS is idempotent)
+    sqlx::raw_sql(SCHEMA).execute(&pool).await?;
     Ok(pool)
 }
 
-pub async fn init_data_dir(data_dir: &str) -> anyhow::Result<()> {
-    let path = Path::new(data_dir);
-    tokio::fs::create_dir_all(path).await?;
-    tokio::fs::create_dir_all(path.join("media")).await?;
+pub async fn init_data_dir(data_dir: &Path) -> anyhow::Result<()> {
+    tokio::fs::create_dir_all(data_dir).await?;
+    tokio::fs::create_dir_all(data_dir.join("media")).await?;
 
-    let pool = connect(path).await?;
-    sqlx::raw_sql(SCHEMA).execute(&pool).await?;
+    let pool = connect(data_dir).await?;
     pool.close().await;
 
-    let config_path = path.join("config.toml");
+    let config_path = data_dir.join("config.toml");
     if !config_path.exists() {
         tokio::fs::write(
             &config_path,

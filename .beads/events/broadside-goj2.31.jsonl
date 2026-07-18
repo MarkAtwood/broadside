@@ -1,0 +1,5 @@
+{"id":"019f7647-2e3b-7e69-8112-b4b6c54d022c","issue_id":"broadside-goj2.31","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:30:04.219948731Z"}
+{"id":"019f7647-2e45-734f-9f6e-91bef96564a4","issue_id":"broadside-goj2.31","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: risk","created_at":"2026-07-18T17:30:04.229218568Z"}
+{"id":"019f7647-2e4e-76b0-85d8-ddeebb892180","issue_id":"broadside-goj2.31","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: maintainer-burden","created_at":"2026-07-18T17:30:04.238439897Z"}
+{"id":"019f7647-2e56-7b2c-9ca7-49c848b214e0","issue_id":"broadside-goj2.31","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:30:04.24673346Z"}
+{"id":"019f765a-eebe-7741-a09b-8238bd363f49","issue_id":"broadside-goj2.31","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"db::connect now runs CREATE TABLE IF NOT EXISTS schema on every connect","created_at":"2026-07-18T17:51:38.686476697Z"}

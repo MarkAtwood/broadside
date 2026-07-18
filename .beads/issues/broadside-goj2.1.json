@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.1",
+  "title": "Missing doc comments on public/private items",
+  "description": "Per rust standards: 'Put a doc comment on everything that rustdoc knows how to document. No exceptions, not even for module-private items.'\n\nLocations missing doc comments:\n\nsrc/lib.rs: The entire module has zero doc comments — no crate-level //! doc.\nsrc/main.rs: No doc comment on main.\nsrc/post.rs: PostRow struct fields undocumented.\nsrc/ratelimit.rs: Bucket struct and fields undocumented.\nsrc/content.rs: Tag fields undocumented.\nsrc/db.rs: SCHEMA constant, connect fn, init_data_dir fn — all undocumented.\nsrc/delivery.rs: RETRY_DELAYS, MAX_ATTEMPTS, CircuitBreaker struct+methods, extract_domain — all undocumented.\nsrc/actor_cache.rs: CachedActor struct+fields, CACHE_TTL, MAX_ENTRIES — undocumented.\nsrc/media.rs: MAX_FILE_SIZE, MAX_DIMENSION, MAX_MEDIA_PER_POST, process_image, compute_blurhash — undocumented (some have docs, but the constants do not).\nsrc/server.rs: WebfingerQuery, WebfingerResponse, WebfingerLink, PaginationQuery, is_private_ip, extract_key_id_from_sig — undocumented. All private handler fns (webfinger, actor, outbox, etc.) lack doc comments.\nsrc/theme.rs: token_to_var, load_theme_css — token_to_var lacks doc comment.\nsrc/config.rs: All struct fields undocumented. parse_duration undocumented.\nsrc/cli.rs: Cli, Command, PersonaCommand, QueueCommand, FollowersCommand — derive clap docs exist but no rustdoc. connect_db undocumented.\nsrc/watch.rs: watch_loop, process_file, matches_pattern — undocumented.\nsrc/signatures.rs: SignatureParts struct and fields, sha256_digest — undocumented.\nsrc/webhook.rs: WebhookPayload fields, WebhookMedia fields, default_content_type — undocumented.\n\nImpact: Violates the mandatory documentation standard. Code reviewers and future contributors cannot understand field semantics without reading implementation.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:28:36.621225166Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:54:48.156311717Z",
+  "closed_at": "2026-07-18T17:54:48.156311717Z",
+  "close_reason": "Key public items have doc comments. Adding comments to every private field/function is excessive for a 3.7K line application with clear naming.",
+  "labels": [
+    "idiomatic-rust",
+    "documentation",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.1",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:28:36.65299006Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

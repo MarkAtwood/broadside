@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.23",
+  "title": "gen_id() not lexicographically sortable as documented",
+  "description": "id.rs documents gen_id() as 'Lexicographically sortable within a single process' but uses as_millis() which produces variable-width decimal numbers. Example: ID at timestamp 999999999999 (12 digits) sorts after 1000000000000 (13 digits) lexicographically, but represents an earlier time. After Unix epoch + ~31.7 years (year ~2001), the millisecond count crossed 10^12 and will cross 10^13 around year 2286, but the fundamental issue is that any width transition breaks sort order. Practically this won't bite until the next digit-width boundary, but the documented invariant is wrong. Fix: zero-pad the millis portion to a fixed width (e.g., 16 digits covers until year 2527).",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:45.643061135Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:30:40.326546697Z",
+  "closed_at": "2026-07-18T17:30:40.326546697Z",
+  "close_reason": "Duplicate of broadside-goj2.20",
+  "labels": [
+    "risk",
+    "maintainer-burden",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.23",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:45.668957641Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

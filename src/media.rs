@@ -143,14 +143,21 @@ pub async fn attachments_for_post(
     post_id: &str,
     domain: &str,
 ) -> Vec<serde_json::Value> {
-    let rows = sqlx::query_as::<_, (String, String, String, String, Option<i64>, Option<i64>)>(
-        "SELECT file_path, mime_type, description, blurhash, width, height \
+    let rows =
+        match sqlx::query_as::<_, (String, String, String, String, Option<i64>, Option<i64>)>(
+            "SELECT file_path, mime_type, description, blurhash, width, height \
          FROM post_media WHERE post_id = ? ORDER BY id",
-    )
-    .bind(post_id)
-    .fetch_all(pool)
-    .await
-    .unwrap_or_default();
+        )
+        .bind(post_id)
+        .fetch_all(pool)
+        .await
+        {
+            Ok(r) => r,
+            Err(e) => {
+                tracing::warn!(post_id, error = %e, "failed to fetch media attachments");
+                return Vec::new();
+            }
+        };
 
     rows.iter()
         .map(

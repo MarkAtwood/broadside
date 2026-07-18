@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.36",
+  "title": "Persona username not validated, allowing path traversal in URLs",
+  "description": "persona.rs add() accepts any string as a username and stores it in the DB. The server constructs URLs like 'https://{domain}/users/{username}' and filesystem paths like 'media/{id}.png' using the username. A username containing '/' or '..' would produce malformed ActivityPub URIs (e.g., https://example.com/users/../admin) and could confuse remote servers' routing. While the CLI is operator-controlled, there is no validation that the username matches [a-zA-Z0-9_]+ or similar safe pattern. A contributor adding a web-based persona creation endpoint would inherit this gap. Fix: validate username against a strict alphanumeric+underscore pattern in persona::add().",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:30:20.284883592Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:50:12.457040418Z",
+  "closed_at": "2026-07-18T17:50:12.457040418Z",
+  "close_reason": "Closed",
+  "labels": [
+    "risk",
+    "maintainer-burden",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.36",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:30:20.314795651Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

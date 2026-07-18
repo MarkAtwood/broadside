@@ -1,0 +1,5 @@
+{"id":"019f7647-019d-7777-92d4-7578e9b0c42c","issue_id":"broadside-goj2.26","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:29:52.797490455Z"}
+{"id":"019f7647-01a2-75ce-b9d1-1f29a782e9e9","issue_id":"broadside-goj2.26","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: crypto-security","created_at":"2026-07-18T17:29:52.802382074Z"}
+{"id":"019f7647-01a7-72fe-8d1b-260d7f25d8b9","issue_id":"broadside-goj2.26","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: storage","created_at":"2026-07-18T17:29:52.807197475Z"}
+{"id":"019f7647-01ab-7cc1-bc54-8a16ec215196","issue_id":"broadside-goj2.26","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:29:52.811836811Z"}
+{"id":"019f7655-d9f0-7ee7-a36e-d7e4ef9fc6c2","issue_id":"broadside-goj2.26","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Accepted per threat model: 'Trust the database, filesystem, and operator.' Encrypting at rest requires passphrase/HSM, out of scope for v0.1.","created_at":"2026-07-18T17:46:05.680977277Z"}

@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.29",
+  "title": "verify_signature uses push-loop for signed string",
+  "description": "src/signatures.rs:63-80 — verify_signature builds the signed string with a push-loop:\n\n    let mut lines = Vec::new();\n    for h in signed_headers {\n        if h == \"(request-target)\" {\n            lines.push(format!(...));\n        } else {\n            ...\n            lines.push(format!(\"{h}: {val}\"));\n        }\n    }\n    let signed_string = lines.join(\"\\n\");\n\nThis could be expressed as a map+collect with fallible iterator (.try_fold or map returning Result + collect::\u003cResult\u003cVec\u003c_\u003e, _\u003e\u003e()), which would also allow early ? return for the missing-header error instead of the current with_context inside the loop.\n\nImpact: Readability/idiom. The loop makes the flow harder to follow and prevents the function from being expressed as a pipeline.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:30:01.641070505Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:53:04.474584721Z",
+  "closed_at": "2026-07-18T17:53:04.474584721Z",
+  "close_reason": "Push-loop is justified here: the ? operator inside the loop for header lookup errors makes an iterator chain less readable (would need collect::\u003cResult\u003cVec\u003c_\u003e\u003e\u003e).",
+  "labels": [
+    "idiomatic-rust",
+    "iterators",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.29",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:30:01.67230157Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

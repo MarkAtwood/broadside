@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.48",
+  "title": "persona::update takes 4 independent Option params",
+  "description": "src/persona.rs:74-81 — persona::update takes 4 separate Option\u003c\u0026str\u003e parameters:\n\n    pub async fn update(\n        pool: \u0026SqlitePool, username: \u0026str,\n        display_name: Option\u003c\u0026str\u003e,\n        bio: Option\u003c\u0026str\u003e,\n        avatar: Option\u003c\u0026str\u003e,\n        header: Option\u003c\u0026str\u003e,\n    )\n\nThis function signature has 6 parameters, 4 of which are Option types that could be grouped into a PersonaUpdate struct. The bool-param guideline applies here by extension — at the call site (cli.rs:150-157), the reader cannot tell which Option is which without checking parameter order.\n\nA builder or struct pattern would be clearer:\n\n    pub struct PersonaUpdate\u003c'a\u003e {\n        pub display_name: Option\u003c\u0026'a str\u003e,\n        pub bio: Option\u003c\u0026'a str\u003e,\n        pub avatar: Option\u003c\u0026'a str\u003e,\n        pub header: Option\u003c\u0026'a str\u003e,\n    }\n\nImpact: Call-site readability. With 4 Option\u003c\u0026str\u003e params in a row, a transposition error (swapping bio and avatar) would compile silently and produce wrong behavior.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:31:18.250842646Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:50:12.417979398Z",
+  "closed_at": "2026-07-18T17:50:12.417979398Z",
+  "close_reason": "Closed",
+  "labels": [
+    "idiomatic-rust",
+    "type-design",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.48",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:31:18.277509126Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

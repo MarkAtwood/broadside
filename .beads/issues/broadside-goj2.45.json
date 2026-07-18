@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.45",
+  "title": "TOCTOU in SSRF guard: DNS checked then re-resolved",
+  "description": "actor_cache.rs:48 calls is_private_host_resolved(host) which resolves DNS and checks for private IPs. Then at line 57, self.client.get(actor_uri) resolves DNS again for the actual HTTP request. Between these two DNS resolutions, an attacker controlling their DNS server can return a public IP for the check and a private IP (e.g., 169.254.169.254 for cloud metadata) for the actual fetch. This is a classic DNS rebinding / TOCTOU attack. The same pattern exists in server.rs:718-732 (Follow handler fetches follower actor), delivery.rs:150-153 (delivery worker re-validates then sends), and media.rs:54-66 (media fetch). The fix is to resolve DNS once and pin the resolved IP for the actual request, or use a custom DNS resolver that filters private IPs. This is a confidentiality/integrity issue: SSRF to internal services. Locations: actor_cache.rs:42-61, server.rs:718-753, delivery.rs:143-154, media.rs:53-66.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:30:54.590449705Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:31:21.639499251Z",
+  "closed_at": "2026-07-18T17:31:21.639499251Z",
+  "close_reason": "Duplicate of broadside-goj2.19 which was filed by a prior review pass",
+  "labels": [
+    "crypto-security",
+    "untrusted-input",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.45",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:30:54.625367243Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

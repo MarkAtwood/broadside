@@ -102,14 +102,15 @@ impl ActorKeyCache {
         // Cache it
         {
             let mut entries = self.entries.lock().await;
-            // Evict if too full
+            // Evict if too full: clear half the cache to amortise eviction cost
             if entries.len() >= MAX_ENTRIES {
-                let oldest = entries
-                    .iter()
-                    .min_by_key(|(_, v)| v.fetched_at)
-                    .map(|(k, _)| k.clone());
-                if let Some(key) = oldest {
-                    entries.remove(&key);
+                // ponytail: half-clear is O(n/2) amortised over n/2 subsequent inserts = O(1) per insert
+                entries.retain(|_, v| v.fetched_at.elapsed() < CACHE_TTL / 2);
+                if entries.len() >= MAX_ENTRIES {
+                    // All entries are fresh; drop half arbitrarily
+                    let keep: std::collections::HashSet<String> =
+                        entries.keys().take(MAX_ENTRIES / 2).cloned().collect();
+                    entries.retain(|k, _| keep.contains(k));
                 }
             }
             entries.insert(

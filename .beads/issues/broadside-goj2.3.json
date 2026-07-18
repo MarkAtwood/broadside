@@ -1,0 +1,29 @@
+{
+  "id": "broadside-goj2.3",
+  "title": "Duplicated signature header parsing logic",
+  "description": "src/signatures.rs:split_signature_params (lines 128-159) and src/server.rs:extract_key_id_from_sig (lines 1212-1250) contain near-identical state machines for parsing HTTP Signature header quoted-string params (tracking in_quotes, escape_next, splitting on commas). The only difference is that one collects all params and the other extracts keyId.\n\nImpact: Maintenance risk — a bug fix in one parser won't be applied to the other. This is not a style nit; the two implementations could diverge on edge cases (e.g., handling of escaped quotes or empty fields), producing inconsistent security behavior in signature verification.\n\nFix: Extract a shared split_signature_params function (already exists in signatures.rs) and call it from extract_key_id_from_sig, or move both into signatures.rs and make extract_key_id_from_sig a thin wrapper.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:28:46.225119883Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:51:38.353186109Z",
+  "closed_at": "2026-07-18T17:51:38.353186109Z",
+  "close_reason": "Removed duplicate extract_key_id_from_sig, now using signatures::parse_signature_header",
+  "labels": [
+    "idiomatic-rust",
+    "duplication",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.3",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:28:46.266130211Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

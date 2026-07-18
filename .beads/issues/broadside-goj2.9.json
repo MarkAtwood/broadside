@@ -1,0 +1,28 @@
+{
+  "id": "broadside-goj2.9",
+  "title": "Duplicated quoted-string signature parser",
+  "description": "The logic for splitting a Signature header value respecting quoted strings and backslash escapes is implemented twice, nearly identically:\n\n1. src/signatures.rs split_signature_params() lines 128-159\n2. src/server.rs extract_key_id_from_sig() lines 1212-1250\n\nBoth have the same escape_next/in_quotes/comma-split logic. The only difference is what they extract from the result (signatures.rs extracts headers= and signature=; server.rs extracts keyId=).\n\nWhat goes wrong: a bug fix to the parser (e.g., handling edge cases in escape sequences) must be applied in two places or one will diverge. This is the kind of duplication that becomes a security bug.\n\nFix: extract split_signature_params into a shared function (it already exists in signatures.rs). Have extract_key_id_from_sig call it and scan the result for the keyId= part.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T17:29:06.310733942Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T17:30:34.595859518Z",
+  "closed_at": "2026-07-18T17:30:34.595859518Z",
+  "close_reason": "Duplicate of broadside-goj2.3",
+  "labels": [
+    "elegance",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-goj2.9",
+      "depends_on_id": "broadside-goj2",
+      "type": "parent-child",
+      "created_at": "2026-07-18T17:29:06.337239874Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

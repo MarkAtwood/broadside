@@ -1,0 +1,5 @@
+{"id":"019f7646-e227-7369-934b-485303292b1b","issue_id":"broadside-goj2.22","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T17:29:44.743224575Z"}
+{"id":"019f7646-e22b-7c4d-bc1e-d646d29dc0b9","issue_id":"broadside-goj2.22","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: crypto-security","created_at":"2026-07-18T17:29:44.747808242Z"}
+{"id":"019f7646-e230-7278-b69d-8da5a8937b5e","issue_id":"broadside-goj2.22","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: key-lifecycle","created_at":"2026-07-18T17:29:44.752162723Z"}
+{"id":"019f7646-e234-76d3-a965-b3562c8db65e","issue_id":"broadside-goj2.22","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-18T17:29:44.756448052Z"}
+{"id":"019f765a-ee3d-763a-b397-a7a235b4e642","issue_id":"broadside-goj2.22","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"WebhookConfig now has manual Debug impl that redacts key field","created_at":"2026-07-18T17:51:38.557408557Z"}
