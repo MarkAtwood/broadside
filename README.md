@@ -50,6 +50,7 @@ Hashtags (`#release`), mentions (`@user@instance`), and URLs are automatically l
 - Profile metadata fields (Website, GitHub, etc. — rendered on Mastodon profiles)
 - Brand theming via W3C Design Tokens (light/dark mode) or custom CSS
 - Delivery retry with exponential backoff and per-domain circuit breaker
+- CDN-friendly caching (`Cache-Control`, `Vary: Accept` on content-negotiated endpoints)
 - Rate limiting, SSRF protection, Digest/Date verification
 - Graceful shutdown on SIGTERM/SIGINT
 
@@ -148,6 +149,16 @@ Both paths are optional. Without them, broadside uses a clean default with autom
 - Nothing else. No PostgreSQL, no Redis, no Node.js.
 
 Broadside uses SQLite for storage. PostgreSQL support is planned for environments that require managed databases (e.g., RDS/Aurora).
+
+### CDN / Caching
+
+Broadside sets per-endpoint `Cache-Control` headers so a CDN or caching reverse proxy works out of the box:
+
+- **Actor, WebFinger, followers, NodeInfo**: `public, max-age=300` (5 min)
+- **Outbox pages, index, profile**: `public, max-age=60` (1 min)
+- **Inbox POST, webhook, health**: `no-store`
+
+Content-negotiated endpoints (actor serves JSON-LD or HTML based on `Accept`) include `Vary: Accept` so CDNs cache both variants correctly. No purge API needed — the short TTLs mean new posts and follows appear within a minute.
 
 ### Caddy example
 
