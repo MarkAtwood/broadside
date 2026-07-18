@@ -1,0 +1,17 @@
+{
+  "id": "broadside-219j",
+  "title": "NodeInfo Content-Type missing profile parameter",
+  "description": "GET /nodeinfo/2.0 returns Content-Type: application/json. The NodeInfo 2.0 spec recommends Content-Type: application/json; profile=\"http://nodeinfo.diaspora.software/ns/schema/2.0#\" per the discovery document. Some clients check for this. Discovered during conformance testing.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T19:16:02.13175813Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T19:18:48.398169597Z",
+  "closed_at": "2026-07-18T19:18:48.398169597Z",
+  "close_reason": "NodeInfo now returns Content-Type with profile parameter per NodeInfo 2.0 spec",
+  "labels": [
+    "conformance"
+  ]
+}

@@ -2,11 +2,13 @@
   "id": "broadside-w6ac",
   "title": "Run go-fed/testsuite (test.activitypub.dev) against broadside",
   "description": "The go-fed test suite at https://test.activitypub.dev is the functional replacement for the defunct W3C test suite. Tests C2S and S2S ActivityPub compliance. Point it at a running broadside instance and work through failures. Note: broadside has no C2S API, so only S2S tests apply.",
-  "status": "open",
+  "status": "closed",
   "priority": 1,
   "issue_type": "task",
   "owner": "mark@reviewcommit.com",
   "created_at": "2026-07-18T19:02:31.033481355Z",
   "created_by": "Mark Atwood",
-  "updated_at": "2026-07-18T19:02:31.033481355Z"
+  "updated_at": "2026-07-18T19:16:54.103387574Z",
+  "closed_at": "2026-07-18T19:16:54.103387574Z",
+  "close_reason": "go-fed/testsuite is defunct (last commit 2020). Builds but requires second public TLS hostname and manual browser interaction. Not automatable."
 }

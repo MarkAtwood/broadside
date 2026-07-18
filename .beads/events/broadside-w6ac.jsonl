@@ -1,1 +1,2 @@
 {"id":"019f769b-d181-71a4-8087-763930a7d367","issue_id":"broadside-w6ac","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T19:02:31.041108349Z"}
+{"id":"019f76a8-fcdc-71e1-b6ac-f415fbfc661a","issue_id":"broadside-w6ac","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"go-fed/testsuite is defunct (last commit 2020). Builds but requires second public TLS hostname and manual browser interaction. Not automatable.","created_at":"2026-07-18T19:16:54.10812415Z"}

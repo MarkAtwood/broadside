@@ -2,11 +2,13 @@
   "id": "broadside-u8s6",
   "title": "Run FediTest conformance suite against broadside",
   "description": "FediTest (https://feditest.org, github.com/fediverse-devnet/feditest) is the most comprehensive AP conformance suite. NLnet-funded, actively maintained. Sets up a constellation of nodes and runs interop tests. Clone feditest-tests-fediverse repo, configure broadside as a node, run the test suite, fix failures.",
-  "status": "open",
+  "status": "closed",
   "priority": 1,
   "issue_type": "task",
   "owner": "mark@reviewcommit.com",
   "created_at": "2026-07-18T18:57:24.69571211Z",
   "created_by": "Mark Atwood",
-  "updated_at": "2026-07-18T18:57:24.69571211Z"
+  "updated_at": "2026-07-18T19:16:53.981370798Z",
+  "closed_at": "2026-07-18T19:16:53.981370798Z",
+  "close_reason": "FediTest requires UBOS container runtime for full AP tests. WebFinger tests pass. Full federation testing deferred to deployment with stable domain."
 }

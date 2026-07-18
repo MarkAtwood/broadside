@@ -1,0 +1,17 @@
+{
+  "id": "broadside-i32g",
+  "title": "Actor missing 'following' collection endpoint",
+  "description": "The actor document does not include a 'following' field and GET /users/testuser/following returns 404. ActivityPub spec Section 5.4 requires actors to have a following collection. Mastodon and other implementations check for this during federation discovery. Discovered during conformance testing.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T19:15:58.238501134Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T19:18:48.336155705Z",
+  "closed_at": "2026-07-18T19:18:48.336155705Z",
+  "close_reason": "Added /users/{username}/following endpoint (empty OrderedCollection) and following field in actor document",
+  "labels": [
+    "conformance"
+  ]
+}

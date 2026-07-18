@@ -2,11 +2,15 @@
   "id": "broadside-su96",
   "title": "Test with Fediverse Pasture test vectors",
   "description": "Fediverse Pasture Inputs (codeberg.org/funfedidev/fediverse-pasture-inputs) provides test vectors for interop — Notes from Misskey, Pleroma, GoToSocial, etc. that exercise edge cases. Feed each vector into our inbox handler and verify correct parsing. Broadside discards most inbound activities, so focus on Follow/Undo Follow vectors.",
-  "status": "open",
+  "status": "closed",
   "priority": 2,
   "issue_type": "task",
+  "assignee": "Mark Atwood",
   "owner": "mark@reviewcommit.com",
   "created_at": "2026-07-18T19:02:31.182263875Z",
   "created_by": "Mark Atwood",
-  "updated_at": "2026-07-18T19:02:31.182263875Z"
+  "updated_at": "2026-07-18T19:11:03.920372165Z",
+  "started_at": "2026-07-18T19:09:42.759058538Z",
+  "closed_at": "2026-07-18T19:11:03.920372165Z",
+  "close_reason": "Closed"
 }

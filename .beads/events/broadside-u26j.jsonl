@@ -1,1 +1,2 @@
 {"id":"019f769b-d1b0-7441-9477-8ac0bbfb2e16","issue_id":"broadside-u26j","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T19:02:31.088279701Z"}
+{"id":"019f76a8-fd13-7571-880b-4352c1c152dc","issue_id":"broadside-u26j","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Converted to curl battery. 27/27 tests pass. One minor Content-Type finding filed as broadside-vcg2.","created_at":"2026-07-18T19:16:54.163357499Z"}

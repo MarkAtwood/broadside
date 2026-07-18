@@ -44,6 +44,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/users/{username}", get(actor))
         .route("/users/{username}/outbox", get(outbox))
         .route("/users/{username}/followers", get(followers_collection))
+        .route("/users/{username}/following", get(following_collection))
         .route("/users/{username}/inbox", post(inbox))
         .route("/inbox", post(shared_inbox))
         .route("/hook/{persona}", post(crate::webhook::handle_webhook))
@@ -255,7 +256,11 @@ async fn webfinger(
                     href: format!("https://{}/users/{}", state.domain, username),
                 }],
             };
-            Json(resp).into_response()
+            (
+                [(axum::http::header::CONTENT_TYPE, "application/jrd+json")],
+                Json(resp),
+            )
+                .into_response()
         }
     }
 }
@@ -271,7 +276,7 @@ async fn nodeinfo_discovery(State(state): State<Arc<AppState>>) -> Json<serde_js
     }))
 }
 
-async fn nodeinfo(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
+async fn nodeinfo(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     let user_count = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM personas")
         .fetch_one(&state.pool)
         .await
@@ -284,7 +289,7 @@ async fn nodeinfo(State(state): State<Arc<AppState>>) -> Json<serde_json::Value>
         .map(|(c,)| c)
         .unwrap_or(0);
 
-    Json(serde_json::json!({
+    let doc = serde_json::json!({
         "version": "2.0",
         "software": {
             "name": "broadside",
@@ -296,7 +301,14 @@ async fn nodeinfo(State(state): State<Arc<AppState>>) -> Json<serde_json::Value>
             "localPosts": post_count
         },
         "openRegistrations": false
-    }))
+    });
+    (
+        [(
+            axum::http::header::CONTENT_TYPE,
+            "application/json; profile=\"http://nodeinfo.diaspora.software/ns/schema/2.0#\"",
+        )],
+        Json(doc),
+    )
 }
 
 // --- Actor ---
@@ -355,6 +367,7 @@ async fn actor(
         "inbox": format!("{}/inbox", actor_uri),
         "outbox": format!("{}/outbox", actor_uri),
         "followers": format!("{}/followers", actor_uri),
+        "following": format!("{}/following", actor_uri),
         "url": actor_uri,
         "discoverable": true,
         "manuallyApprovesFollowers": false,
@@ -535,6 +548,36 @@ async fn followers_collection(
         "id": format!("https://{}/users/{}/followers", state.domain, username),
         "type": "OrderedCollection",
         "totalItems": count
+    });
+
+    (
+        [(
+            axum::http::header::CONTENT_TYPE,
+            "application/activity+json",
+        )],
+        Json(doc),
+    )
+        .into_response()
+}
+
+// --- Following collection (always empty — broadside is one-way) ---
+
+async fn following_collection(
+    State(state): State<Arc<AppState>>,
+    Path(username): Path<String>,
+) -> impl IntoResponse {
+    if crate::persona::get_id(&state.pool, &username)
+        .await
+        .is_err()
+    {
+        return (StatusCode::NOT_FOUND, "unknown user").into_response();
+    }
+
+    let doc = serde_json::json!({
+        "@context": "https://www.w3.org/ns/activitystreams",
+        "id": format!("https://{}/users/{}/following", state.domain, username),
+        "type": "OrderedCollection",
+        "totalItems": 0
     });
 
     (

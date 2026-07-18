@@ -1,1 +1,2 @@
 {"id":"019f769b-d1e1-7917-81c8-2cade33e0808","issue_id":"broadside-msr7","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T19:02:31.137596444Z"}
+{"id":"019f76a8-fd4a-7187-b9f1-243bfaa6ad1c","issue_id":"broadside-msr7","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Discovery checks pass via ngrok (WebFinger, actor doc, NodeInfo). Full follow/delivery test requires stable domain.","created_at":"2026-07-18T19:16:54.218100854Z"}

@@ -1,1 +1,2 @@
 {"id":"019f7697-24e0-7166-8110-7f2e65a3f9fc","issue_id":"broadside-u8s6","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T18:57:24.704092637Z"}
+{"id":"019f76a8-fc9e-7c52-824c-0998d338baa4","issue_id":"broadside-u8s6","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"FediTest requires UBOS container runtime for full AP tests. WebFinger tests pass. Full federation testing deferred to deployment with stable domain.","created_at":"2026-07-18T19:16:54.04680861Z"}
