@@ -913,17 +913,30 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
 
     let actor_uri = format!("https://{}/users/{}", state.domain, username);
 
-    // Build metadata fields HTML
+    // Build metadata fields HTML (Mastodon-style table)
     let mut fields_html = String::new();
     if let Ok(fields) = serde_json::from_str::<Vec<serde_json::Value>>(&metadata_json) {
-        for f in &fields {
-            let name = f["name"].as_str().unwrap_or("");
-            let value = f["value"].as_str().unwrap_or("");
-            fields_html.push_str(&format!(
-                "<dt>{}</dt><dd>{}</dd>",
-                ammonia::clean(name),
-                ammonia::clean(value)
-            ));
+        if !fields.is_empty() {
+            fields_html.push_str("<table class=\"fields\">");
+            for f in &fields {
+                let name = f["name"].as_str().unwrap_or("");
+                let value = f["value"].as_str().unwrap_or("");
+                // Auto-link URLs in values
+                let value_html = if value.starts_with("https://") || value.starts_with("http://") {
+                    format!(
+                        r#"<a href="{v}" rel="nofollow noopener noreferrer">{v}</a>"#,
+                        v = ammonia::clean(value)
+                    )
+                } else {
+                    ammonia::clean(value).to_string()
+                };
+                fields_html.push_str(&format!(
+                    "<tr><th>{}</th><td>{}</td></tr>",
+                    ammonia::clean(name),
+                    value_html
+                ));
+            }
+            fields_html.push_str("</table>");
         }
     }
 
@@ -931,12 +944,15 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
     let mut posts_html = String::new();
     for p in &posts {
         let (processed, _) = crate::content::process_content(&p.content_html, &state.domain);
+        let date_display = &p.published_at[..10]; // YYYY-MM-DD
         posts_html.push_str(&format!(
             r#"<article class="post">
-                <div class="content">{}</div>
-                <time datetime="{}">{}</time>
+                <div class="post-content">{content}</div>
+                <footer><time datetime="{ts}">{date}</time></footer>
             </article>"#,
-            processed, p.published_at, p.published_at
+            content = processed,
+            ts = p.published_at,
+            date = date_display,
         ));
     }
 
@@ -945,6 +961,18 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
     } else {
         format!("<div class=\"bio\">{}</div>", ammonia::clean(&bio))
     };
+
+    let follower_count =
+        sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM followers WHERE persona_id = ?")
+            .bind(&persona_id)
+            .fetch_one(&state.pool)
+            .await
+            .map(|(c,)| c)
+            .unwrap_or(0);
+
+    let post_count = crate::post::count_for_persona(&state.pool, &persona_id)
+        .await
+        .unwrap_or(0);
 
     let html = format!(
         r#"<!DOCTYPE html>
@@ -955,30 +983,45 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
     <title>@{username}@{domain} — {display_name}</title>
     <link rel="alternate" type="application/activity+json" href="{actor_uri}">
     <style>
-        body {{ max-width: 600px; margin: 2em auto; padding: 0 1em; font-family: system-ui, sans-serif; color: #1a1a1a; }}
-        .profile {{ border-bottom: 1px solid #ccc; padding-bottom: 1em; margin-bottom: 1.5em; }}
-        h1 {{ margin-bottom: 0.2em; }}
-        .handle {{ color: #666; margin-top: 0; }}
-        .bio {{ margin: 0.5em 0; }}
-        .joined {{ color: #888; font-size: 0.9em; }}
-        dl {{ display: grid; grid-template-columns: auto 1fr; gap: 0.3em 1em; margin: 0.8em 0; }}
-        dt {{ font-weight: bold; color: #555; }}
-        .post {{ border-bottom: 1px solid #eee; padding: 1em 0; }}
-        .post time {{ color: #888; font-size: 0.85em; }}
-        a {{ color: #2b6cb0; }}
+        :root {{ --text: #1d1d1f; --muted: #6e6e73; --bg: #fff; --card: #f5f5f7; --border: #d2d2d7; --link: #0066cc; }}
+        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+               color: var(--text); background: var(--bg); line-height: 1.6; }}
+        main {{ max-width: 640px; margin: 0 auto; padding: 2rem 1.5rem; }}
+        h1 {{ font-size: 1.75rem; font-weight: 600; margin-bottom: 0.15rem; }}
+        h2 {{ font-size: 1.1rem; font-weight: 600; color: var(--muted); text-transform: uppercase;
+              letter-spacing: 0.05em; margin: 1.5rem 0 0.75rem; }}
+        .handle {{ color: var(--muted); font-size: 0.95rem; margin-bottom: 1rem; }}
+        .bio {{ margin-bottom: 1rem; }}
+        table {{ width: 100%; border-collapse: collapse; margin-bottom: 1rem; }}
+        th, td {{ padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid var(--border); }}
+        th {{ background: var(--card); color: var(--muted); font-size: 0.8rem; font-weight: 600;
+             text-transform: uppercase; letter-spacing: 0.04em; width: 30%; }}
+        td {{ font-size: 0.95rem; }}
+        .meta {{ color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; }}
+        hr {{ border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }}
+        article {{ padding: 1rem 0; border-bottom: 1px solid var(--border); }}
+        article p {{ margin-bottom: 0.5rem; }}
+        article time {{ color: var(--muted); font-size: 0.8rem; }}
+        a {{ color: var(--link); text-decoration: none; }}
+        a:hover {{ text-decoration: underline; }}
+        @media (prefers-color-scheme: dark) {{
+            :root {{ --text: #f5f5f7; --muted: #98989d; --bg: #1d1d1f; --card: #2c2c2e; --border: #3a3a3c; --link: #2997ff; }}
+            body {{ background: var(--bg); color: var(--text); }}
+        }}
     </style>
 </head>
 <body>
-    <div class="profile">
+    <main>
         <h1>{display_name}</h1>
         <p class="handle">@{username}@{domain}</p>
         {bio_html}
-        <dl>{fields_html}</dl>
-        <p class="joined">Joined {created_at}</p>
-    </div>
-    <div class="posts">
+        {fields_html}
+        <p class="meta">{post_count} posts · {follower_count} followers · Joined {created_at}</p>
+        <hr>
+        <h2>Posts</h2>
         {posts_html}
-    </div>
+    </main>
 </body>
 </html>"#,
         username = ammonia::clean(username),
@@ -987,7 +1030,9 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
         actor_uri = actor_uri,
         bio_html = bio_html,
         fields_html = fields_html,
-        created_at = &created_at[..10], // just the date part
+        post_count = post_count,
+        follower_count = follower_count,
+        created_at = &created_at[..10],
         posts_html = posts_html,
     );
 
