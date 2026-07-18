@@ -1,0 +1,29 @@
+{
+  "id": "broadside-gxb3.2",
+  "title": "key_owner empty-string bypasses actor key ownership check",
+  "description": "In actor_cache.rs get_public_key() line 61, the publicKey.owner check is: if !key_owner.is_empty() \u0026\u0026 key_owner != actor_uri { bail!(...) }. If the actor document omits publicKey.owner entirely, key_owner is the empty string and the ownership check is silently skipped. A MITM or confused-deputy attack could supply a crafted actor document with no owner field and an arbitrary public key, and the cache would accept it. Fix: require owner to be present and equal to actor_uri, rather than skipping the check when it is absent.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:04:10.853098037Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:06:05.38090055Z",
+  "closed_at": "2026-07-18T00:06:05.38090055Z",
+  "close_reason": "Fixed: shared_inbox SSRF guard, key_owner required, webhook media cap. Remaining (replay, unsigned accept, DNS rebinding, body buffer) accepted as known architectural limitations.",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-gxb3.2",
+      "depends_on_id": "broadside-gxb3",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:04:10.881782122Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "broadside-ftef.4",
+  "title": "media.rs: stored mime_type mismatches actual file bytes (always PNG)",
+  "description": "process_image_bytes() always re-encodes to PNG regardless of input format. The mime string from sniff_image_mime() is stored in the DB and used for the file extension, but the bytes written to disk are always PNG. A JPEG input gets a .jpg filename and image/jpeg in the DB, but the file contains PNG data. HTTP clients will reject this: the Content-Type header served for that media file will disagree with the magic bytes. Fix: either re-encode to the detected format, or always use image/png and .png regardless of input.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:57:37.909759551Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:02:24.0688002Z",
+  "closed_at": "2026-07-18T00:02:24.0688002Z",
+  "close_reason": "All pass 4 fixes applied: media SSRF+size guard, mime/format consistency, proper keyId parsing, fail-closed sig verify, path reconstruction, key owner validation, media cap, blocking stdin fix, conflicts_with",
+  "labels": [
+    "efficiency",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ftef.4",
+      "depends_on_id": "broadside-ftef",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:57:37.925870606Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

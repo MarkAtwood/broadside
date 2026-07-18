@@ -1,0 +1,28 @@
+{
+  "id": "broadside-ftef.21",
+  "title": "Decision: sniff_image_mime magic byte checks are correct",
+  "description": "The sniff_image_mime() function in src/media.rs correctly identifies PNG (\\x89PNG), JPEG (\\xff\\xd8\\xff), GIF (GIF8), and WebP (RIFF....WEBP). The WebP check correctly validates both the RIFF marker at bytes 0-3 and the WEBP marker at bytes 8-11, guarding against files that start with RIFF but aren't WebP. The minimum length check (4 bytes) is sufficient because the WebP branch separately checks bytes.len() \u003e= 12 before indexing. No issues found.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "decision",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:58:29.565775119Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:02:24.307266035Z",
+  "closed_at": "2026-07-18T00:02:24.307266035Z",
+  "close_reason": "All pass 4 fixes applied: media SSRF+size guard, mime/format consistency, proper keyId parsing, fail-closed sig verify, path reconstruction, key owner validation, media cap, blocking stdin fix, conflicts_with",
+  "labels": [
+    "review",
+    "codereview"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ftef.21",
+      "depends_on_id": "broadside-ftef",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:58:29.580873157Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

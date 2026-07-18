@@ -1,0 +1,29 @@
+{
+  "id": "broadside-ftef.18",
+  "title": "feed.rs: URL interpolated into href attribute without escaping",
+  "description": "Line 74 builds an \u003ca\u003e tag via format\\!(r#\"\u003cp\u003e\u003ca href=\"{url}\"\u003e{url}\u003c/a\u003e\u003c/p\u003e\"#). If the URL from the feed contains a double-quote character, it breaks the href attribute boundary. Example: http://example.com/?a=1\"onmouseover=\"evil() results in an attribute injection. While the result is passed to sanitize_html, ammonia's behavior on malformed attribute values is not guaranteed to clean injected event handlers in all cases. The URL should be percent-encoded or HTML-entity-escaped before interpolation into the attribute value.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:58:24.270656168Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:02:24.267208638Z",
+  "closed_at": "2026-07-18T00:02:24.267208638Z",
+  "close_reason": "All pass 4 fixes applied: media SSRF+size guard, mime/format consistency, proper keyId parsing, fail-closed sig verify, path reconstruction, key owner validation, media cap, blocking stdin fix, conflicts_with",
+  "labels": [
+    "idiomatic-rust",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ftef.18",
+      "depends_on_id": "broadside-ftef",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:58:24.288279057Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

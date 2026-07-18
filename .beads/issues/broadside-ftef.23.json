@@ -1,0 +1,28 @@
+{
+  "id": "broadside-ftef.23",
+  "title": "Decision: is_private_host IPv6-mapped address check is correct",
+  "description": "The is_private_host() function in server.rs correctly handles IPv6-mapped IPv4 addresses (::ffff:x.x.x.x) via to_ipv4_mapped(), and covers ULA (fc00::/7) and link-local (fe80::/10). The AWS metadata endpoint (169.254.x.x) is explicitly checked. The hostname blocklist (localhost, .local, .internal) is a reasonable defense-in-depth layer. No issues found in this function.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "decision",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:58:33.437978509Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:02:24.338597211Z",
+  "closed_at": "2026-07-18T00:02:24.338597211Z",
+  "close_reason": "All pass 4 fixes applied: media SSRF+size guard, mime/format consistency, proper keyId parsing, fail-closed sig verify, path reconstruction, key owner validation, media cap, blocking stdin fix, conflicts_with",
+  "labels": [
+    "review",
+    "codereview"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ftef.23",
+      "depends_on_id": "broadside-ftef",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:58:33.45157665Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

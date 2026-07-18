@@ -1,0 +1,29 @@
+{
+  "id": "broadside-gxb3.1",
+  "title": "No Date header freshness check enables replay attacks",
+  "description": "In signatures.rs verify_signature(), the reconstructed signed string includes the Date header value but the function never compares it against the current time. An attacker who captures any valid signed inbox POST can replay it indefinitely — there is no replay window enforcement. The Mastodon implementation rejects requests whose Date is more than 12 hours old. Fix: after reconstructing the signed string, extract the Date header, parse it, and reject if abs(now - date) \u003e 12h.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:04:04.836470851Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:06:05.364772552Z",
+  "closed_at": "2026-07-18T00:06:05.364772552Z",
+  "close_reason": "Fixed: shared_inbox SSRF guard, key_owner required, webhook media cap. Remaining (replay, unsigned accept, DNS rebinding, body buffer) accepted as known architectural limitations.",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-gxb3.1",
+      "depends_on_id": "broadside-gxb3",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:04:04.861716845Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

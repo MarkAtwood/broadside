@@ -1,0 +1,29 @@
+{
+  "id": "broadside-ftef.16",
+  "title": "actor_cache: publicKey not validated to belong to requested actor",
+  "description": "In src/actor_cache.rs get_public_key, the code extracts actor_doc[\"publicKey\"][\"publicKeyPem\"] and actor_doc[\"publicKey\"][\"id\"] from the fetched document without verifying that the key's owner field matches the actor_uri that was requested. A compromised or malicious actor server could return a document whose publicKey.owner is a different actor, allowing key substitution. The cache then associates that key with the wrong actor_uri. Fix: verify that actor_doc[\"publicKey\"][\"owner\"] or actor_doc[\"id\"] matches actor_uri before caching.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:58:15.35130878Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:02:24.240238763Z",
+  "closed_at": "2026-07-18T00:02:24.240238763Z",
+  "close_reason": "All pass 4 fixes applied: media SSRF+size guard, mime/format consistency, proper keyId parsing, fail-closed sig verify, path reconstruction, key owner validation, media cap, blocking stdin fix, conflicts_with",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ftef.16",
+      "depends_on_id": "broadside-ftef",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:58:15.36970921Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

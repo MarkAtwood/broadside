@@ -1,0 +1,28 @@
+{
+  "id": "broadside-ftef.17",
+  "title": "Decision: webhook key comparison is correctly constant-time",
+  "description": "The handle_webhook in src/webhook.rs hashes both the expected and provided keys with SHA-256 before calling ct_eq(). This correctly prevents timing side-channels on variable-length keys. The approach is sound.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "decision",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:58:20.812317099Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:02:24.253664638Z",
+  "closed_at": "2026-07-18T00:02:24.253664638Z",
+  "close_reason": "All pass 4 fixes applied: media SSRF+size guard, mime/format consistency, proper keyId parsing, fail-closed sig verify, path reconstruction, key owner validation, media cap, blocking stdin fix, conflicts_with",
+  "labels": [
+    "review",
+    "codereview"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ftef.17",
+      "depends_on_id": "broadside-ftef",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:58:20.826702194Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

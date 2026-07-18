@@ -1,0 +1,29 @@
+{
+  "id": "broadside-ftef.20",
+  "title": "cli.rs: --markdown and positional content are not mutually exclusive",
+  "description": "The Post subcommand accepts both --markdown and a positional content argument with no clap conflicts_with constraint. If a user passes both, the markdown path silently wins and the content argument is dropped without any error or warning. Add #[arg(conflicts_with = \"markdown\")] to the content field so clap rejects the combination at parse time with a clear error message.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:58:28.366344956Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:02:24.291645286Z",
+  "closed_at": "2026-07-18T00:02:24.291645286Z",
+  "close_reason": "All pass 4 fixes applied: media SSRF+size guard, mime/format consistency, proper keyId parsing, fail-closed sig verify, path reconstruction, key owner validation, media cap, blocking stdin fix, conflicts_with",
+  "labels": [
+    "idiomatic-rust",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ftef.20",
+      "depends_on_id": "broadside-ftef",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:58:28.385611338Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

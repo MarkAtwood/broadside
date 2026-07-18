@@ -1,0 +1,29 @@
+{
+  "id": "broadside-ftef.8",
+  "title": "media.rs: process_local and process_remote duplicate 20 lines of logic",
+  "description": "Both functions share identical logic: sniff mime, process_image_bytes, gen_id, build filename, create_dir_all, write, compute_blurhash, SQL INSERT. If either copy is updated (e.g. to fix the mime/extension bug) the other silently diverges. Extract a private async fn store_processed_image(pool, post_id, bytes, data_dir, description) -\u003e Result\u003cString\u003e and call it from both.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:57:55.051419894Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:02:24.132227689Z",
+  "closed_at": "2026-07-18T00:02:24.132227689Z",
+  "close_reason": "All pass 4 fixes applied: media SSRF+size guard, mime/format consistency, proper keyId parsing, fail-closed sig verify, path reconstruction, key owner validation, media cap, blocking stdin fix, conflicts_with",
+  "labels": [
+    "idiomatic-rust",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ftef.8",
+      "depends_on_id": "broadside-ftef",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:57:55.066292023Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

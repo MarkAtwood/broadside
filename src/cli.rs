@@ -1,3 +1,4 @@
+use anyhow::Context;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -32,8 +33,8 @@ enum Command {
         /// Persona to post as
         #[arg(long)]
         persona: String,
-        /// Read markdown from stdin
-        #[arg(long)]
+        /// Read markdown from stdin (mutually exclusive with positional content)
+        #[arg(long, conflicts_with = "content")]
         markdown: bool,
         /// Attach media files
         #[arg(long)]
@@ -158,16 +159,24 @@ impl Cli {
                 persona,
                 markdown,
                 content,
-                ..
+                media,
             } => {
                 let pool = connect_db(&self.data_dir).await?;
+                let data_dir = self
+                    .data_dir
+                    .as_ref()
+                    .ok_or_else(|| anyhow::anyhow!("--data-dir or BROADSIDE_DATA_DIR required"))?
+                    .clone();
                 let persona_id = broadside::persona::get_id(&pool, &persona).await?;
 
                 let text = if markdown {
-                    use std::io::Read;
-                    let mut buf = String::new();
-                    std::io::stdin().read_to_string(&mut buf)?;
-                    buf
+                    tokio::task::spawn_blocking(|| {
+                        use std::io::Read;
+                        let mut buf = String::new();
+                        std::io::stdin().read_to_string(&mut buf)?;
+                        Ok::<_, anyhow::Error>(buf)
+                    })
+                    .await??
                 } else {
                     content.ok_or_else(|| {
                         anyhow::anyhow!("provide content as argument or use --markdown for stdin")
@@ -184,8 +193,19 @@ impl Cli {
                 };
                 let post_id =
                     broadside::post::create(&pool, &persona_id, &html, &plain, None).await?;
+
+                for media_path in &media {
+                    let path = std::path::Path::new(media_path);
+                    broadside::media::process_local(&pool, &post_id, path, &data_dir, "")
+                        .await
+                        .with_context(|| format!("processing media {media_path}"))?;
+                }
+
                 let queued = broadside::delivery::fan_out(&pool, &post_id, &persona_id).await?;
-                println!("Created post {post_id} (queued {queued} deliveries)");
+                println!(
+                    "Created post {post_id} ({} media, queued {queued} deliveries)",
+                    media.len()
+                );
             }
             Command::Serve => {
                 let config_path = self
@@ -274,7 +294,9 @@ impl Cli {
                     .ok_or_else(|| anyhow::anyhow!("--data-dir or BROADSIDE_DATA_DIR required"))?;
                 let config = broadside::config::Config::load(&config_path)?;
                 let pool = connect_db(&self.data_dir).await?;
-                broadside::feed::poll_all(&pool, &config.feed, &config.server.domain).await?;
+                let data_dir = std::path::Path::new(&config.server.data_dir);
+                broadside::feed::poll_all(&pool, &config.feed, &config.server.domain, data_dir)
+                    .await?;
             }
         }
         Ok(())

@@ -1,0 +1,19 @@
+{
+  "id": "broadside-gxb3",
+  "title": "Review: broadside 2026-07-17 pass 5",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "epic",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:02:35.836161809Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:06:05.511239334Z",
+  "started_at": "2026-07-18T00:02:40.325927678Z",
+  "closed_at": "2026-07-18T00:06:05.511239334Z",
+  "close_reason": "Pass 5 complete: 7 findings, 3 fixed, 4 accepted as known limits",
+  "labels": [
+    "review",
+    "codereview"
+  ]
+}

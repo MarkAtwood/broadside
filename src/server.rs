@@ -13,9 +13,11 @@ use crate::config::Config;
 pub struct AppState {
     pub pool: SqlitePool,
     pub domain: String,
+    pub data_dir: String,
     pub webhook_keys: std::collections::HashMap<String, String>,
     pub http_client: reqwest::Client,
     pub inbox_limiter: std::sync::Arc<crate::ratelimit::RateLimiter>,
+    pub actor_cache: crate::actor_cache::ActorKeyCache,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -50,12 +52,16 @@ pub async fn serve(config: &Config) -> anyhow::Result<()> {
     // 60 requests per minute per IP on inbox endpoints
     let inbox_limiter = std::sync::Arc::new(crate::ratelimit::RateLimiter::new(60, 60));
 
+    let actor_cache = crate::actor_cache::ActorKeyCache::new(http_client.clone());
+
     let state = Arc::new(AppState {
         pool: pool.clone(),
         domain: domain.clone(),
+        data_dir: config.server.data_dir.clone(),
         webhook_keys,
         http_client,
         inbox_limiter: inbox_limiter.clone(),
+        actor_cache,
     });
 
     // Start delivery worker
@@ -71,11 +77,13 @@ pub async fn serve(config: &Config) -> anyhow::Result<()> {
     });
 
     // Start feed pollers
+    let data_dir_path = std::path::PathBuf::from(&config.server.data_dir);
     for feed_config in &config.feed {
         tokio::spawn(crate::feed::run_poller(
             pool.clone(),
             feed_config.clone(),
             domain.clone(),
+            data_dir_path.clone(),
         ));
     }
 
@@ -91,8 +99,35 @@ pub async fn serve(config: &Config) -> anyhow::Result<()> {
     let app = router(state);
     let listener = tokio::net::TcpListener::bind(&config.server.bind).await?;
     tracing::info!(bind = %config.server.bind, domain = %config.server.domain, "starting server");
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
+    tracing::info!("server shut down gracefully");
     Ok(())
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("failed to install SIGTERM handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => tracing::info!("received Ctrl+C, shutting down"),
+        _ = terminate => tracing::info!("received SIGTERM, shutting down"),
+    }
 }
 
 // --- WebFinger ---
@@ -416,8 +451,58 @@ async fn handle_inbox(
         return StatusCode::TOO_MANY_REQUESTS;
     }
 
-    // ponytail: signature verification not yet implemented (broadside-to5p.2).
-    // Requires fetching remote actor's public key + caching (broadside-to5p.8).
+    // Verify HTTP signature if present.
+    // Fail closed: if Signature header is present but invalid, reject with 401.
+    if let Some(sig_header) = headers.get("signature").and_then(|v| v.to_str().ok()) {
+        // Use the signature parser to extract keyId properly
+        let key_id = extract_key_id_from_sig(sig_header);
+
+        if let Some(key_id) = key_id {
+            let actor_uri = key_id.split('#').next().unwrap_or(&key_id);
+
+            // Reconstruct the request path from the username parameter
+            let path = if let Some(uname) = _username {
+                format!("/users/{uname}/inbox")
+            } else {
+                "/inbox".to_string()
+            };
+
+            // Fetch actor key — fail closed if actor is unreachable
+            let public_key_pem = match state.actor_cache.get_public_key(actor_uri).await {
+                Ok((pem, _)) => pem,
+                Err(e) => {
+                    tracing::warn!(actor = actor_uri, error = %e, "cannot fetch actor key");
+                    return StatusCode::UNAUTHORIZED;
+                }
+            };
+
+            if crate::signatures::verify_signature(
+                &public_key_pem,
+                sig_header,
+                "post",
+                &path,
+                headers,
+            )
+            .is_err()
+            {
+                // Retry once after cache invalidation (key rotation)
+                state.actor_cache.invalidate(actor_uri).await;
+                match state.actor_cache.get_public_key(actor_uri).await {
+                    Ok((fresh_key, _)) => {
+                        if crate::signatures::verify_signature(
+                            &fresh_key, sig_header, "post", &path, headers,
+                        )
+                        .is_err()
+                        {
+                            tracing::warn!(actor = actor_uri, "signature verification failed");
+                            return StatusCode::UNAUTHORIZED;
+                        }
+                    }
+                    Err(_) => return StatusCode::UNAUTHORIZED,
+                }
+            }
+        }
+    }
 
     let activity: serde_json::Value = match serde_json::from_str(body) {
         Ok(v) => v,
@@ -479,8 +564,16 @@ async fn handle_inbox(
             };
 
             let inbox_uri = actor_doc["inbox"].as_str().unwrap_or("").to_string();
+            // Validate shared inbox URI too — same SSRF rules as inbox_uri
             let shared_inbox_uri = actor_doc["endpoints"]["sharedInbox"]
                 .as_str()
+                .filter(|s| s.starts_with("https://"))
+                .filter(|s| {
+                    url::Url::parse(s)
+                        .ok()
+                        .and_then(|u| u.host_str().map(|h| !is_private_host(h)))
+                        .unwrap_or(false)
+                })
                 .map(|s| s.to_string());
 
             if inbox_uri.is_empty() || !inbox_uri.starts_with("https://") {
@@ -640,7 +733,7 @@ async fn health(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
 }
 
 /// Check if a hostname resolves to a private/loopback/link-local address.
-fn is_private_host(host: &str) -> bool {
+pub fn is_private_host(host: &str) -> bool {
     use std::net::IpAddr;
     if let Ok(ip) = host.parse::<IpAddr>() {
         return match ip {
@@ -670,4 +763,36 @@ fn is_private_host(host: &str) -> bool {
     }
     // Block common private hostnames
     host == "localhost" || host.ends_with(".local") || host.ends_with(".internal")
+}
+
+/// Extract keyId from a Signature header value using proper quoted-string parsing.
+fn extract_key_id_from_sig(sig_header: &str) -> Option<String> {
+    // Parse using the same quote-aware splitter as signatures.rs
+    let mut in_quotes = false;
+    let mut current = String::new();
+    let mut parts = Vec::new();
+
+    for c in sig_header.chars() {
+        match c {
+            '"' => {
+                in_quotes = !in_quotes;
+                current.push(c);
+            }
+            ',' if !in_quotes => {
+                parts.push(std::mem::take(&mut current));
+            }
+            _ => current.push(c),
+        }
+    }
+    if !current.is_empty() {
+        parts.push(current);
+    }
+
+    for part in &parts {
+        let trimmed = part.trim();
+        if let Some(val) = trimmed.strip_prefix("keyId=\"") {
+            return Some(val.strip_suffix('"').unwrap_or(val).to_string());
+        }
+    }
+    None
 }

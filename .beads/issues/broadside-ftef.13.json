@@ -1,0 +1,29 @@
+{
+  "id": "broadside-ftef.13",
+  "title": "server.rs: per-user inbox ignores the addressed username",
+  "description": "handle_inbox receives _username: Option\u003c\u0026str\u003e but the parameter is prefixed with _ and never used. A Follow activity POSTed to /users/alice/inbox targeting /users/bob is accepted and processed identically to a shared inbox delivery. The per-user inbox should validate that the activity's object (for Follow) or target matches the addressed username, or at minimum that the addressed username exists. As-is, any delivery to any /users/X/inbox is accepted as-if shared.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:58:09.90163952Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:02:24.201598037Z",
+  "closed_at": "2026-07-18T00:02:24.201598037Z",
+  "close_reason": "All pass 4 fixes applied: media SSRF+size guard, mime/format consistency, proper keyId parsing, fail-closed sig verify, path reconstruction, key owner validation, media cap, blocking stdin fix, conflicts_with",
+  "labels": [
+    "idiomatic-rust",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ftef.13",
+      "depends_on_id": "broadside-ftef",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:58:09.921270415Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

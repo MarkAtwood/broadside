@@ -1,0 +1,29 @@
+{
+  "id": "broadside-tfr1.1",
+  "title": "SSRF: actor_cache fetches keyId URI without SSRF guard",
+  "description": "actor_cache::get_public_key() in src/actor_cache.rs directly fetches the actor_uri parameter with no SSRF guard. This URI is derived from the attacker-controlled keyId field of the Signature header (server.rs line 461: key_id.split('#').next()). An attacker can POST to /inbox or /users/{username}/inbox with Signature: keyId=\"http://169.254.169.254/latest/meta-data/iam/security-credentials/\",...  and the server will fetch that URL on the attacker's behalf before rejecting the signature.\n\nAll other SSRF-sensitive fetches in the codebase are guarded (follower_actor, inbox_uri, shared_inbox_uri, media URLs). This one was missed.\n\nFix: add is_private_host() check in actor_cache::get_public_key() before the HTTP fetch, rejecting non-https URIs and private/internal hosts. The same guard already applied to follower_actor in server.rs lines 538-548 should be replicated here.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:08:16.746240173Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:09:21.471208505Z",
+  "closed_at": "2026-07-18T00:09:21.471208505Z",
+  "close_reason": "SSRF guard added to actor_cache::get_public_key: https-only + is_private_host check",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-tfr1.1",
+      "depends_on_id": "broadside-tfr1",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:08:16.775317386Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "broadside-gxb3.6",
+  "title": "process_remote buffers full response before size check (OOM risk)",
+  "description": "In media.rs process_remote(), the body is collected with resp.bytes().await which buffers the complete HTTP response in memory before checking its length (line 85). The Content-Length pre-check (lines 73-77) is advisory only — a server can lie or omit that header. The actual size enforcement happens post-hoc after the full body is already resident in memory. A malicious or misconfigured media server can cause the process to OOM by sending a multi-gigabyte body. Fix: use resp.bytes_stream() with a byte-counting combinator that aborts the stream once MAX_FILE_SIZE is exceeded, rather than buffering then checking.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:04:34.141078493Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:06:05.447536126Z",
+  "closed_at": "2026-07-18T00:06:05.447536126Z",
+  "close_reason": "Fixed: shared_inbox SSRF guard, key_owner required, webhook media cap. Remaining (replay, unsigned accept, DNS rebinding, body buffer) accepted as known architectural limitations.",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-gxb3.6",
+      "depends_on_id": "broadside-gxb3",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:04:34.169685438Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "broadside-ftef.3",
+  "title": "process_image_bytes re-encodes everything as PNG but mime_type is original format",
+  "description": "In src/media.rs, process_image_bytes() always calls img.write_to(\u0026mut cursor, image::ImageFormat::Png), so the stored file is always a PNG regardless of input format. However, sniff_image_mime() returns the original MIME type (e.g. image/jpeg for a JPEG), which is then bound into the post_media row and used in the ActivityPub attachment's mediaType field. The resulting state: a .jpg file containing PNG bytes with a mediaType of image/jpeg. Remote clients decoding based on mediaType will misidentify the format. Fix: either always store as PNG and set mime_type to image/png, or re-encode to the original format and preserve its MIME type.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:57:35.819136685Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:02:24.048969904Z",
+  "closed_at": "2026-07-18T00:02:24.048969904Z",
+  "close_reason": "All pass 4 fixes applied: media SSRF+size guard, mime/format consistency, proper keyId parsing, fail-closed sig verify, path reconstruction, key owner validation, media cap, blocking stdin fix, conflicts_with",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ftef.3",
+      "depends_on_id": "broadside-ftef",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:57:35.836424423Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

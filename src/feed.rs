@@ -24,6 +24,7 @@ pub async fn poll_feed(
     config: &FeedConfig,
     _domain: &str,
     client: &reqwest::Client,
+    data_dir: &std::path::Path,
 ) -> anyhow::Result<u32> {
     let persona_id = crate::persona::get_id(pool, &config.persona).await?;
 
@@ -101,6 +102,44 @@ pub async fn poll_feed(
         .await?;
 
         if result.rows_affected() > 0 {
+            // Attach enclosure images as media (capped to prevent abuse)
+            let max_media = crate::media::max_media_per_post();
+            let mut media_count = 0usize;
+            'media_loop: for media_link in &entry.media {
+                for content in &media_link.content {
+                    if media_count >= max_media {
+                        break 'media_loop;
+                    }
+                    if let Some(ref url_val) = content.url {
+                        let url_str = url_val.as_str();
+                        let mime = content
+                            .content_type
+                            .as_ref()
+                            .map(|m| m.essence().to_string())
+                            .unwrap_or_default();
+                        if mime.starts_with("image/")
+                            || url_str.ends_with(".jpg")
+                            || url_str.ends_with(".jpeg")
+                            || url_str.ends_with(".png")
+                            || url_str.ends_with(".gif")
+                            || url_str.ends_with(".webp")
+                        {
+                            // process_remote has its own SSRF guard
+                            match crate::media::process_remote(
+                                pool, &id, url_str, data_dir, "", client,
+                            )
+                            .await
+                            {
+                                Ok(_) => media_count += 1,
+                                Err(e) => {
+                                    tracing::warn!(url = url_str, error = %e, "failed to fetch feed media")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             crate::delivery::fan_out(pool, &id, &persona_id).await?;
             new_count += 1;
             newest_id = Some(entry_id);
@@ -132,7 +171,12 @@ pub async fn poll_feed(
 }
 
 /// Background feed poller. Runs as a tokio task for each configured feed.
-pub async fn run_poller(pool: SqlitePool, config: FeedConfig, domain: String) {
+pub async fn run_poller(
+    pool: SqlitePool,
+    config: FeedConfig,
+    domain: String,
+    data_dir: std::path::PathBuf,
+) {
     let interval = config.interval();
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
@@ -140,7 +184,7 @@ pub async fn run_poller(pool: SqlitePool, config: FeedConfig, domain: String) {
         .unwrap_or_default();
 
     loop {
-        match poll_feed(&pool, &config, &domain, &client).await {
+        match poll_feed(&pool, &config, &domain, &client, &data_dir).await {
             Ok(n) if n > 0 => tracing::info!(feed = %config.url, new = n, "feed poll complete"),
             Ok(_) => {}
             Err(e) => tracing::error!(feed = %config.url, error = %e, "feed poll failed"),
@@ -150,13 +194,18 @@ pub async fn run_poller(pool: SqlitePool, config: FeedConfig, domain: String) {
 }
 
 /// One-shot poll of all configured feeds.
-pub async fn poll_all(pool: &SqlitePool, feeds: &[FeedConfig], domain: &str) -> anyhow::Result<()> {
+pub async fn poll_all(
+    pool: &SqlitePool,
+    feeds: &[FeedConfig],
+    domain: &str,
+    data_dir: &std::path::Path,
+) -> anyhow::Result<()> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
         .build()
         .unwrap_or_default();
     for feed in feeds {
-        match poll_feed(pool, feed, domain, &client).await {
+        match poll_feed(pool, feed, domain, &client, data_dir).await {
             Ok(n) => println!("{}: {} new posts", feed.url, n),
             Err(e) => eprintln!("{}: error: {e}", feed.url),
         }

@@ -1,0 +1,29 @@
+{
+  "id": "broadside-ftef.9",
+  "title": "feed.rs: no SSRF guard on enclosure media URLs",
+  "description": "In src/feed.rs poll_feed, media enclosure URLs from the parsed feed are passed directly to crate::media::process_remote without any hostname check. Feed content is attacker-influenced: an RSS/Atom feed can include enclosure URLs pointing to http://169.254.169.254/latest/meta-data/ or any other internal service. process_remote itself has no SSRF guard (separate issue broadside-ftef.2). This issue tracks the feed-specific call site: even after process_remote gains an SSRF guard, it's worth noting this is an additional trust boundary — feed URLs must be treated as untrusted.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:57:58.040455466Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:02:24.147109633Z",
+  "closed_at": "2026-07-18T00:02:24.147109633Z",
+  "close_reason": "All pass 4 fixes applied: media SSRF+size guard, mime/format consistency, proper keyId parsing, fail-closed sig verify, path reconstruction, key owner validation, media cap, blocking stdin fix, conflicts_with",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ftef.9",
+      "depends_on_id": "broadside-ftef",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:57:58.058084619Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -34,12 +34,15 @@ async fn test_server() -> (String, tempfile::TempDir) {
 
     let base_url = format!("http://127.0.0.1:{port}");
 
+    let http_client = reqwest::Client::new();
     let state = Arc::new(broadside::server::AppState {
         pool,
         domain: format!("127.0.0.1:{port}"),
+        data_dir: tmp.path().to_str().unwrap().to_string(),
         webhook_keys: std::collections::HashMap::new(),
-        http_client: reqwest::Client::new(),
+        http_client: http_client.clone(),
         inbox_limiter: std::sync::Arc::new(broadside::ratelimit::RateLimiter::new(1000, 60)),
+        actor_cache: broadside::actor_cache::ActorKeyCache::new(http_client),
     });
 
     let app = broadside::server::router(state);

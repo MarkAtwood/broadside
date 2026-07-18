@@ -1,0 +1,29 @@
+{
+  "id": "broadside-ftef.6",
+  "title": "media.rs: compute_blurhash re-decodes image that is already decoded",
+  "description": "process_image_bytes() decodes the input, optionally resizes, then re-encodes to Vec\u003cu8\u003e. compute_blurhash() is called with those encoded bytes and immediately calls image::load_from_memory() again, paying a full JPEG/PNG decode cycle for every upload. Fix: return the DynamicImage from process_image_bytes and pass it to compute_blurhash directly, skipping the re-encode/re-decode round trip.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:57:44.773063984Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:02:24.104664099Z",
+  "closed_at": "2026-07-18T00:02:24.104664099Z",
+  "close_reason": "All pass 4 fixes applied: media SSRF+size guard, mime/format consistency, proper keyId parsing, fail-closed sig verify, path reconstruction, key owner validation, media cap, blocking stdin fix, conflicts_with",
+  "labels": [
+    "efficiency",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ftef.6",
+      "depends_on_id": "broadside-ftef",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:57:44.789244068Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "broadside-ftef.10",
+  "title": "media.rs: process_remote buffers full response body before size check",
+  "description": "resp.bytes().await buffers the entire HTTP response body into memory before checking against MAX_FILE_SIZE. A malicious or misbehaving remote server can send a multi-gigabyte body, potentially exhausting memory. Fix: check Content-Length header first and reject if it exceeds MAX_FILE_SIZE, then stream with a byte-count limit (e.g. read chunks and abort if total exceeds limit). The current approach also hides this from the reqwest timeout, which is a duration timeout not a size timeout.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:57:59.478785989Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:02:24.159278141Z",
+  "closed_at": "2026-07-18T00:02:24.159278141Z",
+  "close_reason": "All pass 4 fixes applied: media SSRF+size guard, mime/format consistency, proper keyId parsing, fail-closed sig verify, path reconstruction, key owner validation, media cap, blocking stdin fix, conflicts_with",
+  "labels": [
+    "efficiency",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ftef.10",
+      "depends_on_id": "broadside-ftef",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:57:59.497978703Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

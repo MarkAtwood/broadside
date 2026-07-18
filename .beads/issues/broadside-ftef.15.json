@@ -1,0 +1,29 @@
+{
+  "id": "broadside-ftef.15",
+  "title": "server.rs: HTTP Signature keyId extracted via naive string search",
+  "description": "The keyId is extracted from the Signature header using sig_header.find(\"keyId=\\\"\") followed by a find for the closing quote. This does not parse the comma-separated key=value structure of the Signature header correctly. A crafted header like 'headers=\"(request-target)\",keyId=\"legitimate\",otherfield=\"evil keyId=\\\"attacker\\\"\"' could confuse the parser. keyId extraction should parse the header as key=value pairs, respecting quoted strings, before extracting the keyId field.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:58:15.118184962Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:02:24.227483155Z",
+  "closed_at": "2026-07-18T00:02:24.227483155Z",
+  "close_reason": "All pass 4 fixes applied: media SSRF+size guard, mime/format consistency, proper keyId parsing, fail-closed sig verify, path reconstruction, key owner validation, media cap, blocking stdin fix, conflicts_with",
+  "labels": [
+    "idiomatic-rust",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ftef.15",
+      "depends_on_id": "broadside-ftef",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:58:15.136664428Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

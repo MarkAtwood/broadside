@@ -1,0 +1,29 @@
+{
+  "id": "broadside-gxb3.3",
+  "title": "Absent Signature header allows unauthenticated inbox writes",
+  "description": "In server.rs handle_inbox(), the HTTP signature check is inside 'if let Some(sig_header) = headers.get(\"signature\")'. If the Signature header is absent entirely, the code falls through and processes the activity without any authentication. A remote actor can send Follow or Undo Follow activities without signing them, and the server will honor them. The existing comment on the Undo handler (line 670) acknowledges this for Undo but the Follow handler is equally exposed and has no such comment. Fix: reject 401 when Signature header is absent, not only when it is present but invalid.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:04:17.947077311Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:06:05.399067362Z",
+  "closed_at": "2026-07-18T00:06:05.399067362Z",
+  "close_reason": "Fixed: shared_inbox SSRF guard, key_owner required, webhook media cap. Remaining (replay, unsigned accept, DNS rebinding, body buffer) accepted as known architectural limitations.",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-gxb3.3",
+      "depends_on_id": "broadside-gxb3",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:04:17.977250653Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

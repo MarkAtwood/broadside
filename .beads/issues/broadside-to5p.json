@@ -1,13 +1,15 @@
 {
   "id": "broadside-to5p",
   "title": "Broadside v1.0 hardening",
-  "status": "open",
+  "status": "closed",
   "priority": 1,
   "issue_type": "epic",
   "owner": "mark@reviewcommit.com",
   "created_at": "2026-07-17T23:07:41.132104081Z",
   "created_by": "Mark Atwood",
-  "updated_at": "2026-07-17T23:07:41.132104081Z",
+  "updated_at": "2026-07-17T23:56:07.843181475Z",
+  "closed_at": "2026-07-17T23:56:07.843181475Z",
+  "close_reason": "All 13 hardening issues complete",
   "labels": [
     "hardening"
   ]

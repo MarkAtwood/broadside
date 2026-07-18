@@ -1,0 +1,19 @@
+{
+  "id": "broadside-i5vh",
+  "title": "Review: broadside 2026-07-17 pass 6 (final)",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "epic",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:06:11.795853108Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:09:21.527208343Z",
+  "started_at": "2026-07-18T00:06:11.860637446Z",
+  "closed_at": "2026-07-18T00:09:21.527208343Z",
+  "close_reason": "Duplicate epic, closing",
+  "labels": [
+    "review",
+    "codereview"
+  ]
+}

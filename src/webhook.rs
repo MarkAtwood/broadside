@@ -82,6 +82,24 @@ pub async fn handle_webhook(
         }
     };
 
+    // Fetch and attach media (capped)
+    let data_dir = std::path::Path::new(&state.data_dir);
+    let max_media = crate::media::max_media_per_post();
+    for media_item in payload.media.iter().take(max_media) {
+        if let Err(e) = crate::media::process_remote(
+            &state.pool,
+            &post_id,
+            &media_item.url,
+            data_dir,
+            &media_item.description,
+            &state.http_client,
+        )
+        .await
+        {
+            tracing::warn!(url = %media_item.url, error = %e, "failed to fetch webhook media, skipping");
+        }
+    }
+
     match crate::delivery::fan_out(&state.pool, &post_id, &persona_id).await {
         Ok(queued) => {
             tracing::info!(

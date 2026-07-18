@@ -13,7 +13,9 @@ axum = { version = "0.8", features = ["tokio"] }
 base64 = "0.22"
 chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
 clap = { version = "4", features = ["derive", "env"] }
+blurhash = "0.2"
 feed-rs = "2"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
 notify = "7"
 pulldown-cmark = { version = "0.12", default-features = false, features = ["html"] }
 rand = "0.8"

@@ -1,0 +1,29 @@
+{
+  "id": "broadside-ftef.22",
+  "title": "cli.rs: blocking stdin read inside async function",
+  "description": "Command::Post reads stdin with std::io::stdin().read_to_string(\u0026mut buf) (a synchronous blocking call) inside an async fn on the tokio runtime. This stalls the executor thread for the duration of the read. Fix: use tokio::io::AsyncReadExt::read_to_string on tokio::io::stdin() with .await, keeping the executor free during the I/O wait.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:58:32.912725319Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:02:24.320976126Z",
+  "closed_at": "2026-07-18T00:02:24.320976126Z",
+  "close_reason": "All pass 4 fixes applied: media SSRF+size guard, mime/format consistency, proper keyId parsing, fail-closed sig verify, path reconstruction, key owner validation, media cap, blocking stdin fix, conflicts_with",
+  "labels": [
+    "idiomatic-rust",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ftef.22",
+      "depends_on_id": "broadside-ftef",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:58:32.929941258Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

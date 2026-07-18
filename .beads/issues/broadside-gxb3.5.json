@@ -1,0 +1,29 @@
+{
+  "id": "broadside-gxb3.5",
+  "title": "shared_inbox_uri stored without SSRF validation",
+  "description": "In server.rs handle_inbox Follow branch, inbox_uri gets an SSRF guard (lines 574-582) but shared_inbox_uri from actor_doc[\"endpoints\"][\"sharedInbox\"] is stored raw without any validation (line 567-569, 595). During delivery fan_out, shared_inbox_uri takes priority as the delivery target (delivery.rs line 76). An attacker-controlled actor document can set endpoints.sharedInbox to a private/internal IP (e.g. 169.254.169.254) that will be stored and then later POSTed to by the delivery worker, bypassing the guard that was added for inbox_uri. Fix: apply the same https-only + is_private_host check to shared_inbox_uri before storing it, or reject the whole Follow if shared_inbox_uri is present but invalid.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:04:30.610702714Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:06:05.432927612Z",
+  "closed_at": "2026-07-18T00:06:05.432927612Z",
+  "close_reason": "Fixed: shared_inbox SSRF guard, key_owner required, webhook media cap. Remaining (replay, unsigned accept, DNS rebinding, body buffer) accepted as known architectural limitations.",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-gxb3.5",
+      "depends_on_id": "broadside-gxb3",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:04:30.64086486Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

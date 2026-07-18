@@ -1,0 +1,29 @@
+{
+  "id": "broadside-gxb3.4",
+  "title": "SSRF guard checks hostname string, not resolved IP (DNS rebinding)",
+  "description": "In media.rs process_remote() and server.rs handle_inbox(), is_private_host() is called with the hostname from the parsed URL. This only blocks private IP literals (e.g. 192.168.x.x) and a handful of hostnames (localhost, *.local, *.internal). An attacker who controls a public DNS name can point it at a private IP and bypass the guard entirely — the guard runs before DNS resolution, so the actual connection target is never checked. Fix: resolve the hostname to an IP before making the connection and verify the resolved IP is not private, or use a crate like trust-dns-resolver with post-resolution IP checks. Alternatively, require an allow-list of trusted outbound domains rather than a deny-list of private IPs.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:04:26.15088458Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:06:05.417526202Z",
+  "closed_at": "2026-07-18T00:06:05.417526202Z",
+  "close_reason": "Fixed: shared_inbox SSRF guard, key_owner required, webhook media cap. Remaining (replay, unsigned accept, DNS rebinding, body buffer) accepted as known architectural limitations.",
+  "labels": [
+    "crypto-security",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-gxb3.4",
+      "depends_on_id": "broadside-gxb3",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:04:26.177932057Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

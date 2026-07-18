@@ -1,0 +1,29 @@
+{
+  "id": "broadside-ftef.14",
+  "title": "actor_cache: concurrent fetches for same actor URI (stampede)",
+  "description": "In src/actor_cache.rs get_public_key, the cache lock is dropped between the read check and the remote fetch (lines 34-39 vs 65-85). Two concurrent inbox requests with the same keyId will both miss the cache, both fetch the remote actor document, and both insert into the cache. Under high load or a thundering herd (e.g. a popular remote server sending many activities simultaneously), this produces N redundant outbound HTTP requests to the same actor URI. Fix: use a per-actor in-flight deduplication (e.g. tokio::sync::OnceCell keyed by URI, or a separate pending map) to coalesce concurrent fetches.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-17T23:58:10.20009248Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:02:24.215010788Z",
+  "closed_at": "2026-07-18T00:02:24.215010788Z",
+  "close_reason": "All pass 4 fixes applied: media SSRF+size guard, mime/format consistency, proper keyId parsing, fail-closed sig verify, path reconstruction, key owner validation, media cap, blocking stdin fix, conflicts_with",
+  "labels": [
+    "correctness",
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-ftef.14",
+      "depends_on_id": "broadside-ftef",
+      "type": "parent-child",
+      "created_at": "2026-07-17T23:58:10.218254051Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}
