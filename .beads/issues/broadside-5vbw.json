@@ -1,0 +1,17 @@
+{
+  "id": "broadside-5vbw",
+  "title": "smallhold: client_secret compared with ==",
+  "description": "In /home/mark/PROJECT/smallhold/src/api.rs lines 621-623, the client_secret from the OAuth token exchange is compared using Rust's == operator (via *cs \\!= stored_secret), which is not constant-time. An attacker could use timing side-channels to brute-force the client_secret byte by byte. Should use a constant-time comparison function (e.g., subtle::ConstantTimeEq or ring::constant_time::verify_slices_are_equal) instead.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T18:22:54.601344053Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T18:25:31.421633131Z",
+  "closed_at": "2026-07-18T18:25:31.421633131Z",
+  "close_reason": "Moved to smallhold-jpfu",
+  "labels": [
+    "codereview"
+  ]
+}

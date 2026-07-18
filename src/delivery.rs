@@ -133,8 +133,8 @@ async fn process_batch(
     .await?;
 
     let mut processed = 0u32;
-    // Cache per-post data to avoid redundant DB queries when multiple inboxes share a post
-    let mut post_cache: HashMap<String, (Vec<u8>, String)> = HashMap::new();
+    // Cache per-post data: (serialized_body, private_key, actor_uri)
+    let mut post_cache: HashMap<String, (Vec<u8>, String, String)> = HashMap::new();
 
     for (delivery_id, post_id, inbox_uri, attempts) in rows {
         // Re-validate inbox URI at delivery time (defense against DNS rebinding)
@@ -210,16 +210,11 @@ async fn process_batch(
 
             let body = serde_json::to_vec(&activity)?;
             let private_key = crate::persona::get_private_key(pool, &username).await?;
-            post_cache.insert(post_id.clone(), (body, private_key));
+            post_cache.insert(post_id.clone(), (body, private_key, actor_uri));
         }
 
-        let (body, private_key) = post_cache.get(&post_id).expect("just inserted");
-        let actor_uri_for_key = {
-            // Extract username from the cached activity to build key_id
-            let activity: serde_json::Value = serde_json::from_slice(body)?;
-            activity["actor"].as_str().unwrap_or("").to_string()
-        };
-        let key_id = format!("{actor_uri_for_key}#main-key");
+        let (body, private_key, actor_uri) = post_cache.get(&post_id).expect("just inserted");
+        let key_id = format!("{actor_uri}#main-key");
         let target_path = url::Url::parse(&inbox_uri)
             .map(|u| u.path().to_string())
             .unwrap_or_else(|_| "/inbox".to_string());
@@ -228,8 +223,8 @@ async fn process_batch(
             match signatures::sign_request(private_key, &key_id, &target_path, &inbox_domain, body)
             {
                 Ok(h) => h,
-                Err(_e) => {
-                    tracing::error!("failed to sign request for {}", inbox_uri);
+                Err(e) => {
+                    tracing::error!(inbox = %inbox_uri, error = %e, "failed to sign request");
                     mark_dead(pool, &delivery_id, "signing failed").await?;
                     processed += 1;
                     continue;
@@ -245,7 +240,7 @@ async fn process_batch(
             .await;
 
         match result {
-            Ok(resp) if resp.status().is_success() || resp.status().as_u16() == 202 => {
+            Ok(resp) if resp.status().is_success() => {
                 sqlx::query("DELETE FROM delivery_queue WHERE id = ?")
                     .bind(&delivery_id)
                     .execute(pool)

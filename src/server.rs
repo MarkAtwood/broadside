@@ -1183,19 +1183,15 @@ fn is_private_ip(ip: std::net::IpAddr) -> bool {
                 || v4.is_link_local()
                 || v4.is_broadcast()
                 || v4.is_unspecified()
-                || (v4.octets()[0] == 169 && v4.octets()[1] == 254)
         }
         IpAddr::V6(v6) => {
             v6.is_loopback()
                 || v6.is_unspecified()
                 || (v6.segments()[0] & 0xfe00) == 0xfc00
                 || (v6.segments()[0] & 0xffc0) == 0xfe80
-                || v6.to_ipv4_mapped().is_some_and(|v4| {
-                    v4.is_loopback()
-                        || v4.is_private()
-                        || v4.is_link_local()
-                        || (v4.octets()[0] == 169 && v4.octets()[1] == 254)
-                })
+                || v6
+                    .to_ipv4_mapped()
+                    .is_some_and(|v4| v4.is_loopback() || v4.is_private() || v4.is_link_local())
         }
     }
 }

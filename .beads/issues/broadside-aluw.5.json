@@ -1,0 +1,27 @@
+{
+  "id": "broadside-aluw.5",
+  "title": "delivery: redundant JSON re-deserialization to extract actor_uri",
+  "description": "In delivery.rs process_batch(), actor_uri is computed at line 181 and used to build the JSON activity body. The body is serialized and cached in post_cache as (Vec\u003cu8\u003e, String). Then at lines 219-220, the body is re-deserialized via serde_json::from_slice just to extract activity[\"actor\"] — which is the same actor_uri that was available before serialization. Fix: change the cache tuple to (Vec\u003cu8\u003e, String, String) storing (body, private_key, actor_uri), and use the cached actor_uri directly instead of re-parsing. Eliminates one serde_json deserialization per delivery.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T18:36:32.822341134Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T18:38:31.664042269Z",
+  "closed_at": "2026-07-18T18:38:31.664042269Z",
+  "close_reason": "Closed",
+  "labels": [
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-aluw.5",
+      "depends_on_id": "broadside-aluw",
+      "type": "parent-child",
+      "created_at": "2026-07-18T18:36:32.841774153Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

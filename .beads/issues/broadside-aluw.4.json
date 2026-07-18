@@ -1,0 +1,27 @@
+{
+  "id": "broadside-aluw.4",
+  "title": "server: duplicate link-local check in is_private_ip",
+  "description": "server.rs:is_private_ip, IPv4 branch: calls v4.is_link_local() and also checks 'v4.octets()[0] == 169 \u0026\u0026 v4.octets()[1] == 254' — these are identical (is_link_local() covers exactly 169.254.0.0/16 on stable Rust). The manual octets check is dead code. Clippy -D clippy::nonminimal_bool would catch this. Fix: remove the redundant octets check.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T18:34:49.704068889Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T18:38:31.643413362Z",
+  "closed_at": "2026-07-18T18:38:31.643413362Z",
+  "close_reason": "Closed",
+  "labels": [
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-aluw.4",
+      "depends_on_id": "broadside-aluw",
+      "type": "parent-child",
+      "created_at": "2026-07-18T18:34:49.725186557Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

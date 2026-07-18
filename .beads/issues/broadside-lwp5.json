@@ -1,0 +1,17 @@
+{
+  "id": "broadside-lwp5",
+  "title": "smallhold: private key stored plaintext in DB",
+  "description": "In /home/mark/PROJECT/smallhold/src/db.rs line 47, the accounts table stores private_key_pem as plaintext TEXT. Same pattern as broadside — accepted per threat model (single-user server, SQLite file on same disk, encrypting at rest only protects against a narrower attack than full disk compromise). Noting for parity tracking.",
+  "status": "closed",
+  "priority": 4,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T18:23:06.056104188Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T18:25:31.765882764Z",
+  "closed_at": "2026-07-18T18:25:31.765882764Z",
+  "close_reason": "Moved to smallhold — accepted per threat model",
+  "labels": [
+    "codereview"
+  ]
+}
