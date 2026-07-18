@@ -1,0 +1,19 @@
+{
+  "id": "broadside-i5iz",
+  "title": "Add Mastodon actor metadata to persona actor document",
+  "description": "The actor document served at /users/{username} is missing several fields Mastodon expects: published (account creation date, shows 'Joined' on profile), icon (avatar), image (header/banner), attachment (profile metadata key-value pairs like Website/GitHub), discoverable (directory/search visibility), endpoints.sharedInbox (delivery optimization), manuallyApprovesFollowers (should be false). Add all of these to the actor JSON-LD output. Avatar/header paths are already stored in personas table but not serialized. Creation date is in created_at column.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "feature",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T02:49:11.114267331Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T02:51:28.594269276Z",
+  "started_at": "2026-07-18T02:49:15.6699307Z",
+  "closed_at": "2026-07-18T02:51:28.594269276Z",
+  "close_reason": "Actor document now includes: published (join date), discoverable, manuallyApprovesFollowers, endpoints.sharedInbox, icon (avatar), image (header), attachment (PropertyValue metadata fields). CLI: persona update --field 'Name=Value' sets metadata.",
+  "labels": [
+    "federation"
+  ]
+}

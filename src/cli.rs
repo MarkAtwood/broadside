@@ -89,6 +89,9 @@ enum PersonaCommand {
         /// Path to header image
         #[arg(long)]
         header: Option<String>,
+        /// Profile metadata field as "Name=Value" (repeatable)
+        #[arg(long = "field")]
+        fields: Vec<String>,
     },
 }
 
@@ -142,6 +145,7 @@ impl Cli {
                         bio,
                         avatar,
                         header,
+                        fields,
                     } => {
                         broadside::persona::update(
                             &pool,
@@ -152,6 +156,22 @@ impl Cli {
                             header.as_deref(),
                         )
                         .await?;
+                        if !fields.is_empty() {
+                            let metadata: Vec<serde_json::Value> = fields
+                                .iter()
+                                .filter_map(|f| {
+                                    let (name, value) = f.split_once('=')?;
+                                    Some(serde_json::json!({"name": name.trim(), "value": value.trim()}))
+                                })
+                                .collect();
+                            let json = serde_json::to_string(&metadata)?;
+                            sqlx::query("UPDATE personas SET metadata = ? WHERE username = ?")
+                                .bind(&json)
+                                .bind(&username)
+                                .execute(&pool)
+                                .await?;
+                            println!("Set {} metadata field(s)", metadata.len());
+                        }
                     }
                 }
             }

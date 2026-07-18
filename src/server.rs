@@ -260,21 +260,32 @@ async fn actor(
     State(state): State<Arc<AppState>>,
     Path(username): Path<String>,
 ) -> impl IntoResponse {
-    let row = sqlx::query_as::<_, (String, String, String, String, String)>(
-        "SELECT id, username, display_name, bio, public_key FROM personas WHERE username = ?",
+    let row = sqlx::query_as::<_, (String, String, String, String, String, Option<String>, Option<String>, String, String)>(
+        "SELECT id, username, display_name, bio, public_key, avatar_path, header_path, created_at, metadata \
+         FROM personas WHERE username = ?",
     )
     .bind(&username)
     .fetch_optional(&state.pool)
     .await;
 
-    let (_id, username, display_name, bio, public_key) = match row {
+    let (
+        _id,
+        username,
+        display_name,
+        bio,
+        public_key,
+        avatar_path,
+        header_path,
+        created_at,
+        metadata_json,
+    ) = match row {
         Ok(Some(r)) => r,
         _ => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
     };
 
     let actor_uri = format!("https://{}/users/{}", state.domain, username);
 
-    let doc = serde_json::json!({
+    let mut doc = serde_json::json!({
         "@context": [
             "https://www.w3.org/ns/activitystreams",
             "https://w3id.org/security/v1"
@@ -284,16 +295,55 @@ async fn actor(
         "preferredUsername": username,
         "name": display_name,
         "summary": bio,
+        "published": created_at,
         "inbox": format!("{}/inbox", actor_uri),
         "outbox": format!("{}/outbox", actor_uri),
         "followers": format!("{}/followers", actor_uri),
         "url": actor_uri,
+        "discoverable": true,
+        "manuallyApprovesFollowers": false,
+        "endpoints": {
+            "sharedInbox": format!("https://{}/inbox", state.domain)
+        },
         "publicKey": {
             "id": format!("{}#main-key", actor_uri),
             "owner": actor_uri,
             "publicKeyPem": public_key
         }
     });
+
+    if let Some(ref avatar) = avatar_path {
+        doc["icon"] = serde_json::json!({
+            "type": "Image",
+            "mediaType": "image/png",
+            "url": format!("https://{}/{}", state.domain, avatar)
+        });
+    }
+    if let Some(ref header) = header_path {
+        doc["image"] = serde_json::json!({
+            "type": "Image",
+            "mediaType": "image/png",
+            "url": format!("https://{}/{}", state.domain, header)
+        });
+    }
+
+    // Profile metadata fields (e.g., "Website", "GitHub")
+    // Stored as JSON array of {"name": "...", "value": "..."} objects
+    if let Ok(fields) = serde_json::from_str::<Vec<serde_json::Value>>(&metadata_json) {
+        if !fields.is_empty() {
+            let attachments: Vec<serde_json::Value> = fields
+                .iter()
+                .map(|f| {
+                    serde_json::json!({
+                        "type": "PropertyValue",
+                        "name": f["name"],
+                        "value": f["value"]
+                    })
+                })
+                .collect();
+            doc["attachment"] = serde_json::json!(attachments);
+        }
+    }
 
     (
         StatusCode::OK,

@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS personas (
     bio         TEXT NOT NULL DEFAULT '',
     avatar_path TEXT,
     header_path TEXT,
+    metadata    TEXT NOT NULL DEFAULT '[]',
     private_key TEXT NOT NULL,
     public_key  TEXT NOT NULL,
     created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
