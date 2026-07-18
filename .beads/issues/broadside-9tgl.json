@@ -1,0 +1,15 @@
+{
+  "id": "broadside-9tgl",
+  "title": "PostgreSQL/RDS backend support",
+  "description": "Some corporate environments require all production data in a managed database (RDS/Aurora). Add PostgreSQL as an alternative storage backend. sqlx already supports both — the migration is mechanical query-level changes, not architectural. Defer until a concrete user requests it.",
+  "status": "open",
+  "priority": 4,
+  "issue_type": "feature",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T04:34:31.114027241Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T04:34:31.114027241Z",
+  "labels": [
+    "backlog"
+  ]
+}

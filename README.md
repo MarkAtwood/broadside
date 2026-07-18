@@ -105,6 +105,8 @@ pattern = "*.md"
 - A reverse proxy (Caddy or nginx) for TLS termination
 - Nothing else. No PostgreSQL, no Redis, no Node.js.
 
+Broadside uses SQLite for storage. PostgreSQL support is planned for environments that require managed databases (e.g., RDS/Aurora).
+
 ### Caddy example
 
 ```
