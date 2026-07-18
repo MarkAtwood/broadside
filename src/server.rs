@@ -140,6 +140,29 @@ pub async fn serve(config: &Config) -> anyhow::Result<()> {
     // Start delivery worker
     tokio::spawn(crate::delivery::run_worker(pool.clone(), domain.clone()));
 
+    // Periodic census registration (the-federation.info)
+    {
+        let census_domain = domain.clone();
+        tokio::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_secs(7 * 24 * 3600)).await;
+            let client = reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(30))
+                .build()
+                .unwrap();
+            loop {
+                let url = format!("https://the-federation.info/register/{census_domain}");
+                match client.get(&url).send().await {
+                    Ok(resp) => tracing::info!(
+                        status = %resp.status(),
+                        "census registration ping to the-federation.info"
+                    ),
+                    Err(e) => tracing::debug!("census ping failed (non-fatal): {e}"),
+                }
+                tokio::time::sleep(std::time::Duration::from_secs(7 * 24 * 3600)).await;
+            }
+        });
+    }
+
     // Periodic rate limiter prune (every 10 minutes)
     let limiter_clone = inbox_limiter.clone();
     tokio::spawn(async move {
