@@ -253,7 +253,7 @@ async fn webfinger(
 ) -> impl IntoResponse {
     let prefix = "acct:";
     let Some(acct) = query.resource.strip_prefix(prefix) else {
-        return (StatusCode::BAD_REQUEST, "resource must start with acct:").into_response();
+        return (StatusCode::NOT_FOUND, "resource not found").into_response();
     };
 
     let (username, domain) = match acct.split_once('@') {

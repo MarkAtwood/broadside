@@ -106,6 +106,23 @@ async fn test_webfinger_unknown_user() {
 }
 
 #[tokio::test]
+async fn test_webfinger_non_acct_uri() {
+    let (base_url, _tmp) = test_server().await;
+    let client = reqwest::Client::new();
+
+    // RFC 7033: non-acct: URI schemes must get 404, not 400
+    let resp = client
+        .get(format!(
+            "{base_url}/.well-known/webfinger?resource=https://example.com/users/alice"
+        ))
+        .send()
+        .await
+        .unwrap();
+
+    assert_eq!(resp.status(), 404);
+}
+
+#[tokio::test]
 async fn test_actor_document() {
     let (base_url, _tmp) = test_server().await;
     let client = reqwest::Client::new();
