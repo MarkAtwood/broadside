@@ -231,6 +231,7 @@ dependencies = [
  "notify",
  "pulldown-cmark",
  "rand 0.8.7",
+ "regex",
  "reqwest",
  "rsa",
  "serde",

@@ -1,5 +1,6 @@
 pub mod actor_cache;
 pub mod config;
+pub mod content;
 pub mod db;
 pub mod delivery;
 pub mod feed;

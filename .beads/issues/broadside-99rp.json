@@ -1,0 +1,19 @@
+{
+  "id": "broadside-99rp",
+  "title": "Hashtags not rendered: Mastodon requires tag array and pre-linked HTML",
+  "description": "Plain text #hashtag in content is not clickable in Mastodon. Mastodon requires: 1) hashtag linked in HTML as \u003ca href='https://domain/tags/name' class='mention hashtag' rel='tag'\u003e#\u003cspan\u003ename\u003c/span\u003e\u003c/a\u003e, 2) a 'tag' array on the Note object with {type: Hashtag, href, name}. Need to detect #word patterns in content and produce both.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T02:40:19.523170699Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T02:47:34.830235321Z",
+  "started_at": "2026-07-18T02:40:24.819584607Z",
+  "closed_at": "2026-07-18T02:47:34.830235321Z",
+  "close_reason": "Hashtags and mentions now render correctly in Mastodon — verified live against mastodon.social",
+  "labels": [
+    "federation"
+  ]
+}

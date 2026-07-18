@@ -360,6 +360,12 @@ async fn outbox(
         .iter()
         .map(|p| {
             let post_uri = format!("{}/statuses/{}", actor_uri, p.id);
+            let (processed_html, tags) =
+                crate::content::process_content(&p.content_html, &state.domain);
+            let tag_json: Vec<serde_json::Value> = tags
+                .iter()
+                .map(|t| serde_json::to_value(t).unwrap_or_default())
+                .collect();
             serde_json::json!({
                 "id": format!("{}/activity", post_uri),
                 "type": "Create",
@@ -371,10 +377,11 @@ async fn outbox(
                     "id": post_uri,
                     "type": "Note",
                     "attributedTo": actor_uri,
-                    "content": p.content_html,
+                    "content": processed_html,
                     "published": p.published_at,
                     "to": ["https://www.w3.org/ns/activitystreams#Public"],
                     "cc": [format!("{}/followers", actor_uri)],
+                    "tag": tag_json,
                 }
             })
         })

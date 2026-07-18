@@ -182,6 +182,13 @@ async fn process_batch(
         let actor_uri = format!("https://{domain}/users/{username}");
         let post_uri = format!("{actor_uri}/statuses/{post_id}");
 
+        // Process content for hashtags, mentions, and URL auto-linking
+        let (processed_html, tags) = crate::content::process_content(&content_html, domain);
+        let tag_json: Vec<serde_json::Value> = tags
+            .iter()
+            .map(|t| serde_json::to_value(t).unwrap_or_default())
+            .collect();
+
         let activity = serde_json::json!({
             "@context": "https://www.w3.org/ns/activitystreams",
             "id": format!("{post_uri}/activity"),
@@ -194,10 +201,11 @@ async fn process_batch(
                 "id": post_uri,
                 "type": "Note",
                 "attributedTo": &actor_uri,
-                "content": content_html,
+                "content": processed_html,
                 "published": published_at,
                 "to": ["https://www.w3.org/ns/activitystreams#Public"],
                 "cc": [format!("{actor_uri}/followers")],
+                "tag": tag_json,
             }
         });
 
