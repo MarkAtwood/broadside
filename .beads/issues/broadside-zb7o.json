@@ -2,13 +2,15 @@
   "id": "broadside-zb7o",
   "title": "WebFinger: return 400 for empty resource parameter",
   "description": "An empty resource= query string (not missing, but empty) currently returns 404. RFC 7033 §4.2.4 arguably requires 400 for malformed resource parameters. Low severity — debatable whether empty string is malformed or just a non-existent resource.",
-  "status": "open",
+  "status": "closed",
   "priority": 3,
   "issue_type": "bug",
   "owner": "mark@reviewcommit.com",
   "created_at": "2026-07-18T23:42:40.957710175Z",
   "created_by": "Mark Atwood",
-  "updated_at": "2026-07-18T23:42:40.957710175Z",
+  "updated_at": "2026-07-18T23:49:37.578739873Z",
+  "closed_at": "2026-07-18T23:49:37.578739873Z",
+  "close_reason": "Fixed: empty resource= parameter now returns 400 Bad Request instead of 404. Test added.",
   "labels": [
     "conformance"
   ]

@@ -2,13 +2,15 @@
   "id": "broadside-e9vq",
   "title": "WebFinger: add CORS Access-Control-Allow-Origin header",
   "description": "RFC 7033 §5.1 requires Access-Control-Allow-Origin on WebFinger responses. Currently not present. Discovered during conformance testing via ngrok.",
-  "status": "open",
+  "status": "closed",
   "priority": 2,
   "issue_type": "bug",
   "owner": "mark@reviewcommit.com",
   "created_at": "2026-07-18T23:42:40.908643808Z",
   "created_by": "Mark Atwood",
-  "updated_at": "2026-07-18T23:42:40.908643808Z",
+  "updated_at": "2026-07-18T23:49:37.513689074Z",
+  "closed_at": "2026-07-18T23:49:37.513689074Z",
+  "close_reason": "Fixed: WebFinger responses now include Access-Control-Allow-Origin: * per RFC 7033 §5.1. Test added.",
   "labels": [
     "conformance"
   ]

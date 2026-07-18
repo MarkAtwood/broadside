@@ -256,6 +256,9 @@ async fn webfinger(
     State(state): State<Arc<AppState>>,
     Query(query): Query<WebfingerQuery>,
 ) -> impl IntoResponse {
+    if query.resource.is_empty() {
+        return (StatusCode::BAD_REQUEST, "missing resource").into_response();
+    }
     let prefix = "acct:";
     let Some(acct) = query.resource.strip_prefix(prefix) else {
         return (StatusCode::NOT_FOUND, "resource not found").into_response();
@@ -290,6 +293,7 @@ async fn webfinger(
                 [
                     (axum::http::header::CONTENT_TYPE, "application/jrd+json"),
                     (axum::http::header::CACHE_CONTROL, "public, max-age=300"),
+                    (axum::http::header::ACCESS_CONTROL_ALLOW_ORIGIN, "*"),
                 ],
                 Json(resp),
             )
