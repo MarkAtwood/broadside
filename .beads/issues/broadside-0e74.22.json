@@ -1,0 +1,28 @@
+{
+  "id": "broadside-0e74.22",
+  "title": "Private key material may appear in delivery error messages stored in last_error column",
+  "description": "src/delivery.rs process_batch() calls crate::persona::get_private_key(pool, \u0026username).await and, if signing fails, does:\n\n    Err(e) =\u003e {\n        tracing::error!(error = %e, \"failed to sign request\");\n        mark_dead(pool, \u0026delivery_id, \u0026e.to_string()).await?;\n\nThe error string e.to_string() is stored in delivery_queue.last_error. If the private key loading path produces errors that include key material in their Display output (e.g., a PEM parse error that echoes the raw bytes, or a key file read error that includes file contents in the anyhow context chain), that material lands in the DB.\n\nSimilarly, tracing::error!(error = %e, ...) sends it to the log output.\n\nMitigation: audit get_private_key error paths to ensure no key bytes appear in error messages; sanitize error strings before storing in last_error.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:17:51.389986044Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:23:52.644372277Z",
+  "closed_at": "2026-07-18T00:23:52.644372277Z",
+  "close_reason": "All pentest fixes: require Signature header, verify Digest, enforce actor-keyId match, Date freshness, body size limit 256KB, webhook key via header, decompression bomb limits, symlink rejection, redirect following disabled, delivery SSRF recheck, backslash escape handling",
+  "labels": [
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-0e74.22",
+      "depends_on_id": "broadside-0e74",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:17:51.414429019Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

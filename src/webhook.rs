@@ -1,5 +1,5 @@
-use axum::extract::{Path, Query, State};
-use axum::http::StatusCode;
+use axum::extract::{Path, State};
+use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
 use axum::Json;
 use serde::Deserialize;
@@ -10,16 +10,10 @@ use crate::sanitize;
 use crate::server::AppState;
 
 #[derive(Deserialize)]
-pub struct WebhookQuery {
-    key: String,
-}
-
-#[derive(Deserialize)]
 pub struct WebhookPayload {
     content: String,
     #[serde(default = "default_content_type")]
     content_type: String,
-    // ponytail: media fetch not yet implemented — tracked in broadside-to5p.5
     #[serde(default)]
     pub media: Vec<WebhookMedia>,
 }
@@ -38,17 +32,29 @@ fn default_content_type() -> String {
 pub async fn handle_webhook(
     State(state): State<Arc<AppState>>,
     Path(persona_name): Path<String>,
-    Query(query): Query<WebhookQuery>,
+    headers: HeaderMap,
     Json(payload): Json<WebhookPayload>,
 ) -> impl IntoResponse {
+    // Extract key from Authorization header (Bearer token) or X-Webhook-Key header.
+    // NOT from query string — query strings leak to access logs and Referer headers.
+    let provided_key = headers
+        .get("authorization")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.strip_prefix("Bearer "))
+        .or_else(|| headers.get("x-webhook-key").and_then(|v| v.to_str().ok()));
+
+    let provided_key = match provided_key {
+        Some(k) => k,
+        None => return (StatusCode::UNAUTHORIZED, "missing authorization").into_response(),
+    };
+
     let keys = &state.webhook_keys;
     match keys.get(&persona_name) {
         Some(expected_key) => {
-            // Constant-time comparison — hash both keys to fixed length first
-            // to avoid leaking key length via early-exit
+            // Constant-time comparison via SHA-256 hash to avoid length leak
             use sha2::Digest;
             let expected_hash = sha2::Sha256::digest(expected_key.as_bytes());
-            let provided_hash = sha2::Sha256::digest(query.key.as_bytes());
+            let provided_hash = sha2::Sha256::digest(provided_key.as_bytes());
             if expected_hash.ct_eq(&provided_hash).unwrap_u8() != 1 {
                 return (StatusCode::UNAUTHORIZED, "invalid key").into_response();
             }

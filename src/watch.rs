@@ -55,6 +55,14 @@ async fn watch_loop(pool: &SqlitePool, config: &WatchConfig, _domain: &str) -> a
             continue;
         }
 
+        // Reject symlinks to prevent reading arbitrary files (e.g., /etc/passwd, private keys)
+        if let Ok(meta) = tokio::fs::symlink_metadata(&file_path).await {
+            if meta.file_type().is_symlink() {
+                tracing::warn!(file = %file_path.display(), "rejecting symlink in watch directory");
+                continue;
+            }
+        }
+
         // Small delay to let the file finish writing
         tokio::time::sleep(std::time::Duration::from_millis(200)).await;
 

@@ -1,0 +1,28 @@
+{
+  "id": "broadside-0e74.15",
+  "title": "JSON-LD type/actor confusion: array types and object actors bypass guards",
+  "description": "server.rs:512: `let activity_type = activity[\"type\"].as_str().unwrap_or(\"\");`\n\nIf `type` is an array (valid JSON-LD: `\"type\": [\"Follow\", \"Create\"]`), as_str() returns None, the type is treated as empty string, and the activity falls through to the default `_ =\u003e` arm which logs and returns ACCEPTED. The activity is silently dropped rather than validated.\n\nMore dangerously, the handler does not restrict type to known values — it silently accepts and ACCEPTs anything unknown. A future handler added without an explicit whitelist check could be exploited.\n\nserver.rs:516-519: `activity[\"actor\"].as_str()` — if actor is an object (`\"actor\": {\"id\": \"https://...\", \"type\": \"Person\"}`) rather than a string, as_str() returns None and the guard `Some(a) if !a.is_empty()` returns BAD_REQUEST. This is safe but inconsistent with ActivityPub spec which allows actor to be either a string or an object.\n\nserver.rs:520-523: `activity[\"object\"].as_str()` — if object is an embedded object instead of a URI string, the Follow is rejected with BAD_REQUEST. This is safe.\n\nThe main risk: if broadside ever adds activity types where the object handler uses .as_object() or other accessors, the same attacker-controlled confusion applies.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:17:08.763709798Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:23:52.534696263Z",
+  "closed_at": "2026-07-18T00:23:52.534696263Z",
+  "close_reason": "All pentest fixes: require Signature header, verify Digest, enforce actor-keyId match, Date freshness, body size limit 256KB, webhook key via header, decompression bomb limits, symlink rejection, redirect following disabled, delivery SSRF recheck, backslash escape handling",
+  "labels": [
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-0e74.15",
+      "depends_on_id": "broadside-0e74",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:17:08.789061293Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

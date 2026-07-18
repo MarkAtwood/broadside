@@ -124,14 +124,24 @@ fn parse_signature_header(header: &str) -> anyhow::Result<SignatureParts> {
     })
 }
 
-/// Split signature header params, respecting quoted values that may contain commas.
+/// Split signature header params, respecting quoted values and backslash escapes.
 fn split_signature_params(s: &str) -> Vec<String> {
     let mut parts = Vec::new();
     let mut current = String::new();
     let mut in_quotes = false;
+    let mut escape_next = false;
 
     for c in s.chars() {
+        if escape_next {
+            current.push(c);
+            escape_next = false;
+            continue;
+        }
         match c {
+            '\\' if in_quotes => {
+                escape_next = true;
+                current.push(c);
+            }
             '"' => {
                 in_quotes = !in_quotes;
                 current.push(c);

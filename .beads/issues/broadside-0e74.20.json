@@ -1,0 +1,28 @@
+{
+  "id": "broadside-0e74.20",
+  "title": "feed-rs XML parser has no entity expansion limit; billion-laughs attack possible on feed parse",
+  "description": "src/feed.rs poll_feed() calls feed_rs::parser::parse(\u0026body[..]) on the raw response body (up to the 30-second timeout, no explicit byte limit before parse). feed-rs uses quick-xml internally.\n\nquick-xml before 0.36 had no entity expansion limit. If feed-rs passes through or expands XML entities, a billion-laughs payload (nested entity references that expand exponentially) could exhaust CPU and memory during parse.\n\nThe fetch itself is limited by the 30s timeout, but the parse runs in the async task and blocks the tokio runtime thread while expanding entities.\n\nMitigation: check feed-rs and quick-xml versions in Cargo.lock; verify whether feed-rs uses quick-xml's expand_empty_elements / entity expansion in a bounded way. Consider limiting body size before handing to the parser (e.g., cap at 1MB).",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:17:33.50305698Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:23:52.614646599Z",
+  "closed_at": "2026-07-18T00:23:52.614646599Z",
+  "close_reason": "All pentest fixes: require Signature header, verify Digest, enforce actor-keyId match, Date freshness, body size limit 256KB, webhook key via header, decompression bomb limits, symlink rejection, redirect following disabled, delivery SSRF recheck, backslash escape handling",
+  "labels": [
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-0e74.20",
+      "depends_on_id": "broadside-0e74",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:17:33.526571654Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

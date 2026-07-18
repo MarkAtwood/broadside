@@ -1,0 +1,28 @@
+{
+  "id": "broadside-0e74.4",
+  "title": "keyId controls actor fetch target: attacker-supplied key injection",
+  "description": "server.rs:461: `let actor_uri = key_id.split('#').next().unwrap_or(\u0026key_id);`\n\nThe actor_uri used to fetch the public key is derived entirely from the attacker-controlled keyId field in the Signature header. The actor_cache.get_public_key() fetches that URI and uses `publicKey.publicKeyPem` from the returned document.\n\nactor_cache.rs:76 validates `publicKey.owner == actor_uri`, which prevents the simplest key-injection: attacker's server returns a document where owner matches the keyId base URI.\n\nHowever, this still means:\n- The attacker controls what host is fetched for the public key\n- The attacker can register https://attacker.example/users/alice, serve any public key they control, and claim to be acting as that actor\n- There is no validation that the actor_uri in the Signature header matches the `actor` field in the JSON body\n\nAn attacker with a valid key at attacker.example can sign as `keyId=\"https://attacker.example/users/alice#main-key\"` while setting `\"actor\": \"https://mastodon.social/users/realuser\"` in the body. Signature verification passes (attacker.example key is valid and owner matches), and the Follow is inserted with `actor_uri = https://mastodon.social/users/realuser`.\n\nFix: after signature verification, assert that the actor_uri derived from keyId matches activity['actor'].",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:16:07.119161716Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:23:52.324298525Z",
+  "closed_at": "2026-07-18T00:23:52.324298525Z",
+  "close_reason": "All pentest fixes: require Signature header, verify Digest, enforce actor-keyId match, Date freshness, body size limit 256KB, webhook key via header, decompression bomb limits, symlink rejection, redirect following disabled, delivery SSRF recheck, backslash escape handling",
+  "labels": [
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-0e74.4",
+      "depends_on_id": "broadside-0e74",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:16:07.145927895Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

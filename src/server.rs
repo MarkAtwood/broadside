@@ -32,6 +32,8 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/inbox", post(shared_inbox))
         .route("/hook/{persona}", post(crate::webhook::handle_webhook))
         .route("/health", get(health))
+        // Body size limit: 256KB for inbox, webhook is capped by axum default (2MB)
+        .layer(axum::extract::DefaultBodyLimit::max(256 * 1024))
         .with_state(state)
 }
 
@@ -45,8 +47,10 @@ pub async fn serve(config: &Config) -> anyhow::Result<()> {
         .map(|w| (w.persona.clone(), w.key.clone()))
         .collect();
 
+    // Disable automatic redirect following for outbound requests (SSRF defense)
     let http_client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
+        .redirect(reqwest::redirect::Policy::none())
         .build()?;
 
     // 60 requests per minute per IP on inbox endpoints
@@ -435,9 +439,8 @@ async fn handle_inbox(
     headers: &HeaderMap,
     body: &str,
 ) -> impl IntoResponse {
-    // Rate limit by X-Real-IP (set by reverse proxy), falling back to X-Forwarded-For,
-    // then "unknown". Deploy behind a reverse proxy that sets X-Real-IP from the
-    // actual client IP — X-Forwarded-For is attacker-controlled without proxy cooperation.
+    // Rate limit by X-Real-IP (must be set by reverse proxy).
+    // WARNING: without a reverse proxy, this header is attacker-controlled.
     let client_ip = headers
         .get("x-real-ip")
         .or_else(|| headers.get("x-forwarded-for"))
@@ -451,65 +454,108 @@ async fn handle_inbox(
         return StatusCode::TOO_MANY_REQUESTS;
     }
 
-    // Verify HTTP signature if present.
-    // Fail closed: if Signature header is present but invalid, reject with 401.
-    if let Some(sig_header) = headers.get("signature").and_then(|v| v.to_str().ok()) {
-        // Use the signature parser to extract keyId properly
-        let key_id = extract_key_id_from_sig(sig_header);
+    // REQUIRE Signature header — reject unsigned requests.
+    let sig_header = match headers.get("signature").and_then(|v| v.to_str().ok()) {
+        Some(h) => h.to_string(),
+        None => {
+            tracing::debug!("rejecting unsigned inbox request");
+            return StatusCode::UNAUTHORIZED;
+        }
+    };
 
-        if let Some(key_id) = key_id {
-            let actor_uri = key_id.split('#').next().unwrap_or(&key_id);
+    // Extract keyId from Signature header
+    let key_id = match extract_key_id_from_sig(&sig_header) {
+        Some(k) => k,
+        None => return StatusCode::BAD_REQUEST,
+    };
 
-            // Reconstruct the request path from the username parameter
-            let path = if let Some(uname) = _username {
-                format!("/users/{uname}/inbox")
-            } else {
-                "/inbox".to_string()
-            };
+    let actor_uri = key_id.split('#').next().unwrap_or(&key_id).to_string();
 
-            // Fetch actor key — fail closed if actor is unreachable
-            let public_key_pem = match state.actor_cache.get_public_key(actor_uri).await {
-                Ok((pem, _)) => pem,
-                Err(e) => {
-                    tracing::warn!(actor = actor_uri, error = %e, "cannot fetch actor key");
+    // Reconstruct the request path
+    let path = if let Some(uname) = _username {
+        format!("/users/{uname}/inbox")
+    } else {
+        "/inbox".to_string()
+    };
+
+    // Fetch actor key — fail closed if unreachable
+    let public_key_pem = match state.actor_cache.get_public_key(&actor_uri).await {
+        Ok((pem, _)) => pem,
+        Err(e) => {
+            tracing::warn!(actor = %actor_uri, error = %e, "cannot fetch actor key");
+            return StatusCode::UNAUTHORIZED;
+        }
+    };
+
+    // Verify signature
+    if crate::signatures::verify_signature(&public_key_pem, &sig_header, "post", &path, headers)
+        .is_err()
+    {
+        // Retry once after cache invalidation (key rotation)
+        state.actor_cache.invalidate(&actor_uri).await;
+        match state.actor_cache.get_public_key(&actor_uri).await {
+            Ok((fresh_key, _)) => {
+                if crate::signatures::verify_signature(
+                    &fresh_key,
+                    &sig_header,
+                    "post",
+                    &path,
+                    headers,
+                )
+                .is_err()
+                {
+                    tracing::warn!(actor = %actor_uri, "signature verification failed");
                     return StatusCode::UNAUTHORIZED;
                 }
-            };
+            }
+            Err(_) => return StatusCode::UNAUTHORIZED,
+        }
+    }
 
-            if crate::signatures::verify_signature(
-                &public_key_pem,
-                sig_header,
-                "post",
-                &path,
-                headers,
-            )
-            .is_err()
-            {
-                // Retry once after cache invalidation (key rotation)
-                state.actor_cache.invalidate(actor_uri).await;
-                match state.actor_cache.get_public_key(actor_uri).await {
-                    Ok((fresh_key, _)) => {
-                        if crate::signatures::verify_signature(
-                            &fresh_key, sig_header, "post", &path, headers,
-                        )
-                        .is_err()
-                        {
-                            tracing::warn!(actor = actor_uri, "signature verification failed");
-                            return StatusCode::UNAUTHORIZED;
-                        }
-                    }
-                    Err(_) => return StatusCode::UNAUTHORIZED,
-                }
+    // Verify Digest header if present (body integrity)
+    if let Some(digest_header) = headers.get("digest").and_then(|v| v.to_str().ok()) {
+        if let Some(expected_b64) = digest_header.strip_prefix("SHA-256=") {
+            use base64::engine::general_purpose::STANDARD as B64;
+            use base64::Engine;
+            use sha2::Digest;
+            let actual = sha2::Sha256::digest(body.as_bytes());
+            let actual_b64 = B64.encode(actual);
+            if actual_b64 != expected_b64 {
+                tracing::warn!("Digest mismatch");
+                return StatusCode::BAD_REQUEST;
             }
         }
     }
 
+    // Verify Date freshness (reject requests older than 5 minutes)
+    if let Some(date_str) = headers.get("date").and_then(|v| v.to_str().ok()) {
+        if let Ok(date) = chrono::DateTime::parse_from_rfc2822(date_str) {
+            let age = chrono::Utc::now().signed_duration_since(date);
+            if age.num_seconds().unsigned_abs() > 300 {
+                tracing::debug!("rejecting stale request (age: {}s)", age.num_seconds());
+                return StatusCode::UNAUTHORIZED;
+            }
+        }
+    }
+
+    // Parse activity
     let activity: serde_json::Value = match serde_json::from_str(body) {
         Ok(v) => v,
         Err(_) => return StatusCode::BAD_REQUEST,
     };
 
     let activity_type = activity["type"].as_str().unwrap_or("");
+
+    // Verify the activity's actor matches the signature's keyId actor
+    let activity_actor = activity["actor"].as_str().unwrap_or("");
+    if !activity_actor.is_empty() && activity_actor != actor_uri {
+        tracing::warn!(
+            sig_actor = %actor_uri,
+            activity_actor,
+            "actor mismatch between signature and activity"
+        );
+        return StatusCode::UNAUTHORIZED;
+    }
 
     match activity_type {
         "Follow" => {
@@ -536,13 +582,11 @@ async fn handle_inbox(
 
             // SSRF guard: only fetch public https URLs
             if !follower_actor.starts_with("https://") {
-                tracing::warn!(actor = follower_actor, "rejecting non-https actor URI");
                 return StatusCode::BAD_REQUEST;
             }
             if let Ok(parsed) = url::Url::parse(follower_actor) {
                 if let Some(host) = parsed.host_str() {
                     if is_private_host(host) {
-                        tracing::warn!(actor = follower_actor, "rejecting private/local actor URI");
                         return StatusCode::BAD_REQUEST;
                     }
                 }
@@ -556,15 +600,17 @@ async fn handle_inbox(
                 .send()
                 .await
             {
-                Ok(resp) => match resp.json::<serde_json::Value>().await {
-                    Ok(v) => v,
-                    Err(_) => return StatusCode::ACCEPTED,
-                },
-                Err(_) => return StatusCode::ACCEPTED,
+                Ok(resp) if resp.status().is_success() => {
+                    match resp.json::<serde_json::Value>().await {
+                        Ok(v) => v,
+                        Err(_) => return StatusCode::ACCEPTED,
+                    }
+                }
+                _ => return StatusCode::ACCEPTED,
             };
 
             let inbox_uri = actor_doc["inbox"].as_str().unwrap_or("").to_string();
-            // Validate shared inbox URI too — same SSRF rules as inbox_uri
+            // Validate shared inbox URI — same SSRF rules
             let shared_inbox_uri = actor_doc["endpoints"]["sharedInbox"]
                 .as_str()
                 .filter(|s| s.starts_with("https://"))
@@ -579,11 +625,9 @@ async fn handle_inbox(
             if inbox_uri.is_empty() || !inbox_uri.starts_with("https://") {
                 return StatusCode::ACCEPTED;
             }
-            // SSRF guard on inbox_uri too — it's attacker-controlled (from actor doc)
             if let Ok(parsed) = url::Url::parse(&inbox_uri) {
                 if let Some(host) = parsed.host_str() {
                     if is_private_host(host) {
-                        tracing::warn!(inbox = %inbox_uri, "rejecting private inbox URI from actor doc");
                         return StatusCode::ACCEPTED;
                     }
                 }
@@ -613,7 +657,7 @@ async fn handle_inbox(
                 "accepted follow"
             );
 
-            // Send Accept in a background task so we don't block the response
+            // Send Accept in a background task
             let accept = serde_json::json!({
                 "@context": "https://www.w3.org/ns/activitystreams",
                 "id": format!("https://{}/users/{}#accept/{}", state.domain, username, follower_id),
@@ -675,27 +719,27 @@ async fn handle_inbox(
             StatusCode::ACCEPTED
         }
         "Undo" => {
-            // ponytail: Undo Follow mutates followers based on unverified body.
-            // Safe only after signature verification is implemented (broadside-to5p.2).
+            // Signature is verified above — the actor field matches the signer.
             let inner_type = activity["object"]["type"].as_str().unwrap_or("");
             if inner_type == "Follow" {
-                let follower_actor = activity["object"]["actor"]
-                    .as_str()
-                    .or_else(|| activity["actor"].as_str())
-                    .unwrap_or("");
-
-                if !follower_actor.is_empty() {
+                // Only delete followers where actor_uri matches the SIGNED actor
+                // (not the inner object's actor, which could differ)
+                if !actor_uri.is_empty() {
                     match sqlx::query("DELETE FROM followers WHERE actor_uri = ?")
-                        .bind(follower_actor)
+                        .bind(&actor_uri)
                         .execute(&state.pool)
                         .await
                     {
-                        Ok(_) => tracing::info!(
-                            follower = follower_actor,
-                            "removed follower (Undo Follow)"
-                        ),
+                        Ok(r) => {
+                            if r.rows_affected() > 0 {
+                                tracing::info!(
+                                    follower = %actor_uri,
+                                    "removed follower (Undo Follow)"
+                                );
+                            }
+                        }
                         Err(e) => {
-                            tracing::error!(error = %e, follower = follower_actor, "failed to remove follower")
+                            tracing::error!(error = %e, follower = %actor_uri, "failed to remove follower")
                         }
                     }
                 }
@@ -743,37 +787,43 @@ pub fn is_private_host(host: &str) -> bool {
                     || v4.is_link_local()
                     || v4.is_broadcast()
                     || v4.is_unspecified()
-                    // AWS metadata endpoint
                     || v4.octets()[0] == 169 && v4.octets()[1] == 254
             }
             IpAddr::V6(v6) => {
                 v6.is_loopback()
                     || v6.is_unspecified()
-                    // ULA (fc00::/7)
                     || (v6.segments()[0] & 0xfe00) == 0xfc00
-                    // Link-local (fe80::/10)
                     || (v6.segments()[0] & 0xffc0) == 0xfe80
-                    // IPv4-mapped (::ffff:x.x.x.x) — check the mapped v4 address
                     || v6.to_ipv4_mapped().is_some_and(|v4| {
-                        v4.is_loopback() || v4.is_private() || v4.is_link_local()
+                        v4.is_loopback()
+                            || v4.is_private()
+                            || v4.is_link_local()
                             || v4.octets()[0] == 169 && v4.octets()[1] == 254
                     })
             }
         };
     }
-    // Block common private hostnames
     host == "localhost" || host.ends_with(".local") || host.ends_with(".internal")
 }
 
 /// Extract keyId from a Signature header value using proper quoted-string parsing.
 fn extract_key_id_from_sig(sig_header: &str) -> Option<String> {
-    // Parse using the same quote-aware splitter as signatures.rs
     let mut in_quotes = false;
+    let mut escape_next = false;
     let mut current = String::new();
     let mut parts = Vec::new();
 
     for c in sig_header.chars() {
+        if escape_next {
+            current.push(c);
+            escape_next = false;
+            continue;
+        }
         match c {
+            '\\' if in_quotes => {
+                escape_next = true;
+                current.push(c);
+            }
             '"' => {
                 in_quotes = !in_quotes;
                 current.push(c);

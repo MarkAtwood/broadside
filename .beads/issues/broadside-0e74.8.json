@@ -1,0 +1,28 @@
+{
+  "id": "broadside-0e74.8",
+  "title": "No explicit body size limit on webhook POST; Axum default allows 2MB JSON + unbounded media fetch",
+  "description": "src/server.rs builds the router (router()) with no DefaultBodyLimit layer and no RequestBodyLimit extractor on the /hook/{persona} route. Axum's built-in default is 2MB for JSON extraction, but:\n\n1. An attacker can POST a 2MB JSON body containing up to 8 media URLs (max_media_per_post = 8). Each URL is fetched serially, each up to 10MB. Total upstream bandwidth consumed per webhook call: 2MB JSON + 80MB of media fetches = 82MB per authenticated request.\n\n2. The 2MB axum default is undocumented behavior that can change between minor versions. No explicit cap is set by the application.\n\n3. With valid credentials, a rapid sequence of webhook calls creates a sustained outbound bandwidth DoS amplified 41x.\n\nMitigation: add .layer(DefaultBodyLimit::max(65536)) to the /hook route and add explicit rate-limiting on authenticated webhook calls (not just inbox).",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:16:30.767727719Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:23:52.405155519Z",
+  "closed_at": "2026-07-18T00:23:52.405155519Z",
+  "close_reason": "All pentest fixes: require Signature header, verify Digest, enforce actor-keyId match, Date freshness, body size limit 256KB, webhook key via header, decompression bomb limits, symlink rejection, redirect following disabled, delivery SSRF recheck, backslash escape handling",
+  "labels": [
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-0e74.8",
+      "depends_on_id": "broadside-0e74",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:16:30.792765451Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "broadside-0e74.2",
+  "title": "Undo{Follow} wipes all followers by actor URI, no signature required",
+  "description": "server.rs:677-703: The Undo handler deletes from the followers table keyed on `actor_uri` taken directly from the request body. No signature is required (see broadside-0e74.1).\n\nAttack: POST to /inbox with no Signature header:\n```json\n{\"type\":\"Undo\",\"actor\":\"https://victim.example/users/alice\",\"object\":{\"type\":\"Follow\",\"actor\":\"https://victim.example/users/alice\"}}\n```\n\nThis executes: `DELETE FROM followers WHERE actor_uri = 'https://victim.example/users/alice'`\n\nAn attacker can enumerate or guess follower URIs (the outbox leaks follower info indirectly; follower list is publicly scrapable from the fediverse) and surgically remove specific followers or, if they can guess or enumerate URIs, run a loop to wipe the entire followers table.\n\nEven with signature verification enforced, this logic has a secondary flaw: it uses `activity[\"object\"][\"actor\"]` rather than `activity[\"actor\"]`, meaning a signed actor A could send Undo{Follow} claiming object.actor is B, and delete B's follower entry.\n\nThe comment at line 678 flags this but the code is still live and unconditionally deletes.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:15:46.150078616Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:23:52.280607366Z",
+  "closed_at": "2026-07-18T00:23:52.280607366Z",
+  "close_reason": "All pentest fixes: require Signature header, verify Digest, enforce actor-keyId match, Date freshness, body size limit 256KB, webhook key via header, decompression bomb limits, symlink rejection, redirect following disabled, delivery SSRF recheck, backslash escape handling",
+  "labels": [
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-0e74.2",
+      "depends_on_id": "broadside-0e74",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:15:46.17597202Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

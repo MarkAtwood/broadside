@@ -1,0 +1,28 @@
+{
+  "id": "broadside-0e74.19",
+  "title": "actor_cache global mutex: lock contention DoS under concurrent requests",
+  "description": "actor_cache.rs:18: `entries: Mutex\u003cHashMap\u003cString, CachedActor\u003e\u003e` — this is a Tokio async Mutex, but it is held across the entire cache check including the lock acquisition for write after fetch.\n\nMore critically: the cache miss path (lines 55-109) does NOT hold the lock while fetching (the HTTP fetch happens with the lock released — line 40 drops the read guard). However, there is no negative-cache entry and no in-flight deduplication. If N concurrent requests arrive for the same uncached actor_uri simultaneously, all N will:\n1. Miss the cache (lock released)\n2. All fire concurrent HTTP GETs to actor_uri\n3. All compete to write the result back\n\nWith 10,000 req/sec (attacker varies actor_uri slightly each time to ensure cache misses), broadside makes 10,000 outbound HTTP requests — amplification factor 1:1 but each request holds a reqwest connection. The 30-second timeout means up to 300,000 concurrent outbound connections in the worst case before they time out.\n\nEven without amplification: the global Mutex serializes all cache hits. Under high concurrency, every inbox request blocks on the same lock, degrading throughput to effectively single-threaded for the cache lookup phase.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:17:26.874041519Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:23:52.599352795Z",
+  "closed_at": "2026-07-18T00:23:52.599352795Z",
+  "close_reason": "All pentest fixes: require Signature header, verify Digest, enforce actor-keyId match, Date freshness, body size limit 256KB, webhook key via header, decompression bomb limits, symlink rejection, redirect following disabled, delivery SSRF recheck, backslash escape handling",
+  "labels": [
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-0e74.19",
+      "depends_on_id": "broadside-0e74",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:17:26.900220493Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

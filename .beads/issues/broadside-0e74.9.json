@@ -1,0 +1,28 @@
+{
+  "id": "broadside-0e74.9",
+  "title": "Follower table stuffing: unsigned Follow inflates delivery list",
+  "description": "server.rs:594-608: A Follow activity with no Signature header (see broadside-0e74.1) causes a DB insert into the followers table. The actor_uri and inbox_uri are taken directly from the Follow body and the fetched actor document.\n\nAttack:\n- POST /inbox with Follow activities claiming arbitrary actor URIs\n- Broadside inserts up to one row per unique (persona_id, actor_uri) pair (INSERT OR IGNORE avoids exact duplicates)\n- But actor_uri is attacker-controlled: rotate the actor_uri path slightly each request and insert unlimited rows\n- Broadside's delivery worker will attempt to POST to every inbox_uri in the followers table for every published post\n\nEffect:\n1. Storage exhaustion: O(requests) rows inserted into followers\n2. Outbound amplification: every future post triggers delivery attempts to attacker-controlled inboxes (open relay)\n3. DDoS proxy: broadside fans out its signed requests to victim servers listed as inbox_uri\n\nRate limiter is bypassable (broadside-0e74.7) so volume is not constrained.\n\nFix: require valid signature before inserting any follower.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:16:35.720853476Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:23:52.423612516Z",
+  "closed_at": "2026-07-18T00:23:52.423612516Z",
+  "close_reason": "All pentest fixes: require Signature header, verify Digest, enforce actor-keyId match, Date freshness, body size limit 256KB, webhook key via header, decompression bomb limits, symlink rejection, redirect following disabled, delivery SSRF recheck, backslash escape handling",
+  "labels": [
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-0e74.9",
+      "depends_on_id": "broadside-0e74",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:16:35.749505122Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -200,7 +200,15 @@ fn sniff_image_mime(bytes: &[u8]) -> anyhow::Result<&'static str> {
 
 /// Decode, validate, and resize image. Returns the decoded image with dimensions.
 fn process_image(bytes: &[u8]) -> anyhow::Result<(DynamicImage, u32, u32)> {
-    let img = image::load_from_memory(bytes).context("decoding image")?;
+    // Set decode limits to prevent decompression bombs
+    let mut reader = image::ImageReader::new(std::io::Cursor::new(bytes)).with_guessed_format()?;
+    let mut limits = image::Limits::default();
+    // Cap at 4096x4096 = 16M pixels * 4 bytes = 64MB decoded max
+    limits.max_alloc = Some(64 * 1024 * 1024);
+    reader.limits(limits);
+    let img = reader
+        .decode()
+        .context("decoding image (may exceed size limits)")?;
     let img = if img.width() > MAX_DIMENSION || img.height() > MAX_DIMENSION {
         img.resize(
             MAX_DIMENSION,

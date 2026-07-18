@@ -1,0 +1,28 @@
+{
+  "id": "broadside-0e74.11",
+  "title": "No body size limit: 100MB+ body causes OOM before JSON parse",
+  "description": "server.rs:419: The inbox handlers receive `body: String` via Axum's String extractor. Axum's default body size limit is 2MB, but there is no explicit limit configured anywhere in the router setup (server.rs:23-36 — no layer for body size limiting).\n\nWithout a `DefaultBodyLimit` layer or equivalent, Axum falls back to its internal default (which may differ by version) or no limit at all. Sending a multi-GB body will:\n1. Cause the server to buffer the entire body in memory as a String before the JSON parse at line 507\n2. Potentially exhaust heap on a small VPS, killing the process\n\nWith the rate limiter bypassable (broadside-0e74.7), an attacker can sustain multiple concurrent connections each streaming large bodies, multiplying memory pressure.\n\nA single malicious actor could OOM-kill broadside with a few concurrent connections sending ~1GB bodies each.\n\nFix: add `.layer(DefaultBodyLimit::max(1024 * 1024))` (1MB) to the router, or add a `ContentLengthLimit` extractor.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:16:45.29523628Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:23:52.462537462Z",
+  "closed_at": "2026-07-18T00:23:52.462537462Z",
+  "close_reason": "All pentest fixes: require Signature header, verify Digest, enforce actor-keyId match, Date freshness, body size limit 256KB, webhook key via header, decompression bomb limits, symlink rejection, redirect following disabled, delivery SSRF recheck, backslash escape handling",
+  "labels": [
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-0e74.11",
+      "depends_on_id": "broadside-0e74",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:16:45.32108581Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

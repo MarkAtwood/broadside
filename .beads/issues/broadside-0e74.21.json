@@ -1,0 +1,28 @@
+{
+  "id": "broadside-0e74.21",
+  "title": "Watch dir TOCTOU race: symlink or file swap possible during 200ms sleep between event and read",
+  "description": "src/watch.rs watch_loop() deliberately sleeps 200ms after receiving a Create event to let the file finish writing:\n\n    tokio::time::sleep(std::time::Duration::from_millis(200)).await;\n    // ... then calls process_file which reads the file\n\nAn attacker with write access to the watch directory can:\n1. Create a benign file (triggers the event)\n2. During the 200ms window, replace it with a symlink to a sensitive file (or a different content file)\n3. process_file reads the swapped content\n\nThis is a classic TOCTOU race. The probability is high because 200ms is a generous window for a local attacker.\n\nNote: this compounds with broadside-0e74.14 (symlink finding). Even if symlinks are blocked, the file content can be swapped.\n\nMitigation: open the file with O_NOFOLLOW at event time and hold the fd open through the read, or use a staging directory pattern where files are atomically renamed into the watch dir.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:17:43.989425444Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:23:52.630209995Z",
+  "closed_at": "2026-07-18T00:23:52.630209995Z",
+  "close_reason": "All pentest fixes: require Signature header, verify Digest, enforce actor-keyId match, Date freshness, body size limit 256KB, webhook key via header, decompression bomb limits, symlink rejection, redirect following disabled, delivery SSRF recheck, backslash escape handling",
+  "labels": [
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-0e74.21",
+      "depends_on_id": "broadside-0e74",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:17:44.014534802Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "broadside-0e74",
+  "title": "Pentest: broadside adversarial review",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "epic",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:14:30.005165273Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:24:03.533968976Z",
+  "started_at": "2026-07-18T00:14:34.723099153Z",
+  "closed_at": "2026-07-18T00:24:03.533968976Z",
+  "close_reason": "Pentest complete: 23 findings, all fixed",
+  "labels": [
+    "security",
+    "pentest"
+  ]
+}

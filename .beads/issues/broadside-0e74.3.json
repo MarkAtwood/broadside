@@ -1,0 +1,28 @@
+{
+  "id": "broadside-0e74.3",
+  "title": "Digest header not verified: body substitution after valid signature",
+  "description": "signatures.rs verify_signature() reconstructs the signed string from headers listed in the `headers=` parameter of the Signature header. If an attacker includes `digest` in the signed headers list, the Digest is checked. But if they omit it (and broadside does not require it), the signature can be valid while the body is entirely different from what was signed.\n\nsign_request() (outbound) always signs `(request-target) host date digest`. But verify_signature() (inbound) accepts whatever headers= the sender declares. If the sender signs only `(request-target) host date` and supplies a different body, verification passes.\n\nConcrete attack with a valid key pair:\n1. Sign a benign Follow activity with headers=(request-target) host date (no digest).\n2. Replace the body with an Undo{Follow} targeting a victim actor.\n3. POST to broadside. Signature verifies. Body is processed.\n\nThis is a body substitution/confused deputy attack. No Digest enforcement = signatures don't actually authenticate the request body.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:15:57.089467509Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:23:52.301551178Z",
+  "closed_at": "2026-07-18T00:23:52.301551178Z",
+  "close_reason": "All pentest fixes: require Signature header, verify Digest, enforce actor-keyId match, Date freshness, body size limit 256KB, webhook key via header, decompression bomb limits, symlink rejection, redirect following disabled, delivery SSRF recheck, backslash escape handling",
+  "labels": [
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-0e74.3",
+      "depends_on_id": "broadside-0e74",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:15:57.115611781Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

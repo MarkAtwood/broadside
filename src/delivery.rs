@@ -139,7 +139,18 @@ async fn process_batch(
     let mut processed = 0u32;
 
     for (delivery_id, post_id, inbox_uri, attempts) in rows {
+        // Re-validate inbox URI at delivery time (defense against DNS rebinding)
+        if !inbox_uri.starts_with("https://") {
+            mark_dead(pool, &delivery_id, "inbox_uri not https").await?;
+            processed += 1;
+            continue;
+        }
         let inbox_domain = extract_domain(&inbox_uri);
+        if crate::server::is_private_host(&inbox_domain) {
+            mark_dead(pool, &delivery_id, "inbox_uri resolves to private host").await?;
+            processed += 1;
+            continue;
+        }
 
         {
             let mut br = breaker.lock().await;

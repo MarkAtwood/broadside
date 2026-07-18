@@ -1,0 +1,28 @@
+{
+  "id": "broadside-0e74.23",
+  "title": "Feed link URL injected into HTML via string interpolation before sanitize, bypasses ammonia on link text",
+  "description": "src/feed.rs constructs the link HTML via direct string interpolation:\n\n    let link_html = format!(r#\"\u003cp\u003e\u003ca href=\"{url}\"\u003e{url}\u003c/a\u003e\u003c/p\u003e\"#);\n    html.push_str(\u0026sanitize::sanitize_html(\u0026link_html));\n\nThe url variable comes from entry.links.first() filtered to http/https schemes. However, the URL is used both as the href attribute value AND as the visible link text, with no escaping of the URL before interpolation.\n\nIf a feed entry URL contains a double-quote character (valid in URLs when percent-encoded, but some parsers pass through raw quotes), the format string produces malformed HTML like:\n    \u003ca href=\"https://example.com/path?a=1\u0026b=\"\u003escript injection\u003c/a\u003e...\n\nThis is then passed to ammonia. Ammonia parses the HTML, so it will see the broken attribute and may strip or restructure the tag. However, this relies entirely on ammonia's parser behavior with malformed input — it's a defense-in-depth gap, not a guaranteed bypass.\n\nThe title field has the same pattern: format!(\"\u003cp\u003e\u003cstrong\u003e{}\u003c/strong\u003e\u003c/p\u003e\", ammonia::clean(t)) — here t IS cleaned first, so this path is safe.\n\nMitigation: percent-encode or HTML-entity-escape the URL before inserting into the format string, or use ammonia::Builder to construct the anchor tag.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:18:02.400736188Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:23:52.664391384Z",
+  "closed_at": "2026-07-18T00:23:52.664391384Z",
+  "close_reason": "All pentest fixes: require Signature header, verify Digest, enforce actor-keyId match, Date freshness, body size limit 256KB, webhook key via header, decompression bomb limits, symlink rejection, redirect following disabled, delivery SSRF recheck, backslash escape handling",
+  "labels": [
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-0e74.23",
+      "depends_on_id": "broadside-0e74",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:18:02.420371921Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

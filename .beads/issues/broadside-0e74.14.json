@@ -1,0 +1,28 @@
+{
+  "id": "broadside-0e74.14",
+  "title": "Directory watcher symlink attack: process_file follows symlinks without validation",
+  "description": "src/watch.rs watch_loop() receives filesystem events for new files in the watch directory and calls process_file() which calls tokio::fs::read_to_string(file_path) without checking whether the path is a symlink.\n\nAttack path:\n1. Attacker has write access to the watch directory (the scenario where this matters)\n2. Attacker creates a symlink: ln -s /etc/passwd watched_dir/post.md\n3. The notify watcher fires a Create event for the symlink\n4. After the 200ms sleep, process_file reads the symlink target (/etc/passwd)\n5. The content is passed to markdown_to_html() -\u003e sanitize_html() and stored as a post, then delivered to all followers via ActivityPub\n\nThe content of /etc/passwd is sanitized before delivery, but the file has been read and the post is published. More dangerous targets: private keys in data_dir, config files with webhook keys, SQLite DB journal files.\n\nMitigation: check file_path.symlink_metadata() and reject if the file_type is a symlink before reading.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:17:00.631623602Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:23:52.5137044Z",
+  "closed_at": "2026-07-18T00:23:52.5137044Z",
+  "close_reason": "All pentest fixes: require Signature header, verify Digest, enforce actor-keyId match, Date freshness, body size limit 256KB, webhook key via header, decompression bomb limits, symlink rejection, redirect following disabled, delivery SSRF recheck, backslash escape handling",
+  "labels": [
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-0e74.14",
+      "depends_on_id": "broadside-0e74",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:17:00.656073857Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

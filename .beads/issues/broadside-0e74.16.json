@@ -1,0 +1,28 @@
+{
+  "id": "broadside-0e74.16",
+  "title": "Delivery worker posts to inbox_uri from DB without re-validating SSRF guard at delivery time",
+  "description": "src/delivery.rs process_batch() reads inbox_uri from the delivery_queue table and POSTs directly to it. The SSRF guard (is_private_host) is applied at Follow-accept time in server.rs, but:\n\n1. The inbox_uri is stored in the DB. If the DB is compromised or a row is injected (e.g. via SQL injection elsewhere, or a backup restore), the delivery worker will POST to the stored URI without re-checking it.\n\n2. More practically: DNS rebinding. At Follow time, attacker.com resolves to 1.2.3.4 (public IP, passes is_private_host). Later, TTL expires and DNS resolves to 192.168.1.1 (private). The delivery worker uses the stored URI string 'https://attacker.com/inbox', re-resolves it, and POSTs ActivityPub JSON (signed with the private key) to an internal host.\n\n3. The signed body contains the actor URI and post content, giving an internal service a well-formed HTTPS POST with valid HTTP Signature headers from the broadside private key — potentially useful for confused-deputy attacks.\n\nMitigation: re-run is_private_host() on the resolved IP at delivery time (requires hooking reqwest's DNS resolution), or at minimum re-validate the URI string before each delivery attempt.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:17:13.379900911Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:23:52.554777175Z",
+  "closed_at": "2026-07-18T00:23:52.554777175Z",
+  "close_reason": "All pentest fixes: require Signature header, verify Digest, enforce actor-keyId match, Date freshness, body size limit 256KB, webhook key via header, decompression bomb limits, symlink rejection, redirect following disabled, delivery SSRF recheck, backslash escape handling",
+  "labels": [
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-0e74.16",
+      "depends_on_id": "broadside-0e74",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:17:13.406371027Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

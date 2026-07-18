@@ -248,10 +248,11 @@ async fn test_health() {
 }
 
 #[tokio::test]
-async fn test_inbox_invalid_json() {
+async fn test_inbox_rejects_unsigned() {
     let (base_url, _tmp) = test_server().await;
     let client = reqwest::Client::new();
 
+    // Unsigned request should be rejected with 401
     let resp = client
         .post(format!("{base_url}/users/test/inbox"))
         .header("Content-Type", "application/activity+json")
@@ -260,11 +261,15 @@ async fn test_inbox_invalid_json() {
         .await
         .unwrap();
 
-    assert_eq!(resp.status(), 400);
+    assert_eq!(
+        resp.status(),
+        401,
+        "unsigned inbox requests must be rejected"
+    );
 }
 
 #[tokio::test]
-async fn test_inbox_discard_unknown_activity() {
+async fn test_inbox_rejects_unsigned_activity() {
     let (base_url, _tmp) = test_server().await;
     let client = reqwest::Client::new();
 
@@ -283,15 +288,11 @@ async fn test_inbox_discard_unknown_activity() {
         .await
         .unwrap();
 
-    assert_eq!(
-        resp.status(),
-        202,
-        "unknown activities should be accepted and discarded"
-    );
+    assert_eq!(resp.status(), 401, "unsigned activities must be rejected");
 }
 
 #[tokio::test]
-async fn test_shared_inbox() {
+async fn test_shared_inbox_rejects_unsigned() {
     let (base_url, _tmp) = test_server().await;
     let client = reqwest::Client::new();
 
@@ -310,7 +311,11 @@ async fn test_shared_inbox() {
         .await
         .unwrap();
 
-    assert_eq!(resp.status(), 202);
+    assert_eq!(
+        resp.status(),
+        401,
+        "unsigned shared inbox requests must be rejected"
+    );
 }
 
 #[tokio::test]

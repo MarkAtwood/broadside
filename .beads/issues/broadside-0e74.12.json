@@ -1,0 +1,28 @@
+{
+  "id": "broadside-0e74.12",
+  "title": "Decompression bomb: image::load_from_memory called before dimension check, 10MB compressed can produce multi-GB decoded canvas",
+  "description": "src/media.rs process_image() calls image::load_from_memory(bytes) and *then* checks dimensions against MAX_DIMENSION=4096. The decode step allocates pixel memory proportional to the uncompressed image size before the bounds check runs.\n\nA valid PNG within the 10MB download limit can encode a 65535x65535 grayscale image (max PNG dimensions): decoded size = 65535 * 65535 * 4 bytes (RGBA) = ~17GB of RAM. The image crate will attempt to allocate this before returning the DynamicImage that would then be checked.\n\nThis is exploitable via:\n- Webhook: POST with media URL pointing to a crafted PNG on an attacker server\n- Feed: enclosure media URL in a feed entry\n- Directory watcher: process_local() has the same path via store_processed_image -\u003e process_image\n\nimage 0.25 does perform some sanity checks on PNG chunk headers but does not cap total decoded pixel count by default.\n\nMitigation: use image::io::Reader with explicit limits before decoding, or use image::ImageDecoder::set_limits() with Limits::default() which caps total pixel count.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:16:50.542113877Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:23:52.477109034Z",
+  "closed_at": "2026-07-18T00:23:52.477109034Z",
+  "close_reason": "All pentest fixes: require Signature header, verify Digest, enforce actor-keyId match, Date freshness, body size limit 256KB, webhook key via header, decompression bomb limits, symlink rejection, redirect following disabled, delivery SSRF recheck, backslash escape handling",
+  "labels": [
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-0e74.12",
+      "depends_on_id": "broadside-0e74",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:16:50.567883135Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

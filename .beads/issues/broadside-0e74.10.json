@@ -1,0 +1,28 @@
+{
+  "id": "broadside-0e74.10",
+  "title": "SSRF via HTTP redirect: media and feed fetches check host pre-request but follow redirects unchecked",
+  "description": "src/media.rs process_remote() and src/feed.rs poll_feed() both call crate::server::is_private_host() on the *initial* URL before issuing the HTTP request. However, reqwest follows HTTP 301/302/307/308 redirects by default (up to 10 hops) without re-running the SSRF guard.\n\nAttack path:\n1. Attacker controls an external URL at attacker.com/redirect\n2. That URL returns HTTP 302 Location: http://169.254.169.254/latest/meta-data/iam/security-credentials/role\n3. broadside fetches the redirect target, bypassing the is_private_host check\n4. The response bytes are fed to sniff_image_mime(), which will reject non-image magic bytes, but the HTTP request to the metadata endpoint already succeeded — the attacker can observe timing differences or cause the fetch to hang\n\nFor feed pollers the attack is simpler: a feed under admin control that redirects to an internal endpoint.\n\nMitigation: configure reqwest with .redirect(reqwest::redirect::Policy::none()) and handle redirects manually with re-validation, OR use a policy that inspects each redirect hop location against is_private_host.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:16:40.487988184Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:23:52.445662627Z",
+  "closed_at": "2026-07-18T00:23:52.445662627Z",
+  "close_reason": "All pentest fixes: require Signature header, verify Digest, enforce actor-keyId match, Date freshness, body size limit 256KB, webhook key via header, decompression bomb limits, symlink rejection, redirect following disabled, delivery SSRF recheck, backslash escape handling",
+  "labels": [
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-0e74.10",
+      "depends_on_id": "broadside-0e74",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:16:40.512226934Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

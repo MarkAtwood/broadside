@@ -1,0 +1,28 @@
+{
+  "id": "broadside-0e74.17",
+  "title": "Username enumeration via inbox endpoint status codes",
+  "description": "server.rs:532-535: For Follow activities targeting a local user, the handler returns `StatusCode::NOT_FOUND` (404) if the username does not exist, and `StatusCode::ACCEPTED` (202) if it does and the follow was inserted.\n\nAn attacker can enumerate valid usernames by sending unsigned Follow activities to /inbox and observing:\n- 404: username does not exist\n- 202: username exists\n\nThe webfinger endpoint (server.rs:174-180) has the same behavior (404 vs 200), but webfinger enumeration requires knowing the domain. The inbox endpoint accepts arbitrary `object` URIs and the response discriminates on existence.\n\nRate limiting is bypassable (broadside-0e74.7), so high-speed enumeration is feasible.\n\nMitigation: return ACCEPTED regardless of whether the username exists (accept-and-discard pattern), or rate-limit more aggressively and return ACCEPTED for unknown users.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T00:17:15.748913506Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-18T00:23:52.569941315Z",
+  "closed_at": "2026-07-18T00:23:52.569941315Z",
+  "close_reason": "All pentest fixes: require Signature header, verify Digest, enforce actor-keyId match, Date freshness, body size limit 256KB, webhook key via header, decompression bomb limits, symlink rejection, redirect following disabled, delivery SSRF recheck, backslash escape handling",
+  "labels": [
+    "pentest",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-0e74.17",
+      "depends_on_id": "broadside-0e74",
+      "type": "parent-child",
+      "created_at": "2026-07-18T00:17:15.775988462Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}
