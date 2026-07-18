@@ -52,6 +52,11 @@ enum Command {
         #[command(subcommand)]
         command: FollowersCommand,
     },
+    /// Manage relay subscriptions
+    Relay {
+        #[command(subcommand)]
+        command: RelayCommand,
+    },
     /// One-shot poll of all configured feeds
     #[command(name = "feed-poll")]
     FeedPoll,
@@ -105,6 +110,28 @@ enum QueueCommand {
     Retry,
     /// Show delivery statistics
     Stats,
+}
+
+#[derive(Subcommand)]
+enum RelayCommand {
+    /// Subscribe to a relay
+    Add {
+        /// Relay actor URL (e.g. https://relay.fedi.buzz/actor)
+        url: String,
+        /// Persona to send Follow from
+        #[arg(long)]
+        persona: String,
+    },
+    /// Unsubscribe from a relay
+    Remove {
+        /// Relay actor URL
+        url: String,
+        /// Persona to send Undo from
+        #[arg(long)]
+        persona: String,
+    },
+    /// List relay subscriptions
+    List,
 }
 
 #[derive(Subcommand)]
@@ -312,6 +339,27 @@ impl Cli {
                         for (username, count) in &rows {
                             println!("@{username}: {count}");
                         }
+                    }
+                }
+            }
+            Command::Relay { command } => {
+                let config_path = self
+                    .data_dir
+                    .as_ref()
+                    .map(|d| d.join("config.toml"))
+                    .ok_or_else(|| anyhow::anyhow!("--data-dir or BROADSIDE_DATA_DIR required"))?;
+                let config = broadside::config::Config::load(&config_path)?;
+                let pool = connect_db(&self.data_dir).await?;
+                match command {
+                    RelayCommand::Add { url, persona } => {
+                        broadside::relay::add(&pool, &url, &config.server.domain, &persona).await?;
+                    }
+                    RelayCommand::Remove { url, persona } => {
+                        broadside::relay::remove(&pool, &url, &config.server.domain, &persona)
+                            .await?;
+                    }
+                    RelayCommand::List => {
+                        broadside::relay::list(&pool).await?;
                     }
                 }
             }

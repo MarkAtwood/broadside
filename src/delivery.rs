@@ -54,7 +54,7 @@ impl CircuitBreaker {
     }
 }
 
-/// Fan out a post to all followers' inboxes.
+/// Fan out a post to all followers' inboxes and active relay inboxes.
 pub async fn fan_out(pool: &SqlitePool, post_id: &str, persona_id: &str) -> anyhow::Result<u64> {
     let rows = sqlx::query_as::<_, (String, Option<String>)>(
         "SELECT inbox_uri, shared_inbox_uri FROM followers WHERE persona_id = ?",
@@ -78,6 +78,27 @@ pub async fn fan_out(pool: &SqlitePool, post_id: &str, persona_id: &str) -> anyh
             .bind(&id)
             .bind(post_id)
             .bind(target)
+            .execute(pool)
+            .await?;
+        queued += 1;
+    }
+
+    // Also deliver to all active relay inboxes
+    let relays =
+        sqlx::query_as::<_, (String,)>("SELECT inbox_uri FROM relays WHERE status = 'active'")
+            .fetch_all(pool)
+            .await
+            .context("querying relays for fan-out")?;
+
+    for (relay_inbox,) in &relays {
+        if !seen.insert(relay_inbox.clone()) {
+            continue;
+        }
+        let id = gen_id();
+        sqlx::query("INSERT INTO delivery_queue (id, post_id, inbox_uri) VALUES (?, ?, ?)")
+            .bind(&id)
+            .bind(post_id)
+            .bind(relay_inbox)
             .execute(pool)
             .await?;
         queued += 1;

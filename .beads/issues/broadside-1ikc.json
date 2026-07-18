@@ -3,11 +3,13 @@
   "title": "ActivityPub relay support",
   "description": "Add support for subscribing to and publishing through ActivityPub relays. Relays are shared inbox/outbox hubs that help small instances get discovered and populate federated timelines. Major relays: relay.fedi.buzz (topic-filtered), relay.beckmeyer.us, relay.intahnet.co.uk, mastodonrelay.com. The relay protocol is standard AP Follow + delivery to a shared inbox.",
   "design": "Relay subscription is instance-level (not per-persona). Two directions: (1) Outbound: add relay inbox URLs to delivery fanout for all public posts. (2) Inbound: relay forwards posts from other subscribers to our inbox. Implementation approach: dedicated CLI command (broadside relay add/remove/list) that follows/unfollows relay actors, plus adding relay inboxes to the delivery target list alongside follower inboxes.",
-  "status": "open",
+  "status": "closed",
   "priority": 2,
   "issue_type": "feature",
   "owner": "mark@reviewcommit.com",
   "created_at": "2026-07-18T23:43:19.214752395Z",
   "created_by": "Mark Atwood",
-  "updated_at": "2026-07-18T23:43:19.214752395Z"
+  "updated_at": "2026-07-18T23:55:44.157030032Z",
+  "closed_at": "2026-07-18T23:55:44.157030032Z",
+  "close_reason": "All 5 subtasks complete. Relay support implemented: DB table, CLI (add/remove/list), Accept handler, delivery fanout. ~160 lines of new code in src/relay.rs plus small additions to db.rs, delivery.rs, server.rs, cli.rs."
 }

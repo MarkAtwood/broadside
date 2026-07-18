@@ -2,13 +2,15 @@
   "id": "broadside-1ikc.2",
   "title": "CLI: broadside relay add/remove/list",
   "description": "Add relay subcommand: 'relay add \u003curl\u003e' sends Follow to relay actor and stores subscription. 'relay remove \u003curl\u003e' sends Undo{Follow} and removes. 'relay list' shows all subscriptions with status. Must fetch relay actor document to discover inbox URL.",
-  "status": "open",
+  "status": "closed",
   "priority": 2,
   "issue_type": "task",
   "owner": "mark@reviewcommit.com",
   "created_at": "2026-07-18T23:43:32.994704222Z",
   "created_by": "Mark Atwood",
-  "updated_at": "2026-07-18T23:43:32.994704222Z",
+  "updated_at": "2026-07-18T23:55:38.407210783Z",
+  "closed_at": "2026-07-18T23:55:38.407210783Z",
+  "close_reason": "Implemented: broadside relay add/remove/list CLI. Add fetches relay actor, sends Follow, stores pending subscription. Remove sends Undo{Follow} and deletes. List shows all with status markers.",
   "dependencies": [
     {
       "issue_id": "broadside-1ikc.2",

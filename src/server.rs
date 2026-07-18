@@ -998,6 +998,18 @@ async fn handle_inbox(
 
             StatusCode::ACCEPTED
         }
+        "Accept" => {
+            // A remote actor accepted our Follow — check if it's a relay activation
+            if let Some(relay_actor) = activity["actor"].as_str() {
+                if crate::relay::activate(&state.pool, relay_actor)
+                    .await
+                    .unwrap_or(false)
+                {
+                    tracing::info!(relay = %relay_actor, "relay subscription activated");
+                }
+            }
+            StatusCode::ACCEPTED
+        }
         "Undo" => {
             // Signature is verified above — the actor field matches the signer.
             let inner_type = activity["object"]["type"].as_str().unwrap_or("");

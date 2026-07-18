@@ -59,6 +59,14 @@ CREATE TABLE IF NOT EXISTS delivery_queue (
 
 CREATE INDEX IF NOT EXISTS idx_delivery_pending ON delivery_queue(status, next_retry);
 
+CREATE TABLE IF NOT EXISTS relays (
+    id          TEXT PRIMARY KEY,
+    actor_uri   TEXT NOT NULL UNIQUE,
+    inbox_uri   TEXT NOT NULL,
+    status      TEXT NOT NULL DEFAULT 'pending',
+    created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
 CREATE TABLE IF NOT EXISTS feed_state (
     feed_url     TEXT PRIMARY KEY,
     persona_id   TEXT NOT NULL REFERENCES personas(id),

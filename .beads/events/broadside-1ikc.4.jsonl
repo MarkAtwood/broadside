@@ -1,1 +1,2 @@
 {"id":"019f779d-1cf5-7973-92a9-93fdba851ab1","issue_id":"broadside-1ikc.4","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-18T23:43:33.109620104Z"}
+{"id":"019f77a8-2e9f-7412-976a-4dda670563c8","issue_id":"broadside-1ikc.4","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Implemented: fan_out queries active relays table and adds their inbox_uri to delivery targets alongside follower inboxes. Deduplication via seen HashSet.","created_at":"2026-07-18T23:55:38.5272674Z"}

@@ -10,6 +10,7 @@ pub mod media;
 pub mod persona;
 pub mod post;
 pub mod ratelimit;
+pub mod relay;
 pub mod sanitize;
 pub mod server;
 pub mod signatures;
