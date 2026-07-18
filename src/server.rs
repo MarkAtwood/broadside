@@ -71,7 +71,9 @@ async fn security_headers(
             .parse()
             .unwrap(),
     );
-    h.insert("Cache-Control", "no-store".parse().unwrap());
+    // Default to no-store; handlers override with public caching where appropriate
+    h.entry("Cache-Control")
+        .or_insert("no-store".parse().unwrap());
     resp
 }
 
@@ -257,7 +259,10 @@ async fn webfinger(
                 }],
             };
             (
-                [(axum::http::header::CONTENT_TYPE, "application/jrd+json")],
+                [
+                    (axum::http::header::CONTENT_TYPE, "application/jrd+json"),
+                    (axum::http::header::CACHE_CONTROL, "public, max-age=300"),
+                ],
                 Json(resp),
             )
                 .into_response()
@@ -267,13 +272,16 @@ async fn webfinger(
 
 // --- NodeInfo ---
 
-async fn nodeinfo_discovery(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
-    Json(serde_json::json!({
-        "links": [{
-            "rel": "http://nodeinfo.diaspora.software/ns/schema/2.0",
-            "href": format!("https://{}/nodeinfo/2.0", state.domain)
-        }]
-    }))
+async fn nodeinfo_discovery(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    (
+        [(axum::http::header::CACHE_CONTROL, "public, max-age=3600")],
+        Json(serde_json::json!({
+            "links": [{
+                "rel": "http://nodeinfo.diaspora.software/ns/schema/2.0",
+                "href": format!("https://{}/nodeinfo/2.0", state.domain)
+            }]
+        })),
+    )
 }
 
 async fn nodeinfo(State(state): State<Arc<AppState>>) -> impl IntoResponse {
@@ -303,10 +311,13 @@ async fn nodeinfo(State(state): State<Arc<AppState>>) -> impl IntoResponse {
         "openRegistrations": false
     });
     (
-        [(
-            axum::http::header::CONTENT_TYPE,
-            "application/json; profile=\"http://nodeinfo.diaspora.software/ns/schema/2.0#\"",
-        )],
+        [
+            (
+                axum::http::header::CONTENT_TYPE,
+                "application/json; profile=\"http://nodeinfo.diaspora.software/ns/schema/2.0#\"",
+            ),
+            (axum::http::header::CACHE_CONTROL, "public, max-age=300"),
+        ],
         Json(doc),
     )
 }
@@ -416,10 +427,14 @@ async fn actor(
 
     (
         StatusCode::OK,
-        [(
-            axum::http::header::CONTENT_TYPE,
-            "application/activity+json",
-        )],
+        [
+            (
+                axum::http::header::CONTENT_TYPE,
+                "application/activity+json",
+            ),
+            (axum::http::header::CACHE_CONTROL, "public, max-age=300"),
+            (axum::http::header::VARY, "Accept"),
+        ],
         Json(doc),
     )
         .into_response()
@@ -457,10 +472,13 @@ async fn outbox(
             "first": format!("{}?page=1", outbox_uri)
         });
         return (
-            [(
-                axum::http::header::CONTENT_TYPE,
-                "application/activity+json",
-            )],
+            [
+                (
+                    axum::http::header::CONTENT_TYPE,
+                    "application/activity+json",
+                ),
+                (axum::http::header::CACHE_CONTROL, "public, max-age=60"),
+            ],
             Json(doc),
         )
             .into_response();
@@ -516,10 +534,13 @@ async fn outbox(
     });
 
     (
-        [(
-            axum::http::header::CONTENT_TYPE,
-            "application/activity+json",
-        )],
+        [
+            (
+                axum::http::header::CONTENT_TYPE,
+                "application/activity+json",
+            ),
+            (axum::http::header::CACHE_CONTROL, "public, max-age=60"),
+        ],
         Json(doc),
     )
         .into_response()
@@ -551,10 +572,13 @@ async fn followers_collection(
     });
 
     (
-        [(
-            axum::http::header::CONTENT_TYPE,
-            "application/activity+json",
-        )],
+        [
+            (
+                axum::http::header::CONTENT_TYPE,
+                "application/activity+json",
+            ),
+            (axum::http::header::CACHE_CONTROL, "public, max-age=300"),
+        ],
         Json(doc),
     )
         .into_response()
@@ -581,10 +605,13 @@ async fn following_collection(
     });
 
     (
-        [(
-            axum::http::header::CONTENT_TYPE,
-            "application/activity+json",
-        )],
+        [
+            (
+                axum::http::header::CONTENT_TYPE,
+                "application/activity+json",
+            ),
+            (axum::http::header::CACHE_CONTROL, "public, max-age=3600"),
+        ],
         Json(doc),
     )
         .into_response()
@@ -1055,7 +1082,10 @@ async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 
     (
         StatusCode::OK,
-        [(axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8")],
+        [
+            (axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8"),
+            (axum::http::header::CACHE_CONTROL, "public, max-age=60"),
+        ],
         html,
     )
         .into_response()
@@ -1204,7 +1234,11 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
 
     (
         StatusCode::OK,
-        [(axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8")],
+        [
+            (axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8"),
+            (axum::http::header::CACHE_CONTROL, "public, max-age=60"),
+            (axum::http::header::VARY, "Accept"),
+        ],
         html,
     )
         .into_response()
