@@ -31,6 +31,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/users/{username}/inbox", post(inbox))
         .route("/inbox", post(shared_inbox))
         .route("/hook/{persona}", post(crate::webhook::handle_webhook))
+        .route("/", get(index))
         .route("/health", get(health))
         // Body size limit: 256KB for all POST endpoints (inbox and webhook)
         .layer(axum::extract::DefaultBodyLimit::max(256 * 1024))
@@ -886,6 +887,76 @@ async fn health(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
         "personas": persona_count,
         "pending_deliveries": pending
     }))
+}
+
+// --- Index ---
+
+async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    let rows = sqlx::query_as::<_, (String, String)>(
+        "SELECT username, display_name FROM personas ORDER BY username",
+    )
+    .fetch_all(&state.pool)
+    .await
+    .unwrap_or_default();
+
+    let mut personas_html = String::new();
+    for (username, display_name) in &rows {
+        personas_html.push_str(&format!(
+            r#"<li><a href="/users/{u}"><strong>{dn}</strong> <span>@{u}@{domain}</span></a></li>"#,
+            u = ammonia::clean(username),
+            dn = ammonia::clean(display_name),
+            domain = state.domain,
+        ));
+    }
+
+    let html = format!(
+        r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{domain} — Broadside</title>
+    <style>
+        :root {{ --text: #1d1d1f; --muted: #6e6e73; --bg: #fff; --border: #d2d2d7; --link: #0066cc; }}
+        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+               color: var(--text); background: var(--bg); line-height: 1.6; }}
+        main {{ max-width: 640px; margin: 0 auto; padding: 2rem 1.5rem; }}
+        h1 {{ font-size: 1.75rem; font-weight: 600; margin-bottom: 0.5rem; }}
+        p {{ color: var(--muted); margin-bottom: 1.5rem; }}
+        ul {{ list-style: none; }}
+        li {{ padding: 0.75rem 0; border-bottom: 1px solid var(--border); }}
+        li a {{ text-decoration: none; color: var(--text); display: block; }}
+        li a:hover {{ color: var(--link); }}
+        li span {{ color: var(--muted); font-size: 0.9rem; margin-left: 0.5rem; }}
+        footer {{ margin-top: 2rem; color: var(--muted); font-size: 0.8rem; }}
+        a {{ color: var(--link); }}
+        @media (prefers-color-scheme: dark) {{
+            :root {{ --text: #f5f5f7; --muted: #98989d; --bg: #1d1d1f; --border: #3a3a3c; --link: #2997ff; }}
+            body {{ background: var(--bg); color: var(--text); }}
+        }}
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Broadside</h1>
+        <p>ActivityPub broadcast server on {domain}</p>
+        <ul>{personas_html}</ul>
+        <footer>Powered by <a href="https://github.com">Broadside</a> v{version}</footer>
+    </main>
+</body>
+</html>"#,
+        domain = state.domain,
+        personas_html = personas_html,
+        version = env!("CARGO_PKG_VERSION"),
+    );
+
+    (
+        StatusCode::OK,
+        [(axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8")],
+        html,
+    )
+        .into_response()
 }
 
 /// Serve a simple HTML profile page for browser visitors.
