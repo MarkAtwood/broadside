@@ -2,13 +2,15 @@
   "id": "broadside-d74n.14",
   "title": "instance.contact_account returns null",
   "description": "Both /api/v1/instance and /api/v2/instance should return a real Account object for contact_account, not null. Clients display this on About screen. v1: contact_account field, v2: contact.account nested field.",
-  "status": "open",
+  "status": "closed",
   "priority": 3,
   "issue_type": "bug",
   "owner": "mark@reviewcommit.com",
   "created_at": "2026-07-18T22:39:39.588819586Z",
   "created_by": "Mark Atwood",
-  "updated_at": "2026-07-18T22:39:39.588819586Z",
+  "updated_at": "2026-07-18T23:10:03.361739744Z",
+  "closed_at": "2026-07-18T23:10:03.361739744Z",
+  "close_reason": "N/A: Broadside has no Mastodon client API (/api/v1/instance, /api/v2/instance do not exist). Only NodeInfo 2.0 is served, which has no contact_account field per spec. Not a bug — architectural scope difference.",
   "labels": [
     "smallhold-audit"
   ],

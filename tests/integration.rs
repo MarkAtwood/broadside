@@ -335,6 +335,77 @@ async fn test_shared_inbox_rejects_unsigned() {
     );
 }
 
+/// Fediverse Pasture-inspired robustness test: POST various malformed and
+/// edge-case payloads to both inbox endpoints. The server must never return 500.
+#[tokio::test]
+async fn test_inbox_robustness_no_500() {
+    let (base_url, _tmp) = test_server().await;
+    let client = reqwest::Client::new();
+
+    let big_content = format!(r#"{{"type":"Create","actor":"https://x.example/u/a","object":{{"type":"Note","content":"{}"}}}}"#, "x".repeat(100_000));
+    let payloads: Vec<(&str, &str)> = vec![
+        // Empty body
+        ("empty body", ""),
+        // Not JSON
+        ("plain text", "hello world"),
+        // Valid JSON but not an object
+        ("json array", "[]"),
+        ("json number", "42"),
+        ("json string", "\"hello\""),
+        ("json null", "null"),
+        // Empty object
+        ("empty object", "{}"),
+        // Missing required fields
+        ("no type", r#"{"actor":"https://x.example/u/a","object":"https://x.example/p/1"}"#),
+        ("no actor", r#"{"type":"Create","object":"https://x.example/p/1"}"#),
+        // Null values in key positions
+        ("null type", r#"{"type":null,"actor":"https://x.example/u/a"}"#),
+        ("null actor", r#"{"type":"Create","actor":null}"#),
+        ("null object", r#"{"type":"Create","actor":"https://x.example/u/a","object":null}"#),
+        // Wrong types for fields
+        ("numeric type", r#"{"type":42,"actor":"https://x.example/u/a"}"#),
+        ("array actor", r#"{"type":"Create","actor":["https://x.example/u/a"]}"#),
+        ("boolean object", r#"{"type":"Like","actor":"https://x.example/u/a","object":true}"#),
+        // Deeply nested
+        ("deep nesting", r#"{"type":"Create","actor":"https://x.example/u/a","object":{"object":{"object":{"object":{"object":{"object":{"object":{"object":{"object":{"object":"deep"}}}}}}}}}}"#),
+        // Very long content field
+        ("100KB content", &big_content),
+        // Unicode edge cases
+        ("emoji actor", r#"{"type":"Follow","actor":"https://x.example/u/😀🎉","object":"https://x.example/u/b"}"#),
+        ("null bytes", "{\"type\":\"Create\",\"actor\":\"https://x.example/u/a\\u0000b\"}"),
+        // Unknown activity types
+        ("unknown type", r#"{"type":"Explode","actor":"https://x.example/u/a","object":"https://x.example/p/1"}"#),
+        // Duplicate keys (last wins per JSON spec)
+        ("duplicate keys", r#"{"type":"Like","type":"Follow","actor":"https://x.example/u/a"}"#),
+        // Extra unexpected fields
+        ("extra fields", r#"{"type":"Like","actor":"https://x.example/u/a","object":"https://x.example/p/1","evil":"<script>alert(1)</script>","nested":{"deep":true}}"#),
+        // Mastodon-style with @context
+        ("with context", r#"{"@context":"https://www.w3.org/ns/activitystreams","type":"Like","actor":"https://x.example/u/a","object":"https://x.example/p/1"}"#),
+        // Array-valued to/cc (common in real AP)
+        ("array to/cc", r#"{"type":"Create","actor":"https://x.example/u/a","to":["https://www.w3.org/ns/activitystreams#Public"],"cc":[],"object":{"type":"Note","content":"hi"}}"#),
+        // String to/cc (also valid per AP spec)
+        ("string to", r#"{"type":"Create","actor":"https://x.example/u/a","to":"https://www.w3.org/ns/activitystreams#Public"}"#),
+    ];
+
+    for (label, body) in &payloads {
+        for endpoint in ["/users/test/inbox", "/inbox"] {
+            let resp = client
+                .post(format!("{base_url}{endpoint}"))
+                .header("Content-Type", "application/activity+json")
+                .body(body.to_string())
+                .send()
+                .await
+                .unwrap();
+
+            let status = resp.status().as_u16();
+            assert!(
+                status < 500,
+                "inbox returned {status} (5xx) for {label} on {endpoint}"
+            );
+        }
+    }
+}
+
 #[tokio::test]
 async fn test_post_dedup_via_source_ref() {
     let (base_url, _tmp) = test_server().await;
