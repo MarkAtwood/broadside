@@ -18,6 +18,10 @@ pub struct ServerConfig {
     pub bind: String,
     pub domain: String,
     pub data_dir: String,
+    #[serde(default)]
+    pub theme_tokens_path: String,
+    #[serde(default)]
+    pub custom_css_path: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]

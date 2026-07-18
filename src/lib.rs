@@ -12,5 +12,6 @@ pub mod ratelimit;
 pub mod sanitize;
 pub mod server;
 pub mod signatures;
+pub mod theme;
 pub mod watch;
 pub mod webhook;

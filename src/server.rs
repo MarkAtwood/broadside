@@ -18,6 +18,7 @@ pub struct AppState {
     pub http_client: reqwest::Client,
     pub inbox_limiter: std::sync::Arc<crate::ratelimit::RateLimiter>,
     pub actor_cache: crate::actor_cache::ActorKeyCache,
+    pub extra_css: String,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -78,6 +79,14 @@ pub async fn serve(config: &Config) -> anyhow::Result<()> {
 
     let actor_cache = crate::actor_cache::ActorKeyCache::new(http_client.clone());
 
+    let theme_css = crate::theme::load_theme_css(&config.server.theme_tokens_path);
+    let custom_css = if config.server.custom_css_path.is_empty() {
+        String::new()
+    } else {
+        std::fs::read_to_string(&config.server.custom_css_path).unwrap_or_default()
+    };
+    let extra_css = format!("{theme_css}{custom_css}");
+
     let state = Arc::new(AppState {
         pool: pool.clone(),
         domain: domain.clone(),
@@ -86,6 +95,7 @@ pub async fn serve(config: &Config) -> anyhow::Result<()> {
         http_client,
         inbox_limiter: inbox_limiter.clone(),
         actor_cache,
+        extra_css,
     });
 
     // Start delivery worker
@@ -936,6 +946,7 @@ async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
             body {{ background: var(--bg); color: var(--text); }}
         }}
     </style>
+    <style>{extra_css}</style>
 </head>
 <body>
     <main>
@@ -948,6 +959,7 @@ async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 </html>"#,
         domain = state.domain,
         personas_html = personas_html,
+        extra_css = state.extra_css,
         version = env!("CARGO_PKG_VERSION"),
     );
 
@@ -1081,6 +1093,7 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
             body {{ background: var(--bg); color: var(--text); }}
         }}
     </style>
+    <style>{extra_css}</style>
 </head>
 <body>
     <main>
@@ -1099,6 +1112,7 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
         domain = state.domain,
         display_name = ammonia::clean(&display_name),
         actor_uri = actor_uri,
+        extra_css = state.extra_css,
         bio_html = bio_html,
         fields_html = fields_html,
         post_count = post_count,
