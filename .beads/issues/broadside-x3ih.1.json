@@ -1,0 +1,22 @@
+{
+  "id": "broadside-x3ih.1",
+  "title": "DB: cards table + migration",
+  "description": "Add cards table: id, post_id (FK, UNIQUE), url, title, description, image_url, image_path, site_name, card_type (link/photo/video), fetched_at. Add migration from schema version 1 to 2.",
+  "status": "open",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:44:58.263023222Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:44:58.263023222Z",
+  "dependencies": [
+    {
+      "issue_id": "broadside-x3ih.1",
+      "depends_on_id": "broadside-x3ih",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:44:58.284353044Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

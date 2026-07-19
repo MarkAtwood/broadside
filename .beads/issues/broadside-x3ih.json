@@ -1,0 +1,13 @@
+{
+  "id": "broadside-x3ih",
+  "title": "Link preview cards: OG metadata fetch, cache, serve",
+  "description": "When a post contains a URL, fetch the page's OpenGraph/Twitter Card metadata (title, description, image, site_name). Cache the result. Serve via the Mastodon card API field on status objects. Requirements: SSRF-safe fetching (reuse existing guards), async background fetch so posting isn't blocked, image proxying/caching for the preview image, timeout + size limits on fetches, graceful degradation (no card if fetch fails). Clients like Phanpy/Ivory show these prominently — high user-visible value.",
+  "design": "1. New cards table: post_id, url, title, description, image_url, image_cached_path, site_name, fetched_at. 2. On post creation, extract first http/https URL from content. 3. Spawn background task to fetch URL, parse OG tags, download+resize preview image. 4. Serve card data in outbox Note objects as attachment or via future Mastodon API. 5. SSRF: reuse is_private_host_resolved + read_body_limited (cap HTML fetch to 1MB, image to 5MB). 6. Parse with a lightweight HTML meta extractor (no full DOM). 7. Cache cards permanently (URLs don't change metadata often).",
+  "status": "open",
+  "priority": 1,
+  "issue_type": "feature",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:44:43.273996434Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:44:43.273996434Z"
+}

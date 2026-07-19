@@ -1,0 +1,30 @@
+{
+  "id": "broadside-x3ih.2",
+  "title": "OG metadata parser",
+  "description": "Lightweight HTML meta tag extractor. Parse og:title, og:description, og:image, og:site_name, twitter:card, twitter:title, twitter:description, twitter:image from the first 100KB of HTML. No full DOM parse — regex or streaming scan over meta tags in \u003chead\u003e. Return a Card struct.",
+  "status": "open",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:44:58.3441661Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:44:58.3441661Z",
+  "dependencies": [
+    {
+      "issue_id": "broadside-x3ih.2",
+      "depends_on_id": "broadside-x3ih",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:44:58.359476642Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-x3ih.2",
+      "depends_on_id": "broadside-x3ih.1",
+      "type": "blocks",
+      "created_at": "2026-07-19T00:45:03.517029592Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

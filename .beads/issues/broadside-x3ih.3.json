@@ -1,0 +1,38 @@
+{
+  "id": "broadside-x3ih.3",
+  "title": "Background card fetch on post creation",
+  "description": "When a new post is created (via CLI, webhook, or feed), extract the first https URL from content. Spawn a tokio task to fetch the URL (SSRF-guarded, size-limited to 1MB, 10s timeout), parse OG metadata, and INSERT into cards table. If image_url is present, download and cache it (separate task).",
+  "status": "open",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:44:58.41242467Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:44:58.41242467Z",
+  "dependencies": [
+    {
+      "issue_id": "broadside-x3ih.3",
+      "depends_on_id": "broadside-x3ih",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:44:58.429718144Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-x3ih.3",
+      "depends_on_id": "broadside-x3ih.1",
+      "type": "blocks",
+      "created_at": "2026-07-19T00:45:03.588760703Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-x3ih.3",
+      "depends_on_id": "broadside-x3ih.2",
+      "type": "blocks",
+      "created_at": "2026-07-19T00:45:03.653390146Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}
