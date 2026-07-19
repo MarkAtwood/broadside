@@ -40,12 +40,13 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
 USER broadside
 
 # Labels for container registries and tooling
+ARG VERSION=dev
 LABEL org.opencontainers.image.title="broadside" \
       org.opencontainers.image.description="One-way ActivityPub server for organizations" \
       org.opencontainers.image.url="https://github.com/MarkAtwood/broadside" \
       org.opencontainers.image.source="https://github.com/MarkAtwood/broadside" \
       org.opencontainers.image.licenses="AGPL-3.0-only" \
-      org.opencontainers.image.version="0.1.0"
+      org.opencontainers.image.version="${VERSION}"
 
 ENTRYPOINT ["/usr/local/bin/broadside"]
 CMD ["--data-dir", "/data", "serve"]
