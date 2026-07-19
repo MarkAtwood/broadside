@@ -207,14 +207,19 @@ async fn process_batch(
             let actor_uri = format!("https://{domain}/users/{username}");
             let post_uri = format!("{actor_uri}/statuses/{post_id}");
             let (processed_html, tags) = crate::content::process_content(&content_html, domain);
+            let plain_text = crate::sanitize::html_to_text(&processed_html);
+            let detected_lang = crate::content::detect_language(&plain_text);
             // ponytail: Tag is a simple flat struct — serialization is infallible.
-            let tag_json: Vec<serde_json::Value> = tags
+            let mut tag_json: Vec<serde_json::Value> = tags
                 .iter()
                 .map(|t| serde_json::to_value(t).expect("Tag serialization is infallible"))
                 .collect();
+            // FEP-e232: add Link tags for any quoted AP post URLs
+            tag_json.extend(crate::content::detect_quote_links(&processed_html));
             let attachments = crate::media::attachments_for_post(pool, &post_id, domain).await;
+            let card = crate::card::get_card_for_post(pool, &post_id, domain).await;
 
-            let activity = serde_json::json!({
+            let mut activity = serde_json::json!({
                 "@context": "https://www.w3.org/ns/activitystreams",
                 "id": format!("{post_uri}/activity"),
                 "type": "Create",
@@ -232,8 +237,29 @@ async fn process_batch(
                     "cc": [format!("{actor_uri}/followers")],
                     "tag": tag_json,
                     "attachment": attachments,
+                    "contentMap": detected_lang.map(|l| serde_json::json!({l: &processed_html})),
                 }
             });
+
+            // FEP-e232: add quoteUrl for Misskey/Pleroma compat
+            let quote_links = crate::content::detect_quote_links(&processed_html);
+            if let Some(first_quote) = quote_links.first() {
+                if let Some(href) = first_quote["href"].as_str() {
+                    activity["object"]["quoteUrl"] = serde_json::Value::String(href.to_string());
+                }
+            }
+
+            // Add card as preview link if available
+            if let Some(card_val) = card {
+                if let Some(obj) = activity["object"].as_object().cloned() {
+                    let mut obj = obj;
+                    obj.insert("preview".to_string(), card_val);
+                    activity
+                        .as_object_mut()
+                        .unwrap()
+                        .insert("object".to_string(), serde_json::Value::Object(obj));
+                }
+            }
 
             let body = serde_json::to_vec(&activity)?;
             let private_key = crate::persona::get_private_key(pool, &username).await?;

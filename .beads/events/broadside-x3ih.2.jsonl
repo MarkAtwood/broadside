@@ -1,1 +1,2 @@
 {"id":"019f77d5-586c-7b18-9a19-ddeeb9ee4891","issue_id":"broadside-x3ih.2","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:44:58.348727812Z"}
+{"id":"019f77d9-9bde-754e-a8d8-a5627f12a514","issue_id":"broadside-x3ih.2","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Done: card.rs parse_og_meta() scans meta tags in first 100KB, extracts og:title/description/image/site_name/type, falls back to \u003ctitle\u003e.","created_at":"2026-07-19T00:49:37.758348299Z"}

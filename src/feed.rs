@@ -22,7 +22,7 @@ fn truncate_utf8(s: &mut String, max_len: usize) {
 pub async fn poll_feed(
     pool: &SqlitePool,
     config: &FeedConfig,
-    _domain: &str,
+    domain: &str,
     client: &reqwest::Client,
     data_dir: &std::path::Path,
 ) -> anyhow::Result<u32> {
@@ -142,6 +142,16 @@ pub async fn poll_feed(
                     }
                 }
             }
+
+            // Spawn background card fetch for link previews
+            crate::card::spawn_fetch(
+                pool.clone(),
+                id.clone(),
+                html.clone(),
+                data_dir.to_str().unwrap_or(".").to_string(),
+                client.clone(),
+                domain.to_string(),
+            );
 
             if let Err(e) = crate::delivery::fan_out(pool, &id, &persona_id).await {
                 tracing::error!(post_id = %id, error = %e, "fan_out failed for new post");

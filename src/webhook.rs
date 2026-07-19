@@ -106,6 +106,16 @@ pub async fn handle_webhook(
         }
     }
 
+    // Spawn background card fetch for link previews
+    crate::card::spawn_fetch(
+        state.pool.clone(),
+        post_id.clone(),
+        html.clone(),
+        state.data_dir.clone(),
+        state.http_client.clone(),
+        state.domain.clone(),
+    );
+
     match crate::delivery::fan_out(&state.pool, &post_id, &persona_id).await {
         Ok(queued) => {
             tracing::info!(

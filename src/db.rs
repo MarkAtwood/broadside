@@ -76,10 +76,23 @@ CREATE TABLE IF NOT EXISTS feed_state (
     last_seen_id TEXT,
     last_poll    TEXT
 );
+
+CREATE TABLE IF NOT EXISTS cards (
+    id          TEXT PRIMARY KEY,
+    post_id     TEXT NOT NULL UNIQUE REFERENCES posts(id) ON DELETE CASCADE,
+    url         TEXT NOT NULL,
+    title       TEXT NOT NULL DEFAULT '',
+    description TEXT NOT NULL DEFAULT '',
+    image_url   TEXT NOT NULL DEFAULT '',
+    image_path  TEXT NOT NULL DEFAULT '',
+    site_name   TEXT NOT NULL DEFAULT '',
+    card_type   TEXT NOT NULL DEFAULT 'link',
+    fetched_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
 "#;
 
 /// Current schema version. Bump this when adding migrations.
-const CURRENT_SCHEMA_VERSION: i64 = 1;
+const CURRENT_SCHEMA_VERSION: i64 = 2;
 
 /// Migrations to apply for each version bump. Index 0 = migration from version 0 to 1, etc.
 /// Version 0 is the initial schema (SCHEMA constant above).
@@ -87,6 +100,19 @@ const CURRENT_SCHEMA_VERSION: i64 = 1;
 const MIGRATIONS: &[&str] = &[
     // Version 0 -> 1: initial schema, no migration needed (handled by CREATE TABLE IF NOT EXISTS)
     "",
+    // Version 1 -> 2: link preview cards table
+    "CREATE TABLE IF NOT EXISTS cards (
+        id          TEXT PRIMARY KEY,
+        post_id     TEXT NOT NULL UNIQUE REFERENCES posts(id) ON DELETE CASCADE,
+        url         TEXT NOT NULL,
+        title       TEXT NOT NULL DEFAULT '',
+        description TEXT NOT NULL DEFAULT '',
+        image_url   TEXT NOT NULL DEFAULT '',
+        image_path  TEXT NOT NULL DEFAULT '',
+        site_name   TEXT NOT NULL DEFAULT '',
+        card_type   TEXT NOT NULL DEFAULT 'link',
+        fetched_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+    );",
 ];
 
 async fn ensure_migrations(pool: &SqlitePool) -> anyhow::Result<()> {

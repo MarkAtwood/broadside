@@ -2,13 +2,15 @@
   "id": "broadside-x3ih.4",
   "title": "Card image download and resize",
   "description": "When a card has an image_url, download it (SSRF-guarded, size-limited to 5MB), resize to max 800x418 (standard OG image ratio), store in media dir, update cards.image_path. Use existing image processing from media.rs.",
-  "status": "open",
+  "status": "closed",
   "priority": 2,
   "issue_type": "task",
   "owner": "mark@reviewcommit.com",
   "created_at": "2026-07-19T00:44:58.484869586Z",
   "created_by": "Mark Atwood",
-  "updated_at": "2026-07-19T00:44:58.484869586Z",
+  "updated_at": "2026-07-19T00:49:37.879524794Z",
+  "closed_at": "2026-07-19T00:49:37.879524794Z",
+  "close_reason": "Done: fetch_card_image downloads, resizes to 800x418 max, saves as JPEG in media dir.",
   "dependencies": [
     {
       "issue_id": "broadside-x3ih.4",

@@ -142,3 +142,41 @@ pub fn process_content(html: &str, domain: &str) -> (String, Vec<Tag>) {
 
     (result, tags)
 }
+
+/// Detect FEP-e232 quote post URLs (ActivityPub post URLs) in HTML content.
+/// Returns Link tag objects suitable for the Note's `tag` array.
+pub fn detect_quote_links(html: &str) -> Vec<serde_json::Value> {
+    // Match typical AP post URLs: https://domain/users/username/statuses/id
+    // Also matches: https://domain/@user/id (Mastodon shortform)
+    static QUOTE_RE: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(r#"https://[a-zA-Z0-9.\-]+/(?:users/[a-zA-Z0-9_]+/statuses/[a-zA-Z0-9\-]+|@[a-zA-Z0-9_]+/[0-9]+)"#)
+            .expect("quote URL regex")
+    });
+
+    let mut links = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+    for m in QUOTE_RE.find_iter(html) {
+        let url = m.as_str();
+        if seen.insert(url.to_string()) {
+            links.push(serde_json::json!({
+                "type": "Link",
+                "href": url,
+                "mediaType": "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\""
+            }));
+        }
+    }
+    links
+}
+
+/// Detect the language of plain text content. Returns an ISO 639-1 code (e.g. "en", "de")
+/// if confidence is high enough, or None.
+pub fn detect_language(text: &str) -> Option<&'static str> {
+    if text.len() < 20 {
+        return None; // Too short for reliable detection
+    }
+    let info = whatlang::detect(text)?;
+    if info.confidence() < 0.8 {
+        return None;
+    }
+    Some(info.lang().code())
+}

@@ -257,6 +257,29 @@ impl Cli {
                         .with_context(|| format!("processing media {media_path}"))?;
                 }
 
+                // Fetch link preview card (best-effort, don't fail the post)
+                if let Some(url) = broadside::card::extract_first_url(&html) {
+                    let client = reqwest::Client::new();
+                    let config_path = self
+                        .data_dir
+                        .as_ref()
+                        .map(|d| d.join("config.toml"))
+                        .ok_or_else(|| anyhow::anyhow!("--data-dir required"))?;
+                    let config = broadside::config::Config::load(&config_path)?;
+                    if let Err(e) = broadside::card::fetch_and_store(
+                        &pool,
+                        &post_id,
+                        &url,
+                        data_dir,
+                        &client,
+                        &config.server.domain,
+                    )
+                    .await
+                    {
+                        eprintln!("Warning: card fetch failed: {e}");
+                    }
+                }
+
                 let queued = broadside::delivery::fan_out(&pool, &post_id, &persona_id).await?;
                 println!(
                     "Created post {post_id} ({} media, queued {queued} deliveries)",

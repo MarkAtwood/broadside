@@ -1,1 +1,2 @@
 {"id":"019f77d5-58f9-7556-a065-a61b938ed4dd","issue_id":"broadside-x3ih.4","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:44:58.489350388Z"}
+{"id":"019f77d9-9c59-7e59-8d8c-f8d49fde0f69","issue_id":"broadside-x3ih.4","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Done: fetch_card_image downloads, resizes to 800x418 max, saves as JPEG in media dir.","created_at":"2026-07-19T00:49:37.881940919Z"}
