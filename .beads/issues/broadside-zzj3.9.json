@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.9",
+  "title": "sign_request parses private key PEM on every outbound request",
+  "description": "signatures::sign_request calls RsaPrivateKey::from_pkcs8_pem on every call. The delivery worker calls this once per delivery item per batch tick. The private key never changes — parsing it every time wastes ~1-2ms of RSA key parsing on each delivery. The parsed key should be cached after the first parse (e.g. stored alongside the private_key string in post_cache, or held as a thread-local / once-cell per persona). With a busy instance delivering to hundreds of inboxes in a single batch this compounds.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:01:06.607374239Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:19.068012705Z",
+  "closed_at": "2026-07-19T00:15:19.068012705Z",
+  "close_reason": "Accepted: ponytail comment. PEM parse ~1ms, dominated by IO-bound delivery.",
+  "labels": [
+    "review",
+    "efficiency"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.9",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:01:06.633476693Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

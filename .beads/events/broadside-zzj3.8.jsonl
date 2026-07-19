@@ -1,0 +1,4 @@
+{"id":"019f77ad-21b1-7227-b795-a553a3880999","issue_id":"broadside-zzj3.8","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:01:02.89714157Z"}
+{"id":"019f77ad-21b4-7d31-895f-1b219561d8ab","issue_id":"broadside-zzj3.8","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:01:02.900865588Z"}
+{"id":"019f77ad-21b8-7278-8411-b192a0ede199","issue_id":"broadside-zzj3.8","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-19T00:01:02.904162477Z"}
+{"id":"019f77b5-e416-7891-95fe-a3ffcbe67602","issue_id":"broadside-zzj3.8","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: relay.rs now validates both relay URL host and inbox_uri host against is_private_host_resolved().","created_at":"2026-07-19T00:10:36.950562176Z"}

@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.52",
+  "title": "persona.update() dynamic SQL construction can silently update wrong columns",
+  "description": "In persona.rs update(), the UPDATE SQL is built by appending column names from a Vec\u003c\u0026str\u003e and then binding values in the same order. The code adds set clauses and then binds values in four separate if-let blocks. The order of the clauses and the order of the bindings must match exactly; if someone adds a new optional field and inserts the clause in a different position than the binding, the wrong value will be written to the wrong column with no compile-time or runtime error. This is a maintainability trap that will produce data corruption: e.g., bio value written to avatar_path.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:02:30.311575181Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:10:37.219409844Z",
+  "closed_at": "2026-07-19T00:10:37.219409844Z",
+  "close_reason": "Fixed: persona.update() now uses single list pairing clauses with values.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.52",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:02:30.333036342Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

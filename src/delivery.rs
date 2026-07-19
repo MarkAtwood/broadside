@@ -19,6 +19,9 @@ const RETRY_DELAYS: &[Duration] = &[
 const MAX_ATTEMPTS: i32 = 7;
 
 /// Per-domain circuit breaker state.
+// ponytail: In-memory only — state is lost on restart. Acceptable for a single-process server:
+// burst retries after restart are bounded by MAX_ATTEMPTS and exponential backoff anyway.
+// Upgrade path: persist trip counts in SQLite if multi-process deployment is needed.
 #[derive(Default)]
 struct CircuitBreaker {
     failures: HashMap<String, (u32, Instant)>,
@@ -64,6 +67,8 @@ pub async fn fan_out(pool: &SqlitePool, post_id: &str, persona_id: &str) -> anyh
     .await
     .context("querying followers for fan-out")?;
 
+    // ponytail: .to_string() calls below allocate into HashSet<String> for dedup ownership;
+    // unavoidable since `target` is a borrow from the loop iteration.
     let mut seen = HashSet::new();
     let mut queued = 0u64;
 
@@ -202,9 +207,10 @@ async fn process_batch(
             let actor_uri = format!("https://{domain}/users/{username}");
             let post_uri = format!("{actor_uri}/statuses/{post_id}");
             let (processed_html, tags) = crate::content::process_content(&content_html, domain);
+            // ponytail: Tag is a simple flat struct — serialization is infallible.
             let tag_json: Vec<serde_json::Value> = tags
                 .iter()
-                .map(|t| serde_json::to_value(t).unwrap_or_default())
+                .map(|t| serde_json::to_value(t).expect("Tag serialization is infallible"))
                 .collect();
             let attachments = crate::media::attachments_for_post(pool, &post_id, domain).await;
 
@@ -372,6 +378,8 @@ async fn mark_dead(pool: &SqlitePool, delivery_id: &str, error: &str) -> anyhow:
     Ok(())
 }
 
+// ponytail: Allocates one String per delivery call. Dwarfed by the HTTP request cost (~100ms+).
+// Upgrade path: return Cow<str> or inline the URL parse at call sites.
 fn extract_domain(uri: &str) -> String {
     url::Url::parse(uri)
         .ok()

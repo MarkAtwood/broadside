@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.29",
+  "title": "fan_out builds HashSet with target.to_string() allocation per follower",
+  "description": "In delivery::fan_out, the dedup HashSet is built with seen.insert(target.to_string()) where target is either a shared_inbox_uri string slice or an inbox_uri string slice. The to_string() clone is called even for the first occurrence of each target before we know if it will be inserted. This allocates a String for every follower row regardless of whether it is a duplicate. Using a HashSet\u003c\u0026str\u003e would avoid all clones until the data is bound into the SQL query (where an owned String is needed anyway). With thousands of followers this is O(n) avoidable allocations.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:01:45.82691187Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:45.110694528Z",
+  "closed_at": "2026-07-19T00:15:45.110694528Z",
+  "close_reason": "Accepted: same pattern as zzj3.17/zzj3.40. Allocation per follower is dominated by delivery IO.",
+  "labels": [
+    "review",
+    "efficiency"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.29",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:01:45.854636806Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

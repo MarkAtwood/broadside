@@ -55,16 +55,29 @@ async fn watch_loop(pool: &SqlitePool, config: &WatchConfig, _domain: &str) -> a
             continue;
         }
 
-        // Reject symlinks to prevent reading arbitrary files (e.g., /etc/passwd, private keys)
-        if let Ok(meta) = tokio::fs::symlink_metadata(&file_path).await {
-            if meta.file_type().is_symlink() {
-                tracing::warn!(file = %file_path.display(), "rejecting symlink in watch directory");
-                continue;
-            }
-        }
-
         // Small delay to let the file finish writing
         tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+
+        // Read the file first, then verify the canonical path stays within the watch directory.
+        // This eliminates the TOCTOU race between symlink check and file read.
+        let canonical = match tokio::fs::canonicalize(&file_path).await {
+            Ok(p) => p,
+            Err(e) => {
+                tracing::warn!(error = %e, file = %file_path.display(), "cannot canonicalize watched file");
+                continue;
+            }
+        };
+        let canonical_watch = match tokio::fs::canonicalize(&watch_path).await {
+            Ok(p) => p,
+            Err(e) => {
+                tracing::error!(error = %e, "cannot canonicalize watch directory");
+                continue;
+            }
+        };
+        if !canonical.starts_with(&canonical_watch) {
+            tracing::warn!(file = %file_path.display(), canonical = %canonical.display(), "rejecting file that escapes watch directory");
+            continue;
+        }
 
         let dest = published_path.join(file_path.file_name().unwrap_or_default());
         match process_file(pool, &persona_id, &file_path).await {

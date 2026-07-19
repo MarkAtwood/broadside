@@ -106,7 +106,7 @@ pub async fn poll_feed(
 
         if result.rows_affected() > 0 {
             // Attach enclosure images as media (capped to prevent abuse)
-            let max_media = crate::media::max_media_per_post();
+            let max_media = crate::media::MAX_MEDIA;
             let mut media_count = 0usize;
             'media_loop: for media_link in &entry.media {
                 for content in &media_link.content {
@@ -143,7 +143,9 @@ pub async fn poll_feed(
                 }
             }
 
-            crate::delivery::fan_out(pool, &id, &persona_id).await?;
+            if let Err(e) = crate::delivery::fan_out(pool, &id, &persona_id).await {
+                tracing::error!(post_id = %id, error = %e, "fan_out failed for new post");
+            }
             new_count += 1;
             newest_id = Some(entry_id);
         }
@@ -181,12 +183,20 @@ pub async fn run_poller(
     data_dir: std::path::PathBuf,
 ) {
     let interval = config.interval();
-    let client = reqwest::Client::builder()
+    let client = match reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
         .redirect(reqwest::redirect::Policy::none())
         .build()
-        .unwrap_or_default();
+    {
+        Ok(c) => c,
+        Err(e) => {
+            tracing::error!(error = %e, "failed to build HTTP client, feed poller exiting");
+            return;
+        }
+    };
 
+    // ponytail: poll-then-sleep means first poll is immediate on startup — intentional so new
+    // posts appear without waiting a full interval after deploy/restart.
     loop {
         match poll_feed(&pool, &config, &domain, &client, &data_dir).await {
             Ok(n) if n > 0 => tracing::info!(feed = %config.url, new = n, "feed poll complete"),
@@ -207,8 +217,7 @@ pub async fn poll_all(
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
         .redirect(reqwest::redirect::Policy::none())
-        .build()
-        .unwrap_or_default();
+        .build()?;
     for feed in feeds {
         match poll_feed(pool, feed, domain, &client, data_dir).await {
             Ok(n) => println!("{}: {} new posts", feed.url, n),

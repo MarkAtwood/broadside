@@ -1,0 +1,4 @@
+{"id":"019f77ad-f389-720d-b6f8-59cf9e790f8a","issue_id":"broadside-zzj3.34","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:01:56.617134924Z"}
+{"id":"019f77ad-f38d-7d37-b249-035565424afd","issue_id":"broadside-zzj3.34","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:01:56.621866644Z"}
+{"id":"019f77ad-f392-7566-86b4-5ae69c4d6815","issue_id":"broadside-zzj3.34","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: security","created_at":"2026-07-19T00:01:56.6263542Z"}
+{"id":"019f77b5-e2e7-7d79-bd73-1442ee4351a8","issue_id":"broadside-zzj3.34","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: empty/missing actor field now returns BAD_REQUEST instead of silently passing.","created_at":"2026-07-19T00:10:36.647884255Z"}

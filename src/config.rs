@@ -31,7 +31,7 @@ pub struct FeedConfig {
     pub poll_interval: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 pub struct WebhookConfig {
     pub persona: String,
     pub key: String,
@@ -84,6 +84,9 @@ impl Config {
 }
 
 impl FeedConfig {
+    // ponytail: re-parses poll_interval on each call. The parse is trivial (split + match,
+    // no regex) and Config is validated on load so the value never changes. Ceiling: cache
+    // the Duration in a OnceCell if profiling shows this in a hot path.
     pub fn interval(&self) -> Duration {
         parse_duration(&self.poll_interval).expect("validated on load")
     }

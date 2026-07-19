@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.57",
+  "title": "Signed headers list defaults silently if headers= absent from Signature",
+  "description": "signatures.rs:129: if the Signature header omits the headers= parameter, parse_signature_header returns the default '(request-target) host date digest'. This means a sender can omit headers= and the verifier will silently assume a specific signed-headers set rather than rejecting the request as malformed. If the sender's actual signed string used a different headers list, verification will fail — but if the sender crafted the signature against exactly that default set, an unsigned or attacker-constructed request that happens to match the default header set can be accepted. The HTTP Signatures spec (draft-cavage-http-signatures-12 §2.1.6) specifies the default is (date) only, not the four-header set used here. This mismatch between spec default and implementation default could cause interop-based bypass if a remote server relies on the spec default.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:02:39.568125686Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:10:36.866914264Z",
+  "closed_at": "2026-07-19T00:10:36.866914264Z",
+  "close_reason": "Fixed: missing headers= in Signature now returns error.",
+  "labels": [
+    "review",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.57",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:02:39.594150409Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

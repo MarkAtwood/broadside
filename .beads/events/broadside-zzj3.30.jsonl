@@ -1,0 +1,4 @@
+{"id":"019f77ad-d7bd-73ce-a09e-316811f0677e","issue_id":"broadside-zzj3.30","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:01:49.501250819Z"}
+{"id":"019f77ad-d7c1-73e4-86b7-dbeec4692752","issue_id":"broadside-zzj3.30","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:01:49.505255437Z"}
+{"id":"019f77ad-d7c5-71e5-8cac-97b5782b48f8","issue_id":"broadside-zzj3.30","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: security","created_at":"2026-07-19T00:01:49.509124737Z"}
+{"id":"019f77b1-675f-7720-86cf-ee79594071d8","issue_id":"broadside-zzj3.30","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Won't fix: zeroize not needed for this threat model. Keys are in SQLite plaintext anyway; in-memory zeroize adds complexity without security benefit.","created_at":"2026-07-19T00:05:42.879467725Z"}

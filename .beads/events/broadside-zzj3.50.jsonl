@@ -1,0 +1,4 @@
+{"id":"019f77ae-71d2-7610-a2d7-8e7b4401b72a","issue_id":"broadside-zzj3.50","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:02:28.946398322Z"}
+{"id":"019f77ae-71d8-7aaf-9f7d-c6036306680e","issue_id":"broadside-zzj3.50","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:02:28.952700833Z"}
+{"id":"019f77ae-71de-7f06-8af5-e880ba34594d","issue_id":"broadside-zzj3.50","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: readability","created_at":"2026-07-19T00:02:28.958985207Z"}
+{"id":"019f77bb-a91e-715b-9cee-2a39e1accf68","issue_id":"broadside-zzj3.50","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"False positive: unwrap_or(1) handles absent page param, .max(1) handles page=0. Both are needed.","created_at":"2026-07-19T00:16:55.070089473Z"}

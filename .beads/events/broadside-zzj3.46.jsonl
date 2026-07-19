@@ -1,0 +1,4 @@
+{"id":"019f77ae-5887-76ca-9edb-124715331896","issue_id":"broadside-zzj3.46","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:02:22.471445873Z"}
+{"id":"019f77ae-588a-769b-9a8e-b503c1c7b66b","issue_id":"broadside-zzj3.46","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:02:22.474433384Z"}
+{"id":"019f77ae-588d-7a28-b973-de8a44c33125","issue_id":"broadside-zzj3.46","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: efficiency","created_at":"2026-07-19T00:02:22.477665808Z"}
+{"id":"019f77ba-5ed4-7bf1-a380-829f5f9bf178","issue_id":"broadside-zzj3.46","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: eliminated TOCTOU by removing SELECT COUNT, using UPDATE + rows_affected.","created_at":"2026-07-19T00:15:30.516783231Z"}

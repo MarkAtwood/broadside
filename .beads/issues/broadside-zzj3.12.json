@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.12",
+  "title": "content.rs in_link closure is O(n) linear scan for each match position",
+  "description": "process_content builds skip_ranges (one entry per existing \u003ca\u003e tag) and then calls in_link(pos) for every URL/hashtag/mention match. in_link does a linear .any() scan over all skip_ranges entries. With N existing links and M new matches the check is O(N*M). On a post with many existing anchors (e.g. a heavily linked article fed via RSS) this is quadratic in the number of links. Fix: sort skip_ranges by start, then use binary search or a single merge-style pass since replacement positions are already iterated in order.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:01:13.088353607Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:19.124414327Z",
+  "closed_at": "2026-07-19T00:15:19.124414327Z",
+  "close_reason": "Fixed: in_link now uses binary search O(log n) instead of linear scan.",
+  "labels": [
+    "review",
+    "efficiency"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.12",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:01:13.110763069Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

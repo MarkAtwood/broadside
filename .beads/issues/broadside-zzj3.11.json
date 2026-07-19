@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.11",
+  "title": "unwrap() on regex::Regex::new() in server.rs census block",
+  "description": "server::serve() builds a Regex with .build().unwrap() (line ~130) for stripping \u003c/style\u003e tags from CSS. While the literal regex is always valid, .unwrap() on a Result is a code smell and will panic on any future edit that introduces an invalid pattern. The regex crate provides Regex::new() which returns Result; the idiomatic solution is to use a LazyLock\u003cRegex\u003e (as done in content.rs) so the regex is compiled once at startup and panics at init time with a clear message, rather than mid-request.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:01:08.785603231Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:06:05.795971252Z",
+  "closed_at": "2026-07-19T00:06:05.795971252Z",
+  "close_reason": "Duplicate of broadside-zzj3.7 (regex/header .unwrap() on infallible static values).",
+  "labels": [
+    "review",
+    "idiomatic-rust"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.11",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:01:08.804956992Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

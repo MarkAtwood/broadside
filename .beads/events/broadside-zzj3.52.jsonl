@@ -1,0 +1,4 @@
+{"id":"019f77ae-772a-7acf-b2d4-1dd8ab63ab77","issue_id":"broadside-zzj3.52","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:02:30.31470916Z"}
+{"id":"019f77ae-772e-7279-90d0-4f413a09a106","issue_id":"broadside-zzj3.52","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:02:30.318162704Z"}
+{"id":"019f77ae-7731-7211-91cf-2c38909e9ada","issue_id":"broadside-zzj3.52","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-19T00:02:30.321136079Z"}
+{"id":"019f77b5-e52a-72e3-a891-5e960ccd8d93","issue_id":"broadside-zzj3.52","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: persona.update() now uses single list pairing clauses with values.","created_at":"2026-07-19T00:10:37.226190058Z"}

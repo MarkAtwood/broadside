@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.55",
+  "title": "db schema applied with raw_sql — no migration versioning, schema changes on upgrade corrupt existing DBs",
+  "description": "In db.rs connect(), the schema is applied via sqlx::raw_sql(SCHEMA) with CREATE TABLE IF NOT EXISTS. This means: (1) adding a new column to an existing table in a future release requires an ALTER TABLE migration, but the current code has no migration system — the new column simply won't be added to an existing DB; (2) operators upgrading from an older version will silently have an incomplete schema with no error, and queries that reference new columns will fail at runtime with 'no such column'. There is no version table or applied-migrations tracking.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:02:37.579966659Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:10:37.285466751Z",
+  "closed_at": "2026-07-19T00:10:37.285466751Z",
+  "close_reason": "Fixed: added schema_meta table with version tracking and migration framework.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.55",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:02:37.606464738Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

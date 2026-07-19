@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.50",
+  "title": "outbox handler calls query.page.unwrap_or(1) after already confirming page.is_some()",
+  "description": "In outbox() (server.rs ~line 519): the code checks 'if query.page.is_none() { return early }' and then on the next line calls 'let page = query.page.unwrap_or(1).max(1)'. After the is_none early return, query.page is guaranteed Some, so the .unwrap_or(1) is dead code and misleads readers into thinking page could still be None at that point. Use query.page.expect(\"checked above\") or restructure as a match to make the invariant explicit.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:02:28.941651645Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:16:55.068040589Z",
+  "closed_at": "2026-07-19T00:16:55.068040589Z",
+  "close_reason": "False positive: unwrap_or(1) handles absent page param, .max(1) handles page=0. Both are needed.",
+  "labels": [
+    "review",
+    "readability"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.50",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:02:28.972897398Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

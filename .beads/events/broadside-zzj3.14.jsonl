@@ -1,0 +1,4 @@
+{"id":"019f77ad-54de-737a-aa57-f4da349df774","issue_id":"broadside-zzj3.14","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:01:15.998228597Z"}
+{"id":"019f77ad-54e2-799d-a0d6-60f0e90cd57f","issue_id":"broadside-zzj3.14","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:01:16.002630559Z"}
+{"id":"019f77ad-54e7-7164-b4f2-ee15e76bc9f8","issue_id":"broadside-zzj3.14","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-19T00:01:16.007091554Z"}
+{"id":"019f77b5-e4a1-79b3-b6b0-def9ab3a9172","issue_id":"broadside-zzj3.14","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: Client::builder().build() now propagates errors.","created_at":"2026-07-19T00:10:37.089636206Z"}

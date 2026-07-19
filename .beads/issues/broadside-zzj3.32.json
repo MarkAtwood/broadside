@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.32",
+  "title": "Good: regex patterns compiled exactly once via LazyLock",
+  "description": "content.rs uses std::sync::LazyLock for all four compiled Regex patterns (HASHTAG_RE, MENTION_RE, URL_RE, LINK_RE). These are initialized on first use, never recompiled, and thread-safe. This is the correct pattern for process_content which is called on every outbox response, every delivery batch build, and every HTML profile render. A well-intentioned contributor adding a new pattern is guided by example to do the same.",
+  "status": "closed",
+  "priority": 4,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:01:53.368860888Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:45.165262896Z",
+  "closed_at": "2026-07-19T00:15:45.165262896Z",
+  "close_reason": "Praise acknowledged.",
+  "labels": [
+    "review",
+    "praise"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.32",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:01:53.396412883Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 use axum::extract::{Path, Query, State};
-use axum::http::{HeaderMap, StatusCode};
+use axum::http::{HeaderMap, HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Json};
 use axum::routing::{get, post};
 use axum::Router;
@@ -28,6 +28,9 @@ body { background: var(--bg); color: var(--text); } }";
 pub struct AppState {
     pub pool: SqlitePool,
     pub domain: String,
+    // ponytail: data_dir should be PathBuf, but it's only used as a string for path joins
+    // that immediately convert back. Not worth the churn across all call sites. Ceiling:
+    // change to PathBuf when adding any new path-manipulation logic.
     pub data_dir: String,
     pub webhook_keys: std::collections::HashMap<String, String>,
     pub http_client: reqwest::Client,
@@ -62,18 +65,19 @@ async fn security_headers(
 ) -> axum::response::Response {
     let mut resp = next.run(req).await;
     let h = resp.headers_mut();
-    h.insert("X-Content-Type-Options", "nosniff".parse().unwrap());
-    h.insert("X-Frame-Options", "DENY".parse().unwrap());
-    h.insert("Referrer-Policy", "same-origin".parse().unwrap());
+    h.insert(
+        "X-Content-Type-Options",
+        HeaderValue::from_static("nosniff"),
+    );
+    h.insert("X-Frame-Options", HeaderValue::from_static("DENY"));
+    h.insert("Referrer-Policy", HeaderValue::from_static("same-origin"));
     h.insert(
         "Content-Security-Policy",
-        "default-src 'none'; style-src 'unsafe-inline'; img-src https: data:; frame-ancestors 'none'"
-            .parse()
-            .unwrap(),
+        HeaderValue::from_static("default-src 'none'; style-src 'unsafe-inline'; img-src https: data:; frame-ancestors 'none'"),
     );
     // Default to no-store; handlers override with public caching where appropriate
     h.entry("Cache-Control")
-        .or_insert("no-store".parse().unwrap());
+        .or_insert(HeaderValue::from_static("no-store"));
     resp
 }
 
@@ -121,7 +125,13 @@ pub async fn serve(config: &Config) -> anyhow::Result<()> {
     let custom_css = if config.server.custom_css_path.is_empty() {
         String::new()
     } else {
-        std::fs::read_to_string(&config.server.custom_css_path).unwrap_or_default()
+        match std::fs::read_to_string(&config.server.custom_css_path) {
+            Ok(css) => css,
+            Err(e) => {
+                tracing::warn!(path = %config.server.custom_css_path, "failed to read custom CSS: {e}");
+                String::new()
+            }
+        }
     };
     // Strip </style> (case-insensitive) to prevent style tag breakout from operator-supplied CSS
     let extra_css = regex::RegexBuilder::new("</style>")
@@ -149,7 +159,6 @@ pub async fn serve(config: &Config) -> anyhow::Result<()> {
     {
         let census_domain = domain.clone();
         tokio::spawn(async move {
-            tokio::time::sleep(std::time::Duration::from_secs(7 * 24 * 3600)).await;
             let client = reqwest::Client::builder()
                 .timeout(std::time::Duration::from_secs(30))
                 .build()
@@ -518,7 +527,10 @@ async fn outbox(
 
     let page = query.page.unwrap_or(1).max(1);
     let per_page: i64 = 20;
-    let offset = (page as i64 - 1) * per_page;
+    let offset = (page as u64)
+        .saturating_sub(1)
+        .saturating_mul(per_page as u64)
+        .min(i64::MAX as u64) as i64;
 
     let posts = crate::post::list_for_persona(&state.pool, &persona_id, per_page, offset)
         .await
@@ -530,9 +542,10 @@ async fn outbox(
         let post_uri = format!("{}/statuses/{}", actor_uri, p.id);
         let (processed_html, tags) =
             crate::content::process_content(&p.content_html, &state.domain);
+        // ponytail: Tag is a simple flat struct — serialization is infallible.
         let tag_json: Vec<serde_json::Value> = tags
             .iter()
-            .map(|t| serde_json::to_value(t).unwrap_or_default())
+            .map(|t| serde_json::to_value(t).expect("Tag serialization is infallible"))
             .collect();
         let attachments =
             crate::media::attachments_for_post(&state.pool, &p.id, &state.domain).await;
@@ -674,8 +687,12 @@ async fn handle_inbox(
     headers: &HeaderMap,
     body: &str,
 ) -> impl IntoResponse {
-    // Rate limit by X-Real-IP (must be set by reverse proxy).
-    // WARNING: without a reverse proxy, this header is attacker-controlled.
+    // ponytail: Rate limit by X-Real-IP/X-Forwarded-For without a trusted_proxies config.
+    // Attacker can spoof these headers if not behind a reverse proxy. Acceptable for
+    // single-operator deployment behind nginx/caddy. Ceiling: add a trusted_proxies list
+    // and fall back to peer socket addr when headers are absent or untrusted.
+    // Falls back to "unknown" when no header is present (all unknown-source requests
+    // share one bucket, which is conservative).
     let client_ip = headers
         .get("x-real-ip")
         .or_else(|| headers.get("x-forwarded-for"))
@@ -777,9 +794,13 @@ async fn handle_inbox(
         use base64::engine::general_purpose::STANDARD as B64;
         use base64::Engine;
         use sha2::Digest;
+        use subtle::ConstantTimeEq;
         let actual = sha2::Sha256::digest(body.as_bytes());
-        let actual_b64 = B64.encode(actual);
-        if actual_b64 != expected_b64 {
+        let expected = match B64.decode(expected_b64) {
+            Ok(v) => v,
+            Err(_) => return StatusCode::BAD_REQUEST,
+        };
+        if actual.ct_eq(&expected).unwrap_u8() != 1 {
             tracing::warn!("Digest mismatch");
             return StatusCode::BAD_REQUEST;
         }
@@ -815,8 +836,14 @@ async fn handle_inbox(
     let activity_type = activity["type"].as_str().unwrap_or("");
 
     // Verify the activity's actor matches the signature's keyId actor
-    let activity_actor = activity["actor"].as_str().unwrap_or("");
-    if !activity_actor.is_empty() && activity_actor != actor_uri {
+    let activity_actor = match activity["actor"].as_str() {
+        Some(a) if !a.is_empty() => a,
+        _ => {
+            tracing::debug!("rejecting activity with missing or empty actor field");
+            return StatusCode::BAD_REQUEST;
+        }
+    };
+    if activity_actor != actor_uri {
         tracing::warn!(
             sig_actor = %actor_uri,
             activity_actor,
@@ -849,6 +876,7 @@ async fn handle_inbox(
             };
 
             // SSRF guard: only fetch public https URLs
+            // ponytail: called at each trust boundary; DNS caching at the OS level amortizes cost.
             if !follower_actor.starts_with("https://") {
                 return StatusCode::BAD_REQUEST;
             }
@@ -1014,13 +1042,31 @@ async fn handle_inbox(
             // Signature is verified above — the actor field matches the signer.
             let inner_type = activity["object"]["type"].as_str().unwrap_or("");
             if inner_type == "Follow" {
-                // Only delete followers where actor_uri matches the SIGNED actor
-                // (not the inner object's actor, which could differ)
-                if !actor_uri.is_empty() {
-                    match sqlx::query("DELETE FROM followers WHERE actor_uri = ?")
-                        .bind(&actor_uri)
-                        .execute(&state.pool)
-                        .await
+                // Scope the delete to the persona whose inbox received this Undo.
+                // For the per-user inbox, _username identifies the persona.
+                // For the shared inbox, extract target from inner Follow object.
+                let target_persona_id = if let Some(uname) = _username {
+                    crate::persona::get_id(&state.pool, uname).await.ok()
+                } else {
+                    let expected_prefix = format!("https://{}/users/", state.domain);
+                    let inner_target = activity["object"]["object"]
+                        .as_str()
+                        .and_then(|o| o.strip_prefix(&expected_prefix))
+                        .filter(|u| !u.is_empty() && !u.contains('/'));
+                    match inner_target {
+                        Some(u) => crate::persona::get_id(&state.pool, u).await.ok(),
+                        None => None,
+                    }
+                };
+
+                if let Some(pid) = target_persona_id {
+                    match sqlx::query(
+                        "DELETE FROM followers WHERE actor_uri = ? AND persona_id = ?",
+                    )
+                    .bind(&actor_uri)
+                    .bind(&pid)
+                    .execute(&state.pool)
+                    .await
                     {
                         Ok(r) => {
                             if r.rows_affected() > 0 {
@@ -1078,6 +1124,7 @@ async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     .await
     .unwrap_or_default();
 
+    let domain_escaped = ammonia::clean(&state.domain);
     let mut personas_html = String::new();
     for (username, display_name) in &rows {
         let _ = write!(
@@ -1085,7 +1132,7 @@ async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
             r#"<li><a href="/users/{u}"><strong>{dn}</strong> <span>@{u}@{domain}</span></a></li>"#,
             u = ammonia::clean(username),
             dn = ammonia::clean(display_name),
-            domain = state.domain,
+            domain = domain_escaped,
         );
     }
 
@@ -1117,7 +1164,7 @@ async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 </body>
 </html>"#,
         base_css = BASE_CSS,
-        domain = state.domain,
+        domain = domain_escaped,
         personas_html = personas_html,
         extra_css = state.extra_css,
         version = env!("CARGO_PKG_VERSION"),
@@ -1263,7 +1310,7 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
 </html>"#,
         base_css = BASE_CSS,
         username = ammonia::clean(username),
-        domain = state.domain,
+        domain = ammonia::clean(&state.domain),
         display_name = ammonia::clean(&display_name),
         actor_uri = actor_uri,
         extra_css = state.extra_css,
@@ -1320,6 +1367,10 @@ pub fn is_private_host(host: &str) -> bool {
 
 /// Check if a hostname resolves to private/internal addresses via DNS.
 /// Fails closed: returns true (blocked) if DNS resolution fails.
+// ponytail: TOCTOU — DNS is resolved here but reqwest re-resolves independently on connect.
+// A DNS rebinding attack can bypass this check. Proper fix requires a custom reqwest
+// connector that pins resolved IPs, which reqwest doesn't support without replacing the
+// DNS resolver. This advisory check catches casual SSRF; accepted risk for now.
 pub async fn is_private_host_resolved(host: &str) -> bool {
     if is_private_host(host) {
         return true;

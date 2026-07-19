@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.46",
+  "title": "persona::update runs SELECT COUNT then UPDATE — two round-trips, TOCTOU",
+  "description": "persona::update first does SELECT COUNT(*) FROM personas WHERE username = ? and checks count == 0 to validate existence, then runs a second UPDATE query. Between those two queries another actor could delete the persona; the UPDATE would silently affect 0 rows and the function would return Ok, printing 'Updated persona @X' even though nothing changed. The existence check is better expressed by checking rows_affected() on the UPDATE itself, or using RETURNING, eliminating the race and the extra round-trip.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:02:22.467537049Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:30.514490557Z",
+  "closed_at": "2026-07-19T00:15:30.514490557Z",
+  "close_reason": "Fixed: eliminated TOCTOU by removing SELECT COUNT, using UPDATE + rows_affected.",
+  "labels": [
+    "review",
+    "efficiency"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.46",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:02:22.487520699Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

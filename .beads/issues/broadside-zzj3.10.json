@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.10",
+  "title": "watch.rs races between symlink check and file read",
+  "description": "In watch.rs watch_loop(), the symlink check calls tokio::fs::symlink_metadata() and then 200ms later calls tokio::fs::read_to_string() via process_file(). An attacker who can write to the watched directory can replace a regular file with a symlink in that 200ms window. The result is that an arbitrary file readable by the broadside process (e.g., /etc/passwd, the private key DB) gets published as a post to all followers.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:01:08.615802261Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:10:37.010952736Z",
+  "closed_at": "2026-07-19T00:10:37.010952736Z",
+  "close_reason": "Fixed: watch.rs now canonicalizes path after read and rejects escapes.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.10",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:01:08.633579689Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

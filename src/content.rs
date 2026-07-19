@@ -22,6 +22,7 @@ static LINK_RE: LazyLock<Regex> =
 /// ActivityPub tag type.
 #[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "PascalCase")]
+#[non_exhaustive]
 pub enum TagType {
     Hashtag,
     Mention,
@@ -52,9 +53,9 @@ pub fn process_content(html: &str, domain: &str) -> (String, Vec<Tag>) {
         .collect();
 
     let in_link = |pos: usize| -> bool {
-        skip_ranges
-            .iter()
-            .any(|(start, end)| pos >= *start && pos < *end)
+        // Binary search: find the last range whose start <= pos, then check if pos < end.
+        let idx = skip_ranges.partition_point(|(start, _)| *start <= pos);
+        idx > 0 && pos < skip_ranges[idx - 1].1
     };
 
     // Collect all replacements from the ORIGINAL html (positions are stable)

@@ -152,8 +152,10 @@ pub async fn attachments_for_post(
                     "mediaType": mime_type,
                     "url": url,
                     "name": description,
-                    "blurhash": blurhash,
                 });
+                if !blurhash.is_empty() {
+                    attachment["blurhash"] = serde_json::json!(blurhash);
+                }
                 if let Some(w) = width {
                     attachment["width"] = serde_json::json!(w);
                 }
@@ -166,10 +168,8 @@ pub async fn attachments_for_post(
         .collect()
 }
 
-/// Maximum media attachments allowed per post (for feed enclosures).
-pub fn max_media_per_post() -> usize {
-    MAX_MEDIA_PER_POST
-}
+/// Maximum media attachments allowed per post.
+pub const MAX_MEDIA: usize = MAX_MEDIA_PER_POST;
 
 /// Sniff image MIME type from magic bytes.
 pub fn sniff_image_mime(bytes: &[u8]) -> anyhow::Result<&'static str> {
@@ -217,5 +217,11 @@ fn process_image(bytes: &[u8]) -> anyhow::Result<(DynamicImage, u32, u32)> {
 /// Compute blurhash from an already-decoded image.
 fn compute_blurhash(img: &DynamicImage, width: u32, height: u32) -> String {
     let rgba = img.to_rgba8();
-    blurhash::encode(4, 3, width, height, rgba.as_raw()).unwrap_or_default()
+    match blurhash::encode(4, 3, width, height, rgba.as_raw()) {
+        Ok(hash) => hash,
+        Err(e) => {
+            tracing::warn!("blurhash computation failed ({width}x{height}): {e}");
+            String::new()
+        }
+    }
 }

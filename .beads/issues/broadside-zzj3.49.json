@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.49",
+  "title": "Rate limiter key is attacker-controlled without reverse proxy",
+  "description": "server.rs:677-688: the inbox rate limiter uses X-Real-IP or X-Forwarded-For as the per-IP key. These headers are set by the client if there is no reverse proxy stripping them. With no proxy: (a) attacker sets X-Real-IP to a victim server's IP to exhaust that IP's rate limit (availability against legitimate federation), or (b) attacker sends a unique spoofed IP with every request to completely bypass rate limiting. There is no config option to either require a trusted proxy or fall back to the TCP peer address. The comment acknowledges the issue but there is no mitigation when the server is directly internet-exposed.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:02:23.191302608Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:06:05.53550029Z",
+  "closed_at": "2026-07-19T00:06:05.53550029Z",
+  "close_reason": "Duplicate of broadside-zzj3.26 (same rate limiter X-Forwarded-For spoofing finding).",
+  "labels": [
+    "review",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.49",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:02:23.216246159Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

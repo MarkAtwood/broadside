@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.15",
+  "title": "actor_cache half-clear eviction builds a full HashSet of kept keys",
+  "description": "In ActorKeyCache::get_public_key, the overflow-full eviction path builds a HashSet\u003cString\u003e by cloning all 5000 keys to decide which half to keep, then calls retain which clones the keys again for the lookup. This O(n) clone of 10 000 strings only happens when the cache is full and all entries are still fresh, which is an edge case — but when it does hit, it allocates ~10 000 String clones for a single insert. A simpler approach: just call entries.clear() when the cache is full and all entries are fresh (or accept a slight underfill).",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:01:19.68499798Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:45.049239246Z",
+  "closed_at": "2026-07-19T00:15:45.049239246Z",
+  "close_reason": "Accepted: ponytail comment already present. Cache eviction is rare (hourly) and the HashSet is bounded by cache size.",
+  "labels": [
+    "review",
+    "elegance"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.15",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:01:19.712562029Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

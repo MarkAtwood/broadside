@@ -1,0 +1,4 @@
+{"id":"019f77ae-5b5a-7f0c-8055-82ea10326137","issue_id":"broadside-zzj3.49","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:02:23.194987011Z"}
+{"id":"019f77ae-5b5e-7a37-9937-fde1e3e0b414","issue_id":"broadside-zzj3.49","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:02:23.198670471Z"}
+{"id":"019f77ae-5b61-7e21-af4f-2352f5e0ff2e","issue_id":"broadside-zzj3.49","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: security","created_at":"2026-07-19T00:02:23.20192687Z"}
+{"id":"019f77b1-bfe4-7983-9093-76d857201195","issue_id":"broadside-zzj3.49","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Duplicate of broadside-zzj3.26 (same rate limiter X-Forwarded-For spoofing finding).","created_at":"2026-07-19T00:06:05.540624191Z"}

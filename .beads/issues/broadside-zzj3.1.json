@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.1",
+  "title": "census loop sleeps before first ping",
+  "description": "In server.rs the census loop calls tokio::time::sleep(7 days) BEFORE the first GET request, so the instance is never registered until a week after startup. If the process restarts weekly (e.g., Docker rolling deploy, OS reboot) it never pings at all. The sleep should come after the first request, not before.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:00:41.665521608Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:18.778393428Z",
+  "closed_at": "2026-07-19T00:15:18.778393428Z",
+  "close_reason": "Fixed: census loop now pings immediately on startup, then sleeps 7d.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.1",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:00:41.695018472Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

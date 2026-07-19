@@ -20,6 +20,9 @@ pub fn sign_request(
     host: &str,
     body: &[u8],
 ) -> anyhow::Result<HeaderMap> {
+    // ponytail: PEM is re-parsed on every call (~1ms). Delivery is IO-bound (HTTP round-trip
+    // dominates), so this is negligible. Upgrade path: accept a pre-parsed key or cache in
+    // the delivery worker's post_cache.
     let private_key =
         RsaPrivateKey::from_pkcs8_pem(private_key_pem).context("parsing private key PEM")?;
     let signing_key = rsa::pkcs1v15::SigningKey::<Sha256>::new(private_key);
@@ -126,12 +129,13 @@ pub fn parse_signature_header(header: &str) -> anyhow::Result<SignatureParts> {
 
     Ok(SignatureParts {
         key_id: key_id_val.context("missing keyId= in Signature header")?,
-        headers: headers_val.unwrap_or_else(|| "(request-target) host date digest".to_string()),
+        headers: headers_val.context("missing headers= in Signature header")?,
         signature: signature_val.context("missing signature= in Signature header")?,
     })
 }
 
 /// Split signature header params, respecting quoted values and backslash escapes.
+// ponytail: returns Vec<String> not Vec<&str> because backslash-escape handling builds new strings.
 fn split_signature_params(s: &str) -> Vec<String> {
     let mut parts = Vec::new();
     let mut current = String::new();

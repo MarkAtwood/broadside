@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.59",
+  "title": "FeedConfig.poll_interval is a String that is re-parsed on every interval() call",
+  "description": "config::FeedConfig stores poll_interval as String and FeedConfig::interval() calls parse_duration() each time it is called — with an .expect() that relies on config validation having run. The interval is a config-time constant; it should be parsed once at load time and stored as Duration (or a validated newtype). The current pattern means: (a) if validate() is somehow bypassed, interval() panics at runtime rather than load time; (b) parse_duration() is called in a hot path (called once per polling loop iteration); (c) the invariant 'validated on load' exists only as a comment, not as a type guarantee.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:02:52.112831173Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:30.060601017Z",
+  "closed_at": "2026-07-19T00:15:30.060601017Z",
+  "close_reason": "Accepted: ponytail comment. Parse is trivial, no regex.",
+  "labels": [
+    "review",
+    "idiomatic-rust"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.59",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:02:52.144529089Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

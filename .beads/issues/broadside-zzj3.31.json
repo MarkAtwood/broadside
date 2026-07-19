@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.31",
+  "title": "HTML profile page injects unescaped domain into page title and body",
+  "description": "In server.rs serve_profile_html() and index(), state.domain is interpolated directly into the HTML template with format\\!() — it is never passed through ammonia::clean() or HTML-escaped. The domain value comes from config.toml. If an operator sets domain to something containing '\u003c', '\u003e', '\u0026', or '\"' characters (e.g., a misconfiguration or a deliberately crafted value), the HTML output will be malformed. While the operator controls the config, this is a footgun: config values are not validated for HTML-safety on load, and anyone who copies a domain string with an ambiguous character will silently produce broken or injectable pages.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:01:49.852565559Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:18.959276725Z",
+  "closed_at": "2026-07-19T00:15:18.959276725Z",
+  "close_reason": "Fixed: domain HTML-escaped with ammonia::clean before interpolation.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.31",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:01:49.881855502Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

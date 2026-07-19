@@ -1,0 +1,4 @@
+{"id":"019f77ad-4984-7862-9569-acedff845c4b","issue_id":"broadside-zzj3.12","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:01:13.092550231Z"}
+{"id":"019f77ad-4988-7a6a-9a9c-d45f3cda86da","issue_id":"broadside-zzj3.12","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:01:13.096683003Z"}
+{"id":"019f77ad-498c-78ec-b9df-e202bd166171","issue_id":"broadside-zzj3.12","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: efficiency","created_at":"2026-07-19T00:01:13.100585227Z"}
+{"id":"019f77ba-3256-7e56-92c0-b602e20c2953","issue_id":"broadside-zzj3.12","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: in_link now uses binary search O(log n) instead of linear scan.","created_at":"2026-07-19T00:15:19.126940121Z"}

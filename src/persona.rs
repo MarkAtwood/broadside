@@ -7,6 +7,8 @@ use sqlx::SqlitePool;
 use crate::id::gen_id;
 
 /// Generate an RSA 2048 keypair, returning (private_pem, public_pem).
+// ponytail: 2048 matches Mastodon's choice; 4096 would double signing time for marginal benefit
+// in this context.
 fn generate_keypair() -> anyhow::Result<(String, String)> {
     let private_key =
         RsaPrivateKey::new(&mut OsRng, 2048).context("generating RSA 2048 keypair")?;
@@ -88,44 +90,35 @@ pub async fn update(
         anyhow::bail!("nothing to update — specify --display-name, --bio, --avatar, or --header");
     }
 
-    // Verify persona exists first
-    let (count,) = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM personas WHERE username = ?")
-        .bind(username)
-        .fetch_one(pool)
-        .await?;
-    if count == 0 {
-        anyhow::bail!("persona @{username} not found");
-    }
-
-    let mut sets: Vec<&str> = Vec::new();
-    if display_name.is_some() {
-        sets.push("display_name = ?");
-    }
-    if bio.is_some() {
-        sets.push("bio = ?");
-    }
-    if avatar.is_some() {
-        sets.push("avatar_path = ?");
-    }
-    if header.is_some() {
-        sets.push("header_path = ?");
-    }
-
-    let sql = format!("UPDATE personas SET {} WHERE username = ?", sets.join(", "));
-    let mut q = sqlx::query(&sql);
+    let mut fields: Vec<(&str, &str)> = Vec::new();
     if let Some(v) = display_name {
-        q = q.bind(v);
+        fields.push(("display_name = ?", v));
     }
     if let Some(v) = bio {
-        q = q.bind(v);
+        fields.push(("bio = ?", v));
     }
     if let Some(v) = avatar {
-        q = q.bind(v);
+        fields.push(("avatar_path = ?", v));
     }
     if let Some(v) = header {
-        q = q.bind(v);
+        fields.push(("header_path = ?", v));
     }
-    q.bind(username).execute(pool).await?;
+
+    let set_clause: Vec<&str> = fields.iter().map(|(clause, _)| *clause).collect();
+    let sql = format!(
+        "UPDATE personas SET {} WHERE username = ?",
+        set_clause.join(", ")
+    );
+    let mut q = sqlx::query(&sql);
+    for (_, value) in &fields {
+        q = q.bind(*value);
+    }
+    q = q.bind(username);
+    let result = q.execute(pool).await?;
+
+    if result.rows_affected() == 0 {
+        anyhow::bail!("persona @{username} not found");
+    }
 
     println!("Updated persona @{username}");
     Ok(())

@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.45",
+  "title": "feed poller polls immediately on startup then waits interval — no initial backoff on errors",
+  "description": "In feed.rs run_poller(), the loop polls first and then sleeps. On startup with a large number of feeds all polling immediately, or after a crash-restart loop, all feed pollers fire concurrently with no jitter. If the upstream feed server is down and responds with errors, the poller will hammer it every interval with no backoff. This is a my-oss deployer concern: operators who configure many feeds against the same upstream will see their instance immediately flagged for rate limiting or abuse.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:02:17.376895671Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:30.454155196Z",
+  "closed_at": "2026-07-19T00:15:30.454155196Z",
+  "close_reason": "Correct: poll-then-sleep means first poll is immediate. Ponytail comment added.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.45",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:02:17.399685329Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

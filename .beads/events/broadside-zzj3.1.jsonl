@@ -1,0 +1,4 @@
+{"id":"019f77ac-cec7-7038-a985-74283808caac","issue_id":"broadside-zzj3.1","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:00:41.671015001Z"}
+{"id":"019f77ac-cecc-7937-b828-2e66ffdec531","issue_id":"broadside-zzj3.1","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:00:41.67660449Z"}
+{"id":"019f77ac-ced1-7ea8-8a6a-b1e12e0a5507","issue_id":"broadside-zzj3.1","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-19T00:00:41.681961006Z"}
+{"id":"019f77ba-30fe-72bc-927e-39276e80a57c","issue_id":"broadside-zzj3.1","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: census loop now pings immediately on startup, then sleeps 7d.","created_at":"2026-07-19T00:15:18.782179827Z"}

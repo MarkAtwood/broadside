@@ -1,0 +1,4 @@
+{"id":"019f77ad-380a-79f1-9813-59b52f0400bc","issue_id":"broadside-zzj3.10","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:01:08.618652402Z"}
+{"id":"019f77ad-380d-7696-9343-12ca5a78fab9","issue_id":"broadside-zzj3.10","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:01:08.621437586Z"}
+{"id":"019f77ad-3810-7279-b386-0aa8c4b74d35","issue_id":"broadside-zzj3.10","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-19T00:01:08.624162748Z"}
+{"id":"019f77b5-e45a-7551-a889-f0b8e12d6817","issue_id":"broadside-zzj3.10","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: watch.rs now canonicalizes path after read and rejects escapes.","created_at":"2026-07-19T00:10:37.018349295Z"}

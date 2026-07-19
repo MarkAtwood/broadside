@@ -1,0 +1,4 @@
+{"id":"019f77ae-3ea4-7856-a620-dac170678d48","issue_id":"broadside-zzj3.43","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:02:15.844546904Z"}
+{"id":"019f77ae-3ea7-7c97-b086-2380b80affbb","issue_id":"broadside-zzj3.43","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:02:15.847825564Z"}
+{"id":"019f77ae-3eab-757e-bcea-dfc2e632274e","issue_id":"broadside-zzj3.43","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: security","created_at":"2026-07-19T00:02:15.851360336Z"}
+{"id":"019f77b5-e37e-7651-89f8-438cd5f9238a","issue_id":"broadside-zzj3.43","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: digest comparison now uses subtle::ConstantTimeEq on raw bytes.","created_at":"2026-07-19T00:10:36.798414472Z"}

@@ -1,0 +1,4 @@
+{"id":"019f77ae-9b54-7b57-bd04-1a679d883251","issue_id":"broadside-zzj3.57","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:02:39.572743823Z"}
+{"id":"019f77ae-9b59-75af-b6d8-15a4be1659bb","issue_id":"broadside-zzj3.57","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:02:39.577373342Z"}
+{"id":"019f77ae-9b5d-7e20-8eb8-8342e19b7f30","issue_id":"broadside-zzj3.57","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: security","created_at":"2026-07-19T00:02:39.581926996Z"}
+{"id":"019f77b5-e3cb-7e5d-9731-af4b0bf4ce3a","issue_id":"broadside-zzj3.57","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: missing headers= in Signature now returns error.","created_at":"2026-07-19T00:10:36.875942374Z"}

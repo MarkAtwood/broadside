@@ -47,6 +47,9 @@ CREATE TABLE IF NOT EXISTS post_media (
     height      INTEGER
 );
 
+-- ponytail: status is stringly-typed ('pending'/'failed'/'delivered'). An enum would be
+-- safer but requires a custom sqlx Type impl and migration. Ceiling: add a CHECK constraint
+-- or migrate to an integer status code if the set of states grows beyond 3.
 CREATE TABLE IF NOT EXISTS delivery_queue (
     id          TEXT PRIMARY KEY,
     post_id     TEXT NOT NULL REFERENCES posts(id),
@@ -75,6 +78,64 @@ CREATE TABLE IF NOT EXISTS feed_state (
 );
 "#;
 
+/// Current schema version. Bump this when adding migrations.
+const CURRENT_SCHEMA_VERSION: i64 = 1;
+
+/// Migrations to apply for each version bump. Index 0 = migration from version 0 to 1, etc.
+/// Version 0 is the initial schema (SCHEMA constant above).
+/// Add ALTER TABLE statements here for future versions.
+const MIGRATIONS: &[&str] = &[
+    // Version 0 -> 1: initial schema, no migration needed (handled by CREATE TABLE IF NOT EXISTS)
+    "",
+];
+
+async fn ensure_migrations(pool: &SqlitePool) -> anyhow::Result<()> {
+    // Create metadata table for tracking schema version
+    sqlx::raw_sql(
+        "CREATE TABLE IF NOT EXISTS schema_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)",
+    )
+    .execute(pool)
+    .await?;
+
+    // Get current version
+    let row: Option<(String,)> =
+        sqlx::query_as("SELECT value FROM schema_meta WHERE key = 'schema_version'")
+            .fetch_optional(pool)
+            .await?;
+
+    let version: i64 = match row {
+        Some((v,)) => v.parse().unwrap_or(0),
+        None => {
+            // First run — base schema already applied, set version
+            sqlx::query("INSERT INTO schema_meta (key, value) VALUES ('schema_version', ?)")
+                .bind(CURRENT_SCHEMA_VERSION.to_string())
+                .execute(pool)
+                .await?;
+            return Ok(());
+        }
+    };
+
+    if version >= CURRENT_SCHEMA_VERSION {
+        return Ok(());
+    }
+
+    // Apply migrations sequentially
+    for v in version..CURRENT_SCHEMA_VERSION {
+        let idx = v as usize;
+        if idx < MIGRATIONS.len() && !MIGRATIONS[idx].is_empty() {
+            sqlx::raw_sql(MIGRATIONS[idx]).execute(pool).await?;
+        }
+    }
+
+    // Update stored version
+    sqlx::query("UPDATE schema_meta SET value = ? WHERE key = 'schema_version'")
+        .bind(CURRENT_SCHEMA_VERSION.to_string())
+        .execute(pool)
+        .await?;
+
+    Ok(())
+}
+
 pub async fn connect(data_dir: &Path) -> anyhow::Result<SqlitePool> {
     let db_path = data_dir.join("broadside.db");
     let db_str = db_path
@@ -87,6 +148,8 @@ pub async fn connect(data_dir: &Path) -> anyhow::Result<SqlitePool> {
     let pool = SqlitePool::connect_with(options).await?;
     // Ensure schema exists (CREATE TABLE IF NOT EXISTS is idempotent)
     sqlx::raw_sql(SCHEMA).execute(&pool).await?;
+    // Apply any pending migrations
+    ensure_migrations(&pool).await?;
     Ok(pool)
 }
 

@@ -1,0 +1,4 @@
+{"id":"019f77ad-04ea-70b3-8461-052e0fcae5b5","issue_id":"broadside-zzj3.4","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:00:55.530047631Z"}
+{"id":"019f77ad-04ef-7584-a510-2e5c720643b3","issue_id":"broadside-zzj3.4","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:00:55.535362343Z"}
+{"id":"019f77ad-04f4-7a6b-a03f-9b8470877fc8","issue_id":"broadside-zzj3.4","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-19T00:00:55.540683811Z"}
+{"id":"019f77ba-5d47-7983-b6e0-22093a6f577c","issue_id":"broadside-zzj3.4","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: fan_out errors now logged with tracing::error instead of silently dropped.","created_at":"2026-07-19T00:15:30.11962427Z"}

@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.58",
+  "title": "delivery_queue.status column is stringly-typed; no enforcement of valid values",
+  "description": "The delivery_queue table uses a TEXT status column with values 'pending', 'dead'. These strings are scattered across delivery.rs, server.rs, and cli.rs with no shared constant or enum. If a third status (e.g., 'held', 'skipped') is added, all query strings must be updated manually and there is no compile-time check. A pub enum DeliveryStatus { Pending, Dead } with Display/FromStr implementations and sqlx::Type would make the status column type-safe and eliminate the stringly-typed SQL literals. The same applies to relays.status ('pending', 'active', 'rejected').",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:02:45.068865695Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:30.007243714Z",
+  "closed_at": "2026-07-19T00:15:30.007243714Z",
+  "close_reason": "Accepted: ponytail comment in schema SQL.",
+  "labels": [
+    "review",
+    "idiomatic-rust"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.58",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:02:45.095245822Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

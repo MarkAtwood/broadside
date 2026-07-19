@@ -1,0 +1,4 @@
+{"id":"019f77ae-2d45-76ad-b684-116e321323f4","issue_id":"broadside-zzj3.42","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:02:11.397438314Z"}
+{"id":"019f77ae-2d48-7d94-ad3a-f1bb9b44a8d7","issue_id":"broadside-zzj3.42","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:02:11.400891285Z"}
+{"id":"019f77ae-2d4c-744b-b7bb-d0434faa5ed3","issue_id":"broadside-zzj3.42","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: elegance","created_at":"2026-07-19T00:02:11.404282112Z"}
+{"id":"019f77bb-a8e4-70d9-8112-33d1e8a0248a","issue_id":"broadside-zzj3.42","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Accepted: duplicate URL::parse in a tokio::spawn that runs once per Follow accept. Negligible.","created_at":"2026-07-19T00:16:55.012056315Z"}

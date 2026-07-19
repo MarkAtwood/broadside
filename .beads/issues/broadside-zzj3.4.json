@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.4",
+  "title": "fan_out errors silently swallowed in feed poller",
+  "description": "In feed.rs poll_feed(), the call to crate::delivery::fan_out(pool, \u0026id, \u0026persona_id).await? propagates errors correctly, but in run_poller the outer match only logs the error and continues looping — so a persistent DB error in fan_out will spam logs but never stop the poller or surface to the operator. More critically, if fan_out fails partway through (after inserting some delivery rows but before all), the inserted rows are orphaned with no retry signal and the operator has no way to know which posts were not fanned out without manual DB inspection.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:00:55.524318214Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:30.117365783Z",
+  "closed_at": "2026-07-19T00:15:30.117365783Z",
+  "close_reason": "Fixed: fan_out errors now logged with tracing::error instead of silently dropped.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.4",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:00:55.554905587Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

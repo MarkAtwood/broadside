@@ -1,0 +1,4 @@
+{"id":"019f77ad-c8b2-7820-a188-35ad62586bd8","issue_id":"broadside-zzj3.28","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:01:45.650533198Z"}
+{"id":"019f77ad-c8b6-7781-bc6b-995c11a07868","issue_id":"broadside-zzj3.28","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:01:45.654492269Z"}
+{"id":"019f77ad-c8ba-73c5-918d-aa25ed3bfde3","issue_id":"broadside-zzj3.28","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-19T00:01:45.658247627Z"}
+{"id":"019f77b5-e648-74d3-a1e4-4e21b3099e49","issue_id":"broadside-zzj3.28","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: blurhash failure now logged, empty blurhash omitted from AP attachment JSON.","created_at":"2026-07-19T00:10:37.512316934Z"}

@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.23",
+  "title": "actor document publicKey.owner check uses actor_uri not keyId actor",
+  "description": "In actor_cache.rs get_public_key(), the cache is keyed by actor_uri (the actor URL without the fragment). The code fetches actor_uri, extracts publicKey.owner, and checks owner == actor_uri. However, the keyId in the Signature header has its fragment stripped (key_id.split('#').next()) to produce actor_uri before the cache lookup. If a remote server hosts multiple actors and their key documents cross-reference each other (misconfiguration), the owner check uses the stripped actor URI, not the keyId that was originally requested, which could allow a key from actor A to be accepted as belonging to actor B if both share the same actor document URL base.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:01:36.116821916Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:10:37.155886779Z",
+  "closed_at": "2026-07-19T00:10:37.155886779Z",
+  "close_reason": "False positive: publicKey.owner check already compares against the fetched URL.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.23",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:01:36.143901528Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

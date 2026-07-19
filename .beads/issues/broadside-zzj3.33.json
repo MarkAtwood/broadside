@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.33",
+  "title": "serde_json::to_value(t).unwrap_or_default() in outbox and delivery drops tag serialization errors",
+  "description": "In server.rs (outbox handler, ~line 534) and delivery.rs (~line 206), tag_json is built with: tags.iter().map(|t| serde_json::to_value(t).unwrap_or_default()).collect(). If to_value() fails (e.g., a serializer bug), the tag silently becomes JSON null. The Note object then contains null entries in its tag array, which is invalid per ActivityPub. Since Tag derives Serialize and has no non-serializable fields, this cannot actually fail today — but the unwrap_or_default() pattern hides the invariant. The correct approach is to_value(t)? or .expect(\"Tag is always serializable\") with a comment explaining why.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:01:53.668112619Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:19.35137124Z",
+  "closed_at": "2026-07-19T00:15:19.35137124Z",
+  "close_reason": "Fixed: unwrap_or_default changed to expect() with infallibility note.",
+  "labels": [
+    "review",
+    "idiomatic-rust"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.33",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:01:53.695132458Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

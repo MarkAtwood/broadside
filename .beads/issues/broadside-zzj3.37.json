@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.37",
+  "title": "SSRF TOCTOU: DNS rebinding between host check and HTTP connect",
+  "description": "In actor_cache.rs:46-65, media.rs:54-66, and server.rs:851-914, the pattern is: (1) resolve hostname to check if private, (2) let reqwest make its own DNS lookup at connect time. These are two separate DNS queries with no guarantee of the same result. An attacker controlling a DNS server can return a public IP on the first query (passing is_private_host_resolved) and an internal IP (e.g. 10.0.0.1, 169.254.169.254) on the second (used for the actual TCP connection). The reqwest client has redirect-following disabled, which blocks redirect-based SSRF, but does not close this DNS rebinding window. Availability/Confidentiality: requests reach internal services.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:02:04.19326104Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:06:05.469802845Z",
+  "closed_at": "2026-07-19T00:06:05.469802845Z",
+  "close_reason": "Duplicate of broadside-zzj3.2 (same SSRF TOCTOU DNS rebinding finding).",
+  "labels": [
+    "review",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.37",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:02:04.22078191Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

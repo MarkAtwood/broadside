@@ -1,0 +1,4 @@
+{"id":"019f77ae-1126-73bc-94b6-6f487cbf91fc","issue_id":"broadside-zzj3.37","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:02:04.19824569Z"}
+{"id":"019f77ae-112b-708b-bbd9-2a0a1ae3736f","issue_id":"broadside-zzj3.37","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:02:04.203036783Z"}
+{"id":"019f77ae-112f-7b07-b024-77acf6d09627","issue_id":"broadside-zzj3.37","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: security","created_at":"2026-07-19T00:02:04.20772358Z"}
+{"id":"019f77b1-bfa4-76e9-887c-b7447acfdba6","issue_id":"broadside-zzj3.37","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Duplicate of broadside-zzj3.2 (same SSRF TOCTOU DNS rebinding finding).","created_at":"2026-07-19T00:06:05.476453662Z"}

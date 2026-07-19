@@ -26,7 +26,9 @@ async fn test_server() -> (String, tempfile::TempDir) {
     .await
     .unwrap();
 
-    // Find a free port
+    // ponytail: bind-drop-rebind has a theoretical port reuse race; acceptable in test code
+    // since CI retries cover the astronomically rare collision. Passing the listener directly
+    // would require refactoring AppState construction.
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let port = listener.local_addr().unwrap().port();
     drop(listener);

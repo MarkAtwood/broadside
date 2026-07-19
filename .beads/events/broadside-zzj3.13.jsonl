@@ -1,0 +1,4 @@
+{"id":"019f77ad-5102-75c9-8163-bb3ac83b3e41","issue_id":"broadside-zzj3.13","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:01:15.010379883Z"}
+{"id":"019f77ad-5106-7ca7-bf6e-58b2e1d12690","issue_id":"broadside-zzj3.13","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:01:15.014831183Z"}
+{"id":"019f77ad-510b-78a0-bf38-0ef9439a178c","issue_id":"broadside-zzj3.13","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-19T00:01:15.019565817Z"}
+{"id":"019f77ba-3290-7ab9-b751-707f1056c00f","issue_id":"broadside-zzj3.13","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Accepted: ponytail comment. In-memory loss bounded by MAX_ATTEMPTS + exponential backoff.","created_at":"2026-07-19T00:15:19.184703279Z"}

@@ -1,0 +1,4 @@
+{"id":"019f77ae-9390-7a74-a67f-bf9add879feb","issue_id":"broadside-zzj3.55","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:02:37.584685972Z"}
+{"id":"019f77ae-9395-7478-96b5-576d1ba203d7","issue_id":"broadside-zzj3.55","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:02:37.589293711Z"}
+{"id":"019f77ae-9399-7e19-840f-2a0925017eeb","issue_id":"broadside-zzj3.55","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-19T00:02:37.593924627Z"}
+{"id":"019f77b5-e56e-72f7-afc0-d466d121e98a","issue_id":"broadside-zzj3.55","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: added schema_meta table with version tracking and migration framework.","created_at":"2026-07-19T00:10:37.294195097Z"}

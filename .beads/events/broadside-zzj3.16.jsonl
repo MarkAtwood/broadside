@@ -1,0 +1,4 @@
+{"id":"019f77ad-6bc2-75bd-91d0-6345027f9a14","issue_id":"broadside-zzj3.16","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:01:21.858376681Z"}
+{"id":"019f77ad-6bc5-7c08-b120-c18e122b7774","issue_id":"broadside-zzj3.16","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:01:21.86178911Z"}
+{"id":"019f77ad-6bc9-79d6-91c9-6af599dcec79","issue_id":"broadside-zzj3.16","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-19T00:01:21.865645345Z"}
+{"id":"019f77ba-3177-743f-9502-e59a45985cf3","issue_id":"broadside-zzj3.16","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: outbox offset uses saturating arithmetic.","created_at":"2026-07-19T00:15:18.903278785Z"}

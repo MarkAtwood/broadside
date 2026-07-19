@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.5",
+  "title": "load_theme_css takes \u0026String not \u0026str",
+  "description": "theme::load_theme_css(path: \u0026str) is declared as taking \u0026str, which is correct, but the call sites in server.rs pass \u0026config.server.theme_tokens_path where theme_tokens_path is a String field. The parameter is fine, but the config struct uses String for path fields (theme_tokens_path, custom_css_path, bind, domain, data_dir) rather than PathBuf or \u0026str. Callers must own or clone these Strings to satisfy the fields, and serve() calls config.server.data_dir.clone() and config.server.domain.clone() multiple times to get owned copies for spawned tasks. If the struct held PathBuf for paths and the fields were borrowed at call sites, the clones would be eliminated. Per standards: take \u0026str not String in fn params, take \u0026Path not PathBuf.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:00:55.996083918Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:29.652735414Z",
+  "closed_at": "2026-07-19T00:15:29.652735414Z",
+  "close_reason": "Already correct: load_theme_css already takes \u0026str.",
+  "labels": [
+    "review",
+    "idiomatic-rust"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.5",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:00:56.024552535Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

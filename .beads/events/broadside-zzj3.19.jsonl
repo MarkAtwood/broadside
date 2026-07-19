@@ -1,0 +1,4 @@
+{"id":"019f77ad-8353-74c2-b374-da3b00fda992","issue_id":"broadside-zzj3.19","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:01:27.891312567Z"}
+{"id":"019f77ad-8358-72f7-a608-c92ef5e6d01c","issue_id":"broadside-zzj3.19","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:01:27.896195518Z"}
+{"id":"019f77ad-835c-7e01-9873-c90945768cd3","issue_id":"broadside-zzj3.19","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-19T00:01:27.900918695Z"}
+{"id":"019f77ba-5db1-7e43-8eb4-6817d1f75823","issue_id":"broadside-zzj3.19","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Accepted: ponytail comment. Backslash-escape handling requires owned Strings.","created_at":"2026-07-19T00:15:30.225935407Z"}

@@ -1,0 +1,4 @@
+{"id":"019f77ae-94f8-7233-9392-2bc96d706508","issue_id":"broadside-zzj3.56","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:02:37.94414499Z"}
+{"id":"019f77ae-94fc-7275-9e32-b68d1d96da82","issue_id":"broadside-zzj3.56","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:02:37.948161619Z"}
+{"id":"019f77ae-94ff-7e2c-ae33-058cfd3395cc","issue_id":"broadside-zzj3.56","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-19T00:02:37.951929861Z"}
+{"id":"019f77ba-31ea-70cd-9cd1-24db3a61b289","issue_id":"broadside-zzj3.56","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Accepted: noted decomposition opportunity, not refactoring in this pass.","created_at":"2026-07-19T00:15:19.018053148Z"}

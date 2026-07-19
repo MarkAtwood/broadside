@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.40",
+  "title": "to_string() on \u0026str / Cow\u003cstr\u003e allocates unnecessarily in watch.rs and elsewhere",
+  "description": "watch.rs line 101: file_path.to_string_lossy().to_string() — to_string_lossy() returns Cow\u003cstr\u003e; if the path is valid UTF-8 (almost always), this is a no-op borrow. .to_string() on a Cow\u003cstr\u003e unconditionally allocates a new String even when the Cow is already Borrowed. The idiomatic replacement is .into_owned() which avoids the copy when already owned, or just passing the Cow directly to functions that accept AsRef\u003cstr\u003e. Additionally, relay.rs uses .map(|h| h.to_string()) on host_str() results (lines 77-78, 151-152, 977-978 in server.rs) when the result is only needed as \u0026str for subsequent calls. These are systematic gratuitous allocations.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:02:08.521450912Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:30.339741689Z",
+  "closed_at": "2026-07-19T00:15:30.339741689Z",
+  "close_reason": "Accepted: ponytail comment. .to_string() calls feed into owned fields/collections.",
+  "labels": [
+    "review",
+    "idiomatic-rust"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.40",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:02:08.543480349Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

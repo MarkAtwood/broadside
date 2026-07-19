@@ -1,0 +1,4 @@
+{"id":"019f77ad-165b-7811-bee8-ed86536b98e9","issue_id":"broadside-zzj3.6","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:00:59.995529184Z"}
+{"id":"019f77ad-1660-7e85-b575-4c0ccdf0ac3d","issue_id":"broadside-zzj3.6","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:01:00.000952038Z"}
+{"id":"019f77ad-1666-7798-a1ce-9943c5fd63f2","issue_id":"broadside-zzj3.6","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: efficiency","created_at":"2026-07-19T00:01:00.006498426Z"}
+{"id":"019f77ba-5d7d-743c-b4b7-c96f714add0d","issue_id":"broadside-zzj3.6","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Accepted: ponytail comment. Called at each trust boundary, OS DNS cache amortizes.","created_at":"2026-07-19T00:15:30.173278167Z"}

@@ -1,0 +1,4 @@
+{"id":"019f77ad-78fb-7cf7-9f77-73f7bdf33033","issue_id":"broadside-zzj3.18","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:01:25.243850842Z"}
+{"id":"019f77ad-7900-7c33-a259-6a6c7979c875","issue_id":"broadside-zzj3.18","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:01:25.248800238Z"}
+{"id":"019f77ad-7905-7595-83d2-a152a7c448e3","issue_id":"broadside-zzj3.18","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: readability","created_at":"2026-07-19T00:01:25.253366637Z"}
+{"id":"019f77b1-c025-71be-ba42-02b261d56e44","issue_id":"broadside-zzj3.18","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Duplicate of broadside-zzj3.1 (same census sleep-before-first-ping finding).","created_at":"2026-07-19T00:06:05.605115022Z"}

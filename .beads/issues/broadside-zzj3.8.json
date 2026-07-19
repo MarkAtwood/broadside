@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.8",
+  "title": "relay.add() has no SSRF guard on relay actor URL",
+  "description": "In relay.rs add(), the relay_url is checked for the https:// prefix but is never checked against is_private_host_resolved(). An operator who runs 'broadside relay add https://192.168.1.x/actor' will trigger an outbound fetch to a private host. The Follow is also signed and sent to the inbox discovered from that document without host validation. This is operator-initiated (CLI), but it can be used to exfiltrate data or probe internal services from the server's network.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:01:02.89287187Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:10:36.942000246Z",
+  "closed_at": "2026-07-19T00:10:36.942000246Z",
+  "close_reason": "Fixed: relay.rs now validates both relay URL host and inbox_uri host against is_private_host_resolved().",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.8",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:01:02.914640746Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

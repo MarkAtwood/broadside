@@ -1,0 +1,4 @@
+{"id":"019f77ad-875c-7439-8ba7-825d014ca7c1","issue_id":"broadside-zzj3.20","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:01:28.924277515Z"}
+{"id":"019f77ad-8761-7198-a3d3-6ebecf300446","issue_id":"broadside-zzj3.20","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:01:28.929105474Z"}
+{"id":"019f77ad-8765-7a57-8a66-3b5bdd5621a5","issue_id":"broadside-zzj3.20","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-19T00:01:28.933678305Z"}
+{"id":"019f77ba-32fd-76c6-87d7-a4a9dedb54ae","issue_id":"broadside-zzj3.20","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"False positive: adjacent ranges (start == prev_end) are correctly kept by strict less-than.","created_at":"2026-07-19T00:15:19.293444718Z"}

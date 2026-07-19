@@ -1,0 +1,4 @@
+{"id":"019f77ad-bd21-780c-88e0-9a14482a9f0e","issue_id":"broadside-zzj3.26","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:01:42.689528342Z"}
+{"id":"019f77ad-bd26-7564-8d35-06b6cdd758f8","issue_id":"broadside-zzj3.26","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:01:42.694354023Z"}
+{"id":"019f77ad-bd2b-71d4-99b9-70f9b08c3ba6","issue_id":"broadside-zzj3.26","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-19T00:01:42.699120534Z"}
+{"id":"019f77b5-e5fe-7bb8-9db0-19a3ff46d599","issue_id":"broadside-zzj3.26","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Accepted risk: documented as ponytail ceiling. Single-operator deployment behind reverse proxy.","created_at":"2026-07-19T00:10:37.438768627Z"}

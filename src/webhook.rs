@@ -90,7 +90,7 @@ pub async fn handle_webhook(
 
     // Fetch and attach media (capped)
     let data_dir = std::path::Path::new(&state.data_dir);
-    let max_media = crate::media::max_media_per_post();
+    let max_media = crate::media::MAX_MEDIA;
     for media_item in payload.media.iter().take(max_media) {
         if let Err(e) = crate::media::process_remote(
             &state.pool,

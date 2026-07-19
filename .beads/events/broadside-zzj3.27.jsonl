@@ -1,0 +1,4 @@
+{"id":"019f77ad-bff9-7a65-bf13-4e9a0e8ee93d","issue_id":"broadside-zzj3.27","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:01:43.417682564Z"}
+{"id":"019f77ad-bffe-77af-ac23-8a803b12a106","issue_id":"broadside-zzj3.27","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:01:43.422504162Z"}
+{"id":"019f77ad-c003-71df-af2b-f01a59721c0e","issue_id":"broadside-zzj3.27","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: security","created_at":"2026-07-19T00:01:43.427123321Z"}
+{"id":"019f77b1-6721-74f7-989a-ed9c0a7daa08","issue_id":"broadside-zzj3.27","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Won't fix: operator accepts plaintext key storage. Single-operator server; DB file permissions are the access control boundary.","created_at":"2026-07-19T00:05:42.817326213Z"}

@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.53",
+  "title": "New RSA keypairs generated at 2048 bits",
+  "description": "persona.rs:12: RsaPrivateKey::new(\u0026mut OsRng, 2048). NIST SP 800-131A Rev. 2 (2019) projects RSA-2048 as acceptable through 2030 but recommends RSA-3072 or RSA-4096 for new key generation to provide longevity past that date. Keys generated now stay in use for the server's lifetime; if that extends past ~2030, the keys will be below current NIST recommended security levels. ActivityPub implementations (Mastodon, etc.) accept any size \u003e= 2048, so there is no interoperability barrier to using 4096. Integrity: long-lived keys become vulnerable to factoring advances before they are rotated.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:02:31.446618699Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:30.570866364Z",
+  "closed_at": "2026-07-19T00:15:30.570866364Z",
+  "close_reason": "Accepted: ponytail comment. 2048 matches Mastodon, 4096 marginal benefit.",
+  "labels": [
+    "review",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.53",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:02:31.467943217Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

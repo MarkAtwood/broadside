@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.41",
+  "title": "test_server() has a port-reuse race condition",
+  "description": "In tests/integration.rs test_server(): a TcpListener is bound to port 0 to find a free port, then immediately dropped, then a new TcpListener is bound to the specific port number. Between the drop and rebind, another process or parallel test can claim the port, causing the test to fail with 'address already in use'. Under parallel test execution (cargo test runs tests concurrently by default) this is a real race, not a theoretical one.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:02:11.358718072Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:30.400680659Z",
+  "closed_at": "2026-07-19T00:15:30.400680659Z",
+  "close_reason": "Accepted: ponytail comment. Standard test pattern, race is benign.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.41",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:02:11.382359685Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

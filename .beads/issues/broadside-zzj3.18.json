@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.18",
+  "title": "census loop sleeps BEFORE first ping, then indefinitely",
+  "description": "In server.rs the census background task does: sleep(7 days) → loop { ping; sleep(7 days) }. The first ping fires after 7 days. If the server is restarted weekly (e.g. for updates) the census ping never fires. The intent is clearly weekly pings; the structure should be: loop { ping; sleep(7 days) }. The pre-loop sleep is wrong control flow that makes the first ping unreachable under normal ops cadence.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:01:25.239225252Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:06:05.600726212Z",
+  "closed_at": "2026-07-19T00:06:05.600726212Z",
+  "close_reason": "Duplicate of broadside-zzj3.1 (same census sleep-before-first-ping finding).",
+  "labels": [
+    "review",
+    "readability"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.18",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:01:25.265850751Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

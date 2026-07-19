@@ -16,6 +16,18 @@ pub async fn add(
         bail!("relay URL must use https");
     }
 
+    // SSRF guard: reject relay URLs pointing to private/internal hosts
+    let relay_host = url::Url::parse(relay_url)
+        .ok()
+        .and_then(|u| u.host_str().map(|h| h.to_string()));
+    match relay_host {
+        Some(ref h) if crate::server::is_private_host_resolved(h).await => {
+            bail!("relay URL resolves to private/internal host");
+        }
+        None => bail!("relay URL has no valid host"),
+        _ => {}
+    }
+
     // Check if already subscribed
     let existing = sqlx::query_as::<_, (String,)>("SELECT status FROM relays WHERE actor_uri = ?")
         .bind(relay_url)
@@ -26,7 +38,7 @@ pub async fn add(
         bail!("relay already registered (status: {status})");
     }
 
-    // Fetch relay actor document to discover inbox
+    // ponytail: new Client per CLI invocation; CLI runs once and exits, no reuse benefit.
     let client = reqwest::Client::new();
     let resp = client
         .get(relay_url)
@@ -46,6 +58,18 @@ pub async fn add(
         .as_str()
         .context("relay actor has no inbox field")?
         .to_string();
+
+    // SSRF guard: reject inbox URIs pointing to private/internal hosts
+    let inbox_host = url::Url::parse(&inbox_uri)
+        .ok()
+        .and_then(|u| u.host_str().map(|h| h.to_string()));
+    match inbox_host {
+        Some(ref h) if crate::server::is_private_host_resolved(h).await => {
+            bail!("relay inbox URI resolves to private/internal host");
+        }
+        None => bail!("relay inbox URI has no valid host"),
+        _ => {}
+    }
 
     // Store the relay subscription
     let id = gen_id();

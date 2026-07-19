@@ -1,0 +1,4 @@
+{"id":"019f77ae-072a-74a3-b424-5bd65eeab04d","issue_id":"broadside-zzj3.36","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:02:01.642304439Z"}
+{"id":"019f77ae-072e-7dd5-8193-f049fa2459c6","issue_id":"broadside-zzj3.36","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:02:01.646906949Z"}
+{"id":"019f77ae-0733-77a7-8eee-6b45dbc20b1e","issue_id":"broadside-zzj3.36","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-19T00:02:01.651502072Z"}
+{"id":"019f77ba-9760-7b94-93c0-b11ff6476d79","issue_id":"broadside-zzj3.36","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Out of scope: doc comments are a project-wide initiative, not a review fix. Tracked separately if needed.","created_at":"2026-07-19T00:15:44.992759554Z"}

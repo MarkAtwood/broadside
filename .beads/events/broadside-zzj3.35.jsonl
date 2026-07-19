@@ -1,0 +1,4 @@
+{"id":"019f77ae-00c6-716f-87e4-65c009ab4a2d","issue_id":"broadside-zzj3.35","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:02:00.006094587Z"}
+{"id":"019f77ae-00ca-7a6c-82e3-670e810bcf95","issue_id":"broadside-zzj3.35","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:02:00.010683817Z"}
+{"id":"019f77ae-00cf-78e7-b6f0-4ebe1be0490d","issue_id":"broadside-zzj3.35","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-19T00:02:00.015584345Z"}
+{"id":"019f77b5-fef5-77e9-a5f2-d47cd49feb55","issue_id":"broadside-zzj3.35","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Already fixed: feed.rs lines 61-67 filter link URLs to http/https only before interpolation, and line 78 passes through sanitize_html. javascript: URLs are rejected.","created_at":"2026-07-19T00:10:43.829519577Z"}

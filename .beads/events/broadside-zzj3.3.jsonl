@@ -1,0 +1,4 @@
+{"id":"019f77ac-f9b8-748d-9aa6-57b7bad5897a","issue_id":"broadside-zzj3.3","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:00:52.664298828Z"}
+{"id":"019f77ac-f9bd-7dc8-ad97-82d2fb0e74cf","issue_id":"broadside-zzj3.3","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:00:52.669903806Z"}
+{"id":"019f77ac-f9c3-7506-b6a3-423d3135de58","issue_id":"broadside-zzj3.3","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: efficiency","created_at":"2026-07-19T00:00:52.675329709Z"}
+{"id":"019f77bb-a825-72fe-8bfe-eef4b6b835ed","issue_id":"broadside-zzj3.3","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Accepted: profile page DB queries are simple indexed lookups (\u003c1ms each). Combining would add complexity for negligible gain on a low-traffic endpoint.","created_at":"2026-07-19T00:16:54.821196659Z"}

@@ -1,0 +1,4 @@
+{"id":"019f77ae-8bd9-73cc-833a-c401eb082f4d","issue_id":"broadside-zzj3.54","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:02:35.609249917Z"}
+{"id":"019f77ae-8bde-7217-b170-ef52ccf9aab9","issue_id":"broadside-zzj3.54","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:02:35.614138495Z"}
+{"id":"019f77ae-8be2-7f3f-be1d-36f9d535a0c9","issue_id":"broadside-zzj3.54","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: elegance","created_at":"2026-07-19T00:02:35.61900017Z"}
+{"id":"019f77b1-c0a5-75e2-8894-945d0fc721c5","issue_id":"broadside-zzj3.54","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Duplicate of broadside-zzj3.7 (same security_headers .parse().unwrap() finding).","created_at":"2026-07-19T00:06:05.733386161Z"}

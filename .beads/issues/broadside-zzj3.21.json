@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.21",
+  "title": "relay.rs creates a new reqwest::Client per CLI invocation",
+  "description": "relay::add and relay::remove each call reqwest::Client::new() inline rather than accepting a client parameter or using the shared AppState client. This is only hit from the CLI so it has no runtime cost, but it is an inconsistency: every other outbound HTTP call uses a client with a 30s timeout and redirect::Policy::none() (SSRF defense). The relay CLI client inherits reqwest defaults: unlimited redirects and no timeout, meaning a malicious relay could hang the add command indefinitely or redirect to a private endpoint.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:01:31.941825446Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:30.279233586Z",
+  "closed_at": "2026-07-19T00:15:30.279233586Z",
+  "close_reason": "Accepted: ponytail comment. CLI runs once and exits.",
+  "labels": [
+    "review",
+    "efficiency"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.21",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:01:31.966079911Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

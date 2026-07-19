@@ -1,0 +1,4 @@
+{"id":"019f77ad-c967-7554-bcc1-b0623487383f","issue_id":"broadside-zzj3.29","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:01:45.831349871Z"}
+{"id":"019f77ad-c96c-7101-97ca-f78c398d8802","issue_id":"broadside-zzj3.29","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:01:45.836066186Z"}
+{"id":"019f77ad-c970-78b0-840c-9915ff9e77a0","issue_id":"broadside-zzj3.29","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: efficiency","created_at":"2026-07-19T00:01:45.840569971Z"}
+{"id":"019f77ba-97d9-7adc-af26-a8d3ac21ff41","issue_id":"broadside-zzj3.29","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Accepted: same pattern as zzj3.17/zzj3.40. Allocation per follower is dominated by delivery IO.","created_at":"2026-07-19T00:15:45.113712331Z"}

@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.35",
+  "title": "feed.rs link URL injected unsanitized into HTML before ammonia pass",
+  "description": "In feed.rs poll_feed(), a link URL from the feed is interpolated directly into a format string: format\\!(r#\"\u003cp\u003e\u003ca href=\"{url}\"\u003e{url}\u003c/a\u003e\u003c/p\u003e\"#) and then passed to sanitize::sanitize_html(). ammonia allows \u003ca href=...\u003e but does not sanitize the href value for URL injection. A feed whose entry links contain javascript: URLs (e.g. 'javascript:alert(1)') will have that URL both in the href and as the visible text after ammonia processes it, because ammonia 4.x strips unknown protocols only if configured to do so — and the SANITIZE_BUILDER in sanitize.rs only allowlists tag attributes, not URL schemes. The operator-controlled feed is trusted, but a compromised upstream feed will inject XSS into every follower's client that renders the post.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:02:00.001193291Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:10:43.82299732Z",
+  "closed_at": "2026-07-19T00:10:43.82299732Z",
+  "close_reason": "Already fixed: feed.rs lines 61-67 filter link URLs to http/https only before interpolation, and line 78 passes through sanitize_html. javascript: URLs are rejected.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.35",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:02:00.028472174Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

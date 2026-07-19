@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.2",
+  "title": "SSRF guard bypassed by TOCTOU between DNS check and HTTP fetch",
+  "description": "In server.rs handle_inbox (Follow handler), actor_cache.rs, media.rs, and relay.rs: the SSRF guard calls is_private_host_resolved() (which does a DNS lookup) and then later performs the actual HTTP request. A DNS rebinding attack can resolve to a public IP at check time and a private IP at fetch time. The reqwest client has no mechanism to bind the resolved address, so the check provides false confidence. Operators deploying on a host that also serves internal services are exposed. All four callers share this pattern.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:00:48.868279588Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:10:37.361733236Z",
+  "closed_at": "2026-07-19T00:10:37.361733236Z",
+  "close_reason": "Accepted risk: documented as ponytail ceiling. DNS rebinding TOCTOU requires custom resolver which reqwest doesn't support.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.2",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:00:48.899415801Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

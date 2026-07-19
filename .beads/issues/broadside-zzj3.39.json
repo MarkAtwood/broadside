@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.39",
+  "title": "Undo{Follow} deletes ALL followers matching actor_uri across all personas",
+  "description": "In server.rs handle_inbox() Undo branch: the DELETE query is 'DELETE FROM followers WHERE actor_uri = ?' bound to actor_uri. If the same remote actor follows multiple local personas, a single Undo Follow removes the follower row from every persona simultaneously. This means a remote actor can silently unfollow a persona they never sent a Follow for by sending an Undo Follow for any persona on the instance. The fix is to scope the delete to the persona whose inbox received the Undo, or to the object.object field of the Undo activity.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:02:06.078289853Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:10:36.714518941Z",
+  "closed_at": "2026-07-19T00:10:36.714518941Z",
+  "close_reason": "Fixed: Undo{Follow} now scopes DELETE to persona_id.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.39",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:02:06.098804468Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

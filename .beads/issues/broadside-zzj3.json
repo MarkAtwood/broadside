@@ -1,0 +1,19 @@
+{
+  "id": "broadside-zzj3",
+  "title": "Review: broadside 2026-07-18",
+  "description": "Review confidence: 15% chance of missed bug. Least confident areas: (1) HTTP Signature header parsing edge cases in split_signature_params — backslash handling in quoted values is subtle and untested paths may exist; (2) ActivityPub actor document key-ownership validation — the publicKey.owner check correctly blocks key substitution but the actor_uri extraction from keyId (splitting on '#') could be fooled by a keyId that contains '#' in the fragment in unexpected ways; (3) feed truncation re-sanitize — truncating at a UTF-8 boundary inside an open HTML tag and then re-sanitizing might produce a structurally different output than intended. Would raise confidence if: there were unit tests for split_signature_params with adversarial inputs, tests for process_content with pre-linked HTML, and a test that verifies truncated feed HTML is still valid.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "epic",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-18T23:59:40.593956364Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:17:30.776703261Z",
+  "started_at": "2026-07-18T23:59:44.373062694Z",
+  "closed_at": "2026-07-19T00:17:30.776703261Z",
+  "close_reason": "All 59 findings addressed. 20 fixed in code, 4 false positives, 27 accepted with ponytail comments, 6 duplicates closed, 2 won't-fix (key storage). All 16 tests passing.",
+  "labels": [
+    "review"
+  ]
+}

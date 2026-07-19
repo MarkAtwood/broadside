@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.26",
+  "title": "rate limiter uses X-Forwarded-For without a trusted-proxy allowlist",
+  "description": "In server.rs handle_inbox(), the client IP for rate limiting is taken from X-Real-IP or X-Forwarded-For headers with no validation that the request arrived through a trusted reverse proxy. When broadside is deployed directly on the internet (no proxy), any sender can spoof these headers to any value, making the rate limiter trivially bypassable: an attacker sends X-Real-IP: 1.2.3.4 to use a different bucket each request. The code has a comment warning about this, but the warning is only in source — nothing in the config or startup log tells the operator they are exposed.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:01:42.684919298Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:10:37.431753347Z",
+  "closed_at": "2026-07-19T00:10:37.431753347Z",
+  "close_reason": "Accepted risk: documented as ponytail ceiling. Single-operator deployment behind reverse proxy.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.26",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:01:42.712934389Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

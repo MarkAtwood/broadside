@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.7",
+  "title": "unwrap() on header value parses in security_headers middleware",
+  "description": "server.rs security_headers(): each .parse().unwrap() on the static string literals ('nosniff', 'DENY', 'same-origin', the CSP string, 'no-store') will panic if the literal is ever changed to contain non-ASCII or is replaced with a runtime value. The idiomatic fix is HeaderValue::from_static() for literals, which is const-checked and infallible. Using .parse().unwrap() on static strings is a latent panic risk and a clippy::unwrap_in_result concern, and hides the fact that these are const values.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:01:02.661420049Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:18.842977836Z",
+  "closed_at": "2026-07-19T00:15:18.842977836Z",
+  "close_reason": "Fixed: security_headers uses HeaderValue::from_static().",
+  "labels": [
+    "review",
+    "idiomatic-rust"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.7",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:01:02.693963101Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

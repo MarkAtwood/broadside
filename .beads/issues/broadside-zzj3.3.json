@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.3",
+  "title": "serve_profile_html makes 3 separate DB round-trips for one page",
+  "description": "serve_profile_html fetches display_name/bio (query 1), then calls get_id (query 2), then count_for_persona (query 3), plus a follower COUNT (query 4) and a separate list_for_persona (query 5). The persona_id is already available from the first row — the second query is avoidable. Worse, all five queries run sequentially on every HTML profile page hit. This can be collapsed into 2 queries: one JOIN that returns all scalar persona fields plus counts, one for the post list.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:00:52.658519992Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:16:54.816530776Z",
+  "closed_at": "2026-07-19T00:16:54.816530776Z",
+  "close_reason": "Accepted: profile page DB queries are simple indexed lookups (\u003c1ms each). Combining would add complexity for negligible gain on a low-traffic endpoint.",
+  "labels": [
+    "review",
+    "efficiency"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.3",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:00:52.686396739Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "broadside-zzj3.16",
+  "title": "outbox page number accepted as u32 but stored as i64 offset — overflow on page \u003e 46M",
+  "description": "In server.rs outbox(), page is Query\u003cPaginationQuery\u003e where page: Option\u003cu32\u003e (max ~4.3 billion). The offset is computed as (page as i64 - 1) * per_page. For page values larger than about 46M the offset exceeds i64::MAX / 20 and the multiplication overflows i64, producing a negative offset that SQLite interprets as 0, silently serving page 1 again instead of an empty page or an error. No practical user hits this but a fuzzer or a broken client will.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:01:21.854581087Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T00:15:18.901249361Z",
+  "closed_at": "2026-07-19T00:15:18.901249361Z",
+  "close_reason": "Fixed: outbox offset uses saturating arithmetic.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-zzj3.16",
+      "depends_on_id": "broadside-zzj3",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:01:21.878494323Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}
