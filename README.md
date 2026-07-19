@@ -142,11 +142,42 @@ Both paths are optional. Without them, broadside uses a clean default with autom
 
 ## Deployment
 
-### Docker
+### Docker (recommended)
 
 ```bash
 docker pull fallenpegasus/broadside:latest
-docker run -v broadside-data:/data -p 3000:3000 fallenpegasus/broadside
+docker run -d --name broadside \
+  -v broadside-data:/data \
+  -p 3000:3000 \
+  fallenpegasus/broadside
+```
+
+Initialize and create a persona:
+
+```bash
+docker exec broadside broadside init /data
+docker exec broadside broadside persona add announcements \
+  --display-name="ACME Announcements"
+```
+
+Images are published automatically on every release to [Docker Hub](https://hub.docker.com/r/fallenpegasus/broadside). Tags: `latest`, plus version numbers (e.g. `0.3.1`).
+
+### Docker Compose
+
+```yaml
+services:
+  broadside:
+    image: fallenpegasus/broadside:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - broadside-data:/data
+    environment:
+      - RUST_LOG=broadside=info
+
+volumes:
+  broadside-data:
 ```
 
 ### Requirements
