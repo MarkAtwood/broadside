@@ -1,0 +1,28 @@
+{
+  "id": "broadside-3mgw.3",
+  "title": "delivery: detect_quote_links called twice on the same processed_html",
+  "description": "In process_batch (delivery.rs), crate::content::detect_quote_links(\u0026processed_html) is called at line 218 to build tag_json, and again at line 245 to extract the first quote URL for the quoteUrl field. Both calls scan the same string with the same regex. The second call is redundant: the Vec returned by the first call already contains the data needed. The result of the first call should be reused.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:54:48.867838188Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T01:26:28.217563655Z",
+  "closed_at": "2026-07-19T01:26:28.217563655Z",
+  "close_reason": "Fixed: detect_quote_links called once, result reused.",
+  "labels": [
+    "review",
+    "idiomatic-rust"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3mgw.3",
+      "depends_on_id": "broadside-3mgw",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:54:48.89611031Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{"id":"019f77df-4b71-721d-ad0d-17bc2d7e1c92","issue_id":"broadside-3mgw.12","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:55:50.385139105Z"}
+{"id":"019f77df-4b76-79f2-be46-fc5285978fb1","issue_id":"broadside-3mgw.12","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:55:50.390653262Z"}
+{"id":"019f77df-4b7b-7866-8fa3-5a22d85577c8","issue_id":"broadside-3mgw.12","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: security","created_at":"2026-07-19T00:55:50.39555087Z"}
+{"id":"019f77f6-86dc-7bd3-b3e9-a2fb92416e0f","issue_id":"broadside-3mgw.12","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Duplicate of broadside-3mgw.16 (same file:// SSRF guard bypass).","created_at":"2026-07-19T01:21:12.924775543Z"}

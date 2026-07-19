@@ -1,0 +1,4 @@
+{"id":"019f77df-c23e-77d7-a601-23e160789bec","issue_id":"broadside-3mgw.17","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:56:20.798514481Z"}
+{"id":"019f77df-c243-725f-bcf2-783f606f135c","issue_id":"broadside-3mgw.17","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:56:20.803155919Z"}
+{"id":"019f77df-c248-705c-9585-befe17c46e1e","issue_id":"broadside-3mgw.17","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-19T00:56:20.808024076Z"}
+{"id":"019f77f6-8656-77c9-8629-3a19488e9a1b","issue_id":"broadside-3mgw.17","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Duplicate of broadside-3mgw.3 (same detect_quote_links called twice finding).","created_at":"2026-07-19T01:21:12.790511708Z"}

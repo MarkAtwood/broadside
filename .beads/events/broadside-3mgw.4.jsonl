@@ -1,0 +1,4 @@
+{"id":"019f77de-6da6-7b2e-94ac-aee5fb38b9cd","issue_id":"broadside-3mgw.4","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:54:53.606733813Z"}
+{"id":"019f77de-6dab-7b5b-9785-b3a6558dc7bc","issue_id":"broadside-3mgw.4","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:54:53.611745058Z"}
+{"id":"019f77de-6db0-7979-b4cd-6ed7ddebb10c","issue_id":"broadside-3mgw.4","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-19T00:54:53.616621648Z"}
+{"id":"019f77fb-56c3-7df5-9e72-60e0a53e518e","issue_id":"broadside-3mgw.4","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: card preview inserted via direct assignment, no JSON clone.","created_at":"2026-07-19T01:26:28.291915256Z"}

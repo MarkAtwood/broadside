@@ -1,0 +1,28 @@
+{
+  "id": "broadside-3mgw.20",
+  "title": "relay.rs: Undo Follow actor mismatch if persona differs between add and remove",
+  "description": "relay add stores only actor_uri, inbox_uri, and status — NOT which persona sent the Follow. relay remove builds the Undo Follow using whatever --persona is passed at remove time. If 'relay add --persona alice' is called but 'relay remove --persona bob' is called later, the Undo is signed by bob and references a follow_id containing alice's URI (https://domain/users/alice/relay-follow/ID). The remote relay will reject the Undo because the actor doesn't match the original Follow actor, leaving the relay still subscribed despite the local record being deleted. Fix: store the originating persona_id in the relays table and use it when constructing the Undo.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:56:40.436270737Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T01:26:19.736037698Z",
+  "closed_at": "2026-07-19T01:26:19.736037698Z",
+  "close_reason": "Fixed: relay persona stored in DB, used for Undo. Migration v2-\u003ev3.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3mgw.20",
+      "depends_on_id": "broadside-3mgw",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:56:40.467080648Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

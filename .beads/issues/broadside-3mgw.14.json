@@ -1,0 +1,28 @@
+{
+  "id": "broadside-3mgw.14",
+  "title": "card.rs: meta_tag_re misses reversed attribute order",
+  "description": "parse_og_meta uses meta_tag_re which requires property/name to appear BEFORE content in the \u003cmeta\u003e tag. Many CMS systems (WordPress via Yoast, some CDNs) emit tags with content first, e.g. \u003cmeta content=\"Title\" property=\"og:title\" /\u003e. These produce zero captures, silently returning an empty CardMeta. The card is then discarded (title.is_empty() check). Result: preview cards never fetched for a large fraction of real-world URLs. Fix: use two separate regexes or scan for each attribute independently.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:56:03.932037501Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T01:26:19.475249152Z",
+  "closed_at": "2026-07-19T01:26:19.475249152Z",
+  "close_reason": "Fixed: meta tag regex now matches reversed attribute order.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3mgw.14",
+      "depends_on_id": "broadside-3mgw",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:56:03.961757078Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

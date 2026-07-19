@@ -126,9 +126,9 @@ enum RelayCommand {
     Remove {
         /// Relay actor URL
         url: String,
-        /// Persona to send Undo from
+        /// Persona to send Undo from (defaults to persona stored at subscribe time)
         #[arg(long)]
-        persona: String,
+        persona: Option<String>,
     },
     /// List relay subscriptions
     List,
@@ -259,7 +259,10 @@ impl Cli {
 
                 // Fetch link preview card (best-effort, don't fail the post)
                 if let Some(url) = broadside::card::extract_first_url(&html) {
-                    let client = reqwest::Client::new();
+                    let client = reqwest::Client::builder()
+                        .redirect(reqwest::redirect::Policy::none())
+                        .timeout(std::time::Duration::from_secs(30))
+                        .build()?;
                     let config_path = self
                         .data_dir
                         .as_ref()
@@ -378,8 +381,13 @@ impl Cli {
                         broadside::relay::add(&pool, &url, &config.server.domain, &persona).await?;
                     }
                     RelayCommand::Remove { url, persona } => {
-                        broadside::relay::remove(&pool, &url, &config.server.domain, &persona)
-                            .await?;
+                        broadside::relay::remove(
+                            &pool,
+                            &url,
+                            &config.server.domain,
+                            persona.as_deref(),
+                        )
+                        .await?;
                     }
                     RelayCommand::List => {
                         broadside::relay::list(&pool).await?;

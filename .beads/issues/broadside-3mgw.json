@@ -1,0 +1,19 @@
+{
+  "id": "broadside-3mgw",
+  "title": "Review: broadside 2026-07-18 pass2",
+  "description": "Review confidence: 15% chance of missed bug.\nLeast confident areas: signatures.rs interaction with the new contentMap/quoteUrl fields (not reviewed this pass); feed.rs SSRF on enclosure URLs (process_remote is trusted but mime-type check allows extension-based bypass); db.rs migration sequencing for installs that had schema_meta from a prior version with different numbering.\nWould raise confidence if: integration test that exercises card fetch with reversed-attribute OG tags; test for detect_quote_links with an \u003ca\u003e-wrapped AP URL.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "epic",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:53:32.917897973Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T01:26:28.736964195Z",
+  "started_at": "2026-07-19T00:53:37.471298808Z",
+  "closed_at": "2026-07-19T01:26:28.736964195Z",
+  "close_reason": "All 22 findings addressed. 16 fixed, 3 duplicates, 2 accepted with ponytail, 1 already handled. All 16 tests passing.",
+  "labels": [
+    "review"
+  ]
+}

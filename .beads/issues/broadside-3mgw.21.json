@@ -1,0 +1,28 @@
+{
+  "id": "broadside-3mgw.21",
+  "title": "content.rs: detect_quote_links matches URLs inside existing \u003ca\u003e tags",
+  "description": "detect_quote_links runs QUOTE_RE.find_iter(html) on raw HTML without skipping content inside existing \u003ca\u003e...\u003c/a\u003e spans. A post that contains an anchor tag linking to an AP post URL (e.g. a linkified mention URL or a plain link the user didn't intend as a quote) will get a FEP-e232 Link tag and quoteUrl added to the Note, incorrectly marking the post as a quote of that content. process_content has explicit skip_ranges logic for this purpose but detect_quote_links does not use it. Fix: apply the same in_link check used in process_content, or pass quote detection results through process_content rather than re-scanning the final HTML.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:56:47.765033147Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T01:26:19.795747188Z",
+  "closed_at": "2026-07-19T01:26:19.795747188Z",
+  "close_reason": "Fixed: detect_quote_links skips URLs inside \u003ca\u003e tag spans.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3mgw.21",
+      "depends_on_id": "broadside-3mgw",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:56:47.794722077Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

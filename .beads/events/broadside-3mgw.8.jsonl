@@ -1,0 +1,4 @@
+{"id":"019f77de-b537-749a-b601-a62e175e7544","issue_id":"broadside-3mgw.8","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:55:11.927302101Z"}
+{"id":"019f77de-b53c-77b3-8a01-854a8cafd65a","issue_id":"broadside-3mgw.8","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:55:11.932505127Z"}
+{"id":"019f77de-b541-764d-9e05-fecbf7f28d7a","issue_id":"broadside-3mgw.8","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-19T00:55:11.937413495Z"}
+{"id":"019f77fb-583f-70e6-abf9-4beafe79facf","issue_id":"broadside-3mgw.8","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: HashSet\u003c\u0026str\u003e instead of HashSet\u003cString\u003e.","created_at":"2026-07-19T01:26:28.671059789Z"}

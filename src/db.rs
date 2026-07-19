@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS cards (
 "#;
 
 /// Current schema version. Bump this when adding migrations.
-const CURRENT_SCHEMA_VERSION: i64 = 2;
+const CURRENT_SCHEMA_VERSION: i64 = 3;
 
 /// Migrations to apply for each version bump. Index 0 = migration from version 0 to 1, etc.
 /// Version 0 is the initial schema (SCHEMA constant above).
@@ -113,6 +113,8 @@ const MIGRATIONS: &[&str] = &[
         card_type   TEXT NOT NULL DEFAULT 'link',
         fetched_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
     );",
+    // Version 2 -> 3: store persona used when subscribing to a relay
+    "ALTER TABLE relays ADD COLUMN persona TEXT NOT NULL DEFAULT '';",
 ];
 
 async fn ensure_migrations(pool: &SqlitePool) -> anyhow::Result<()> {
@@ -130,7 +132,9 @@ async fn ensure_migrations(pool: &SqlitePool) -> anyhow::Result<()> {
             .await?;
 
     let version: i64 = match row {
-        Some((v,)) => v.parse().unwrap_or(0),
+        Some((v,)) => v
+            .parse()
+            .map_err(|e| anyhow::anyhow!("corrupt schema_version '{}': {}", v, e))?,
         None => {
             // First run — base schema already applied, set version
             sqlx::query("INSERT INTO schema_meta (key, value) VALUES ('schema_version', ?)")

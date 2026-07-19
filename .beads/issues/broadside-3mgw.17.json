@@ -1,0 +1,28 @@
+{
+  "id": "broadside-3mgw.17",
+  "title": "delivery.rs: detect_quote_links called twice on same content",
+  "description": "In process_batch (delivery.rs), detect_quote_links(\u0026processed_html) is called at line 218 to populate tag_json, then called again at line 245 to extract quoteUrl. The second call re-runs the regex on the full HTML. These two calls should be merged: call once, store result, use it for both tag_json extension and quoteUrl extraction. As written, any CPU cost or future side-effects of the function are doubled per delivery item.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:56:20.793407025Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T01:21:12.720980451Z",
+  "closed_at": "2026-07-19T01:21:12.720980451Z",
+  "close_reason": "Duplicate of broadside-3mgw.3 (same detect_quote_links called twice finding).",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3mgw.17",
+      "depends_on_id": "broadside-3mgw",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:56:20.824197606Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

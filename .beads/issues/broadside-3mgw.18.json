@@ -1,0 +1,28 @@
+{
+  "id": "broadside-3mgw.18",
+  "title": "delivery.rs: contentMap serializes as null when language undetected",
+  "description": "In process_batch, 'contentMap': detected_lang.map(|l| json!({l: html})) produces 'contentMap': null in the JSON output when detect_language returns None. The ActivityPub spec (AS2) defines contentMap as a Language-Value map; null is not a valid value and may cause parsing errors or unexpected behavior in receiving implementations that expect an object. The field should be omitted entirely when no language is detected. Fix: conditionally insert contentMap into the object only when detected_lang is Some.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:56:26.438227408Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T01:26:19.603954588Z",
+  "closed_at": "2026-07-19T01:26:19.603954588Z",
+  "close_reason": "Fixed: contentMap only emitted when language detected, absent otherwise.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3mgw.18",
+      "depends_on_id": "broadside-3mgw",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:56:26.46783237Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

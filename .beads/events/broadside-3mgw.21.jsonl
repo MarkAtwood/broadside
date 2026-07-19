@@ -1,0 +1,4 @@
+{"id":"019f77e0-2b9a-7368-a05e-c0707352bca6","issue_id":"broadside-3mgw.21","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:56:47.770223947Z"}
+{"id":"019f77e0-2b9e-7d24-84f0-0112e20415f3","issue_id":"broadside-3mgw.21","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:56:47.774861845Z"}
+{"id":"019f77e0-2ba3-7bb7-b4fc-919fa1033a10","issue_id":"broadside-3mgw.21","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-19T00:56:47.77976826Z"}
+{"id":"019f77fb-3597-7dad-821d-3cf5a504363e","issue_id":"broadside-3mgw.21","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: detect_quote_links skips URLs inside \u003ca\u003e tag spans.","created_at":"2026-07-19T01:26:19.799896898Z"}

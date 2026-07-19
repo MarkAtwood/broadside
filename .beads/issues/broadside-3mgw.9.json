@@ -1,0 +1,28 @@
+{
+  "id": "broadside-3mgw.9",
+  "title": "db: corrupt schema version silently treated as 0, re-running all migrations",
+  "description": "In ensure_migrations, the stored schema version string is parsed with v.parse().unwrap_or(0). If the value in the database is corrupted or non-numeric, this silently falls back to version 0 and re-applies all migrations from the beginning. For migrations that use CREATE TABLE IF NOT EXISTS this is harmless now, but any future destructive migration (ALTER TABLE, DROP COLUMN) would execute incorrectly. The parse should return an error rather than swallowing corruption.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:55:17.357059745Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T01:26:19.86089146Z",
+  "closed_at": "2026-07-19T01:26:19.86089146Z",
+  "close_reason": "Fixed: corrupt schema version now returns error instead of unwrap_or(0).",
+  "labels": [
+    "review",
+    "idiomatic-rust"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3mgw.9",
+      "depends_on_id": "broadside-3mgw",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:55:17.387879092Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

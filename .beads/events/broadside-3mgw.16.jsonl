@@ -1,0 +1,4 @@
+{"id":"019f77df-ad33-7d8e-b6a0-5c3501b6635e","issue_id":"broadside-3mgw.16","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:56:15.411889136Z"}
+{"id":"019f77df-ad38-7d0b-b5c1-9914baa5232f","issue_id":"broadside-3mgw.16","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:56:15.416855752Z"}
+{"id":"019f77df-ad3d-7a75-88f7-a17e3dc522d2","issue_id":"broadside-3mgw.16","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-19T00:56:15.421686249Z"}
+{"id":"019f77fb-3351-7941-9762-618a38864758","issue_id":"broadside-3mgw.16","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: fetch_card_image rejects non-https:// image URLs.","created_at":"2026-07-19T01:26:19.217607185Z"}

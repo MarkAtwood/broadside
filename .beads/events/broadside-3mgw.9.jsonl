@@ -1,0 +1,4 @@
+{"id":"019f77de-ca72-75e6-8573-a6d616533512","issue_id":"broadside-3mgw.9","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:55:17.362387245Z"}
+{"id":"019f77de-ca77-7473-a712-62abfc2e10b8","issue_id":"broadside-3mgw.9","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:55:17.367292258Z"}
+{"id":"019f77de-ca7c-719f-8ede-30e27be8c7bc","issue_id":"broadside-3mgw.9","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-19T00:55:17.372107085Z"}
+{"id":"019f77fb-35d9-7200-9928-d01b763bc343","issue_id":"broadside-3mgw.9","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: corrupt schema version now returns error instead of unwrap_or(0).","created_at":"2026-07-19T01:26:19.865131688Z"}

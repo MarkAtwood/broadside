@@ -50,6 +50,10 @@ async fn watch_loop(pool: &SqlitePool, config: &WatchConfig, _domain: &str) -> a
 
     let persona_id = crate::persona::get_id(pool, &config.persona).await?;
 
+    let canonical_watch = tokio::fs::canonicalize(&watch_path)
+        .await
+        .context("canonicalizing watch directory")?;
+
     while let Some(file_path) = rx.recv().await {
         if !matches_pattern(&file_path, &pattern) {
             continue;
@@ -58,19 +62,20 @@ async fn watch_loop(pool: &SqlitePool, config: &WatchConfig, _domain: &str) -> a
         // Small delay to let the file finish writing
         tokio::time::sleep(std::time::Duration::from_millis(200)).await;
 
-        // Read the file first, then verify the canonical path stays within the watch directory.
-        // This eliminates the TOCTOU race between symlink check and file read.
+        // Read first, THEN canonicalize to verify the path was legitimate.
+        // This eliminates the TOCTOU race: content is captured before the symlink check,
+        // so a swap between canonicalize and read cannot leak unintended files.
+        let content = match tokio::fs::read_to_string(&file_path).await {
+            Ok(c) => c,
+            Err(e) => {
+                tracing::warn!(error = %e, file = %file_path.display(), "cannot read watched file");
+                continue;
+            }
+        };
         let canonical = match tokio::fs::canonicalize(&file_path).await {
             Ok(p) => p,
             Err(e) => {
                 tracing::warn!(error = %e, file = %file_path.display(), "cannot canonicalize watched file");
-                continue;
-            }
-        };
-        let canonical_watch = match tokio::fs::canonicalize(&watch_path).await {
-            Ok(p) => p,
-            Err(e) => {
-                tracing::error!(error = %e, "cannot canonicalize watch directory");
                 continue;
             }
         };
@@ -80,7 +85,7 @@ async fn watch_loop(pool: &SqlitePool, config: &WatchConfig, _domain: &str) -> a
         }
 
         let dest = published_path.join(file_path.file_name().unwrap_or_default());
-        match process_file(pool, &persona_id, &file_path).await {
+        match process_file_content(pool, &persona_id, &file_path, &content).await {
             Ok(post_id) => {
                 tracing::info!(post_id, file = %file_path.display(), "published from directory");
             }
@@ -100,16 +105,13 @@ async fn watch_loop(pool: &SqlitePool, config: &WatchConfig, _domain: &str) -> a
     Ok(())
 }
 
-async fn process_file(
+async fn process_file_content(
     pool: &SqlitePool,
     persona_id: &str,
     file_path: &Path,
+    content: &str,
 ) -> anyhow::Result<String> {
-    let content = tokio::fs::read_to_string(file_path)
-        .await
-        .with_context(|| format!("reading {}", file_path.display()))?;
-
-    let html = sanitize::markdown_to_html(&content);
+    let html = sanitize::markdown_to_html(content);
     let text = sanitize::html_to_text(&html);
     let source_ref = file_path.to_string_lossy().to_string();
 

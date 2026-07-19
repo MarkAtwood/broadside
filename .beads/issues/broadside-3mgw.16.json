@@ -1,0 +1,28 @@
+{
+  "id": "broadside-3mgw.16",
+  "title": "card.rs: image_url not checked for https scheme before fetch",
+  "description": "fetch_card_image calls url::Url::parse(image_url) and checks is_private_host_resolved but does NOT verify the scheme is https://. An OG tag with content=\"http://...\" will be fetched over plaintext. More critically, content=\"file:///etc/passwd\" parses successfully, has no host, so parsed.host_str() returns None and the SSRF guard is skipped entirely before client.get(image_url) is called (reqwest rejects file:// but the guard is still bypassed). Also, is_private_host_resolved uses port 443 for DNS lookup; an http:// URL to an internal host on port 80 still resolves to a private IP but the guard is conceptually mismatched. Fix: reject image_url unless it starts with https://.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:56:15.406114458Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T01:26:19.211328001Z",
+  "closed_at": "2026-07-19T01:26:19.211328001Z",
+  "close_reason": "Fixed: fetch_card_image rejects non-https:// image URLs.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3mgw.16",
+      "depends_on_id": "broadside-3mgw",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:56:15.435862802Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

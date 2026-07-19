@@ -1,0 +1,28 @@
+{
+  "id": "broadside-3mgw.15",
+  "title": "card.rs: meta_tag_re misses single-quoted attributes",
+  "description": "meta_tag_re matches only double-quoted attribute values (uses \" in the pattern). HTML allows single-quoted attributes: \u003cmeta property='og:title' content='Hello'\u003e. These produce no captures. Result: same silent miss as the attribute-order bug — preview cards not fetched for sites that use single-quote HTML syntax. Fix: add alternation for single-quoted values in the regex.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:56:09.324050545Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T01:26:19.536646945Z",
+  "closed_at": "2026-07-19T01:26:19.536646945Z",
+  "close_reason": "Fixed: meta tag regex accepts single-quoted attributes.",
+  "labels": [
+    "review",
+    "correctness"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3mgw.15",
+      "depends_on_id": "broadside-3mgw",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:56:09.352650551Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

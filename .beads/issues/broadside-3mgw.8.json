@@ -1,0 +1,28 @@
+{
+  "id": "broadside-3mgw.8",
+  "title": "content: detect_quote_links allocates String for HashSet dedup when \u0026str suffices",
+  "description": "In detect_quote_links, seen is HashSet\u003cString\u003e and each match is inserted as url.to_string() (line 160). url is a \u0026str with lifetime tied to the html parameter, which is borrowed for the full duration of the function. The set could be HashSet\u003c\u0026str\u003e, avoiding one String allocation per unique URL seen.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:55:11.922198122Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T01:26:28.666921663Z",
+  "closed_at": "2026-07-19T01:26:28.666921663Z",
+  "close_reason": "Fixed: HashSet\u003c\u0026str\u003e instead of HashSet\u003cString\u003e.",
+  "labels": [
+    "review",
+    "idiomatic-rust"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3mgw.8",
+      "depends_on_id": "broadside-3mgw",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:55:11.95130414Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

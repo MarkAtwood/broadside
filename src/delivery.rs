@@ -160,6 +160,8 @@ async fn process_batch(
 
     let mut processed = 0u32;
     // Cache per-post data: (serialized_body, private_key, actor_uri)
+    // ponytail: body is .clone()'d per inbox send. Bodies are typically <10KB JSON;
+    // memcpy cost is negligible vs the HTTP roundtrip (~100ms+). Upgrade path: Arc<Vec<u8>>.
     let mut post_cache: HashMap<String, (Vec<u8>, String, String)> = HashMap::new();
 
     for (delivery_id, post_id, inbox_uri, attempts) in rows {
@@ -215,7 +217,8 @@ async fn process_batch(
                 .map(|t| serde_json::to_value(t).expect("Tag serialization is infallible"))
                 .collect();
             // FEP-e232: add Link tags for any quoted AP post URLs
-            tag_json.extend(crate::content::detect_quote_links(&processed_html));
+            let quote_links = crate::content::detect_quote_links(&processed_html);
+            tag_json.extend(quote_links.iter().cloned());
             let attachments = crate::media::attachments_for_post(pool, &post_id, domain).await;
             let card = crate::card::get_card_for_post(pool, &post_id, domain).await;
 
@@ -237,12 +240,15 @@ async fn process_batch(
                     "cc": [format!("{actor_uri}/followers")],
                     "tag": tag_json,
                     "attachment": attachments,
-                    "contentMap": detected_lang.map(|l| serde_json::json!({l: &processed_html})),
                 }
             });
 
+            // Only include contentMap when language was detected (avoid null field)
+            if let Some(lang) = detected_lang {
+                activity["object"]["contentMap"] = serde_json::json!({lang: &processed_html});
+            }
+
             // FEP-e232: add quoteUrl for Misskey/Pleroma compat
-            let quote_links = crate::content::detect_quote_links(&processed_html);
             if let Some(first_quote) = quote_links.first() {
                 if let Some(href) = first_quote["href"].as_str() {
                     activity["object"]["quoteUrl"] = serde_json::Value::String(href.to_string());
@@ -251,14 +257,7 @@ async fn process_batch(
 
             // Add card as preview link if available
             if let Some(card_val) = card {
-                if let Some(obj) = activity["object"].as_object().cloned() {
-                    let mut obj = obj;
-                    obj.insert("preview".to_string(), card_val);
-                    activity
-                        .as_object_mut()
-                        .unwrap()
-                        .insert("object".to_string(), serde_json::Value::Object(obj));
-                }
+                activity["object"]["preview"] = card_val;
             }
 
             let body = serde_json::to_vec(&activity)?;

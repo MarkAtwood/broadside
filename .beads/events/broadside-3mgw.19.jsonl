@@ -1,0 +1,4 @@
+{"id":"019f77df-f2b8-7c94-832f-76d28933f2f2","issue_id":"broadside-3mgw.19","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:56:33.20882533Z"}
+{"id":"019f77df-f2bd-7dd7-94a5-36ed2142cc58","issue_id":"broadside-3mgw.19","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:56:33.213907865Z"}
+{"id":"019f77df-f2c2-7ba9-8fe4-e55c8c0b15d5","issue_id":"broadside-3mgw.19","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-19T00:56:33.218765073Z"}
+{"id":"019f77fb-351a-7d75-932d-9372358e5b9a","issue_id":"broadside-3mgw.19","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: watch.rs reads first, then canonicalizes to verify path.","created_at":"2026-07-19T01:26:19.674882574Z"}

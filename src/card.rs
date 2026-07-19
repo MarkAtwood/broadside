@@ -35,10 +35,21 @@ pub fn parse_og_meta(html: &[u8], url: &str) -> CardMeta {
     };
 
     // Simple meta tag scanner — no full DOM parse needed
-    for cap in meta_tag_re().captures_iter(&text) {
+    let regexes = meta_tag_regexes();
+    // Collect matches from both orderings: property-first and content-first
+    let mut matches: Vec<(&str, &str)> = Vec::new();
+    for cap in regexes[0].captures_iter(&text) {
         let property = cap.get(1).map(|m| m.as_str()).unwrap_or("");
         let content = cap.get(2).map(|m| m.as_str()).unwrap_or("");
-
+        matches.push((property, content));
+    }
+    for cap in regexes[1].captures_iter(&text) {
+        // Reversed: content is group 1, property/name is group 2
+        let content = cap.get(1).map(|m| m.as_str()).unwrap_or("");
+        let property = cap.get(2).map(|m| m.as_str()).unwrap_or("");
+        matches.push((property, content));
+    }
+    for (property, content) in matches {
         match property {
             "og:title" | "twitter:title" => {
                 if meta.title.is_empty() {
@@ -84,14 +95,20 @@ pub fn parse_og_meta(html: &[u8], url: &str) -> CardMeta {
     meta
 }
 
-fn meta_tag_re() -> &'static regex::Regex {
-    static RE: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
-        regex::Regex::new(
-            r#"(?i)<meta\s[^>]*(?:property|name)\s*=\s*"([^"]+)"[^>]*content\s*=\s*"([^"]*)"[^>]*/?\s*>"#,
-        )
-        .unwrap()
+fn meta_tag_regexes() -> &'static [regex::Regex; 2] {
+    static RES: std::sync::LazyLock<[regex::Regex; 2]> = std::sync::LazyLock::new(|| {
+        [
+            // property/name before content
+            regex::Regex::new(
+                r#"(?i)<meta\s[^>]*(?:property|name)\s*=\s*["']([^"']+)["'][^>]*content\s*=\s*["']([^"']*)["'][^>]*/?\s*>"#,
+            ).unwrap(),
+            // content before property/name (reversed order)
+            regex::Regex::new(
+                r#"(?i)<meta\s[^>]*content\s*=\s*["']([^"']*)["'][^>]*(?:property|name)\s*=\s*["']([^"']+)["'][^>]*/?\s*>"#,
+            ).unwrap(),
+        ]
     });
-    &RE
+    &RES
 }
 
 fn title_re() -> &'static regex::Regex {
@@ -152,7 +169,9 @@ pub async fn fetch_and_store(
 
     // Download and cache the preview image if present
     let image_path = if !meta.image_url.is_empty() {
-        fetch_card_image(client, &meta.image_url, data_dir, domain).await
+        fetch_card_image(client, &meta.image_url, data_dir, domain)
+            .await
+            .unwrap_or_default()
     } else {
         String::new()
     };
@@ -179,13 +198,18 @@ pub async fn fetch_and_store(
     Ok(())
 }
 
-/// Download and resize a card preview image. Returns the stored file path (relative to data_dir/media).
+/// Download and resize a card preview image. Returns the stored file path (relative to data_dir/media),
+/// or None on failure.
 async fn fetch_card_image(
     client: &reqwest::Client,
     image_url: &str,
     data_dir: &Path,
     domain: &str,
-) -> String {
+) -> Option<String> {
+    if !image_url.starts_with("https://") {
+        return None;
+    }
+
     let result = async {
         let parsed = url::Url::parse(image_url)?;
         if let Some(host) = parsed.host_str() {
@@ -226,10 +250,10 @@ async fn fetch_card_image(
     .await;
 
     match result {
-        Ok(path) => path,
+        Ok(path) => Some(path),
         Err(e) => {
             tracing::debug!(image_url, error = %e, "card image fetch failed");
-            String::new()
+            None
         }
     }
 }
@@ -274,6 +298,8 @@ pub async fn get_card_for_post(
 
 /// Spawn a background task to fetch the link preview card for a post.
 /// Extracts the first URL from `content_html` and fetches its OG metadata.
+// ponytail: owned Strings are required here — spawned tasks need 'static ownership,
+// so callers must clone into these parameters. No way around it with tokio::spawn.
 pub fn spawn_fetch(
     pool: SqlitePool,
     post_id: String,

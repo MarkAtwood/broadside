@@ -1,0 +1,4 @@
+{"id":"019f77df-60c5-7c4b-9376-63f8aa94984d","issue_id":"broadside-3mgw.13","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:55:55.845806464Z"}
+{"id":"019f77df-60cb-7022-889b-3106a47ba01e","issue_id":"broadside-3mgw.13","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:55:55.851013267Z"}
+{"id":"019f77df-60cf-7ad3-9739-c94dc7df6338","issue_id":"broadside-3mgw.13","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: security","created_at":"2026-07-19T00:55:55.855709937Z"}
+{"id":"019f77fb-3416-7838-bc0a-145c99fb0044","issue_id":"broadside-3mgw.13","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: cli.rs card fetch uses no-redirect client.","created_at":"2026-07-19T01:26:19.414539393Z"}

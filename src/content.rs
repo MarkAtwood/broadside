@@ -145,6 +145,7 @@ pub fn process_content(html: &str, domain: &str) -> (String, Vec<Tag>) {
 
 /// Detect FEP-e232 quote post URLs (ActivityPub post URLs) in HTML content.
 /// Returns Link tag objects suitable for the Note's `tag` array.
+/// Excludes URLs that appear inside `<a>` tags (those are regular links, not quotes).
 pub fn detect_quote_links(html: &str) -> Vec<serde_json::Value> {
     // Match typical AP post URLs: https://domain/users/username/statuses/id
     // Also matches: https://domain/@user/id (Mastodon shortform)
@@ -153,11 +154,25 @@ pub fn detect_quote_links(html: &str) -> Vec<serde_json::Value> {
             .expect("quote URL regex")
     });
 
+    // Build skip ranges for existing <a> tags
+    let skip_ranges: Vec<(usize, usize)> = LINK_RE
+        .find_iter(html)
+        .map(|m| (m.start(), m.end()))
+        .collect();
+
+    let in_link = |pos: usize| -> bool {
+        let idx = skip_ranges.partition_point(|(start, _)| *start <= pos);
+        idx > 0 && pos < skip_ranges[idx - 1].1
+    };
+
     let mut links = Vec::new();
-    let mut seen = std::collections::HashSet::new();
+    let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
     for m in QUOTE_RE.find_iter(html) {
+        if in_link(m.start()) {
+            continue;
+        }
         let url = m.as_str();
-        if seen.insert(url.to_string()) {
+        if seen.insert(url) {
             links.push(serde_json::json!({
                 "type": "Link",
                 "href": url,

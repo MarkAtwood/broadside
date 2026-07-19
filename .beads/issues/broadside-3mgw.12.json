@@ -1,0 +1,28 @@
+{
+  "id": "broadside-3mgw.12",
+  "title": "file:// and other schemeless URLs in og:image bypass SSRF guard silently",
+  "description": "In fetch_card_image() (card.rs line 191), the SSRF guard checks parsed.host_str(). For file:// URLs (e.g., file:///etc/passwd), host_str() returns None, so the guard body is never executed and the URL is passed directly to reqwest::get(). Reqwest rejects file:// at the transport layer so no file is actually read, but the guard's failure-mode is silent skip rather than explicit rejection. Any URL scheme that parses successfully but has no host (file://, data:, custom schemes) silently bypasses the guard. If reqwest is extended or a future code path changes the HTTP client, this silent bypass becomes a live vulnerability. The guard should explicitly require the https scheme before checking the host.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:55:50.38001129Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T01:21:12.920579556Z",
+  "closed_at": "2026-07-19T01:21:12.920579556Z",
+  "close_reason": "Duplicate of broadside-3mgw.16 (same file:// SSRF guard bypass).",
+  "labels": [
+    "review",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3mgw.12",
+      "depends_on_id": "broadside-3mgw",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:55:50.410268719Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

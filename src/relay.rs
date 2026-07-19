@@ -39,7 +39,10 @@ pub async fn add(
     }
 
     // ponytail: new Client per CLI invocation; CLI runs once and exits, no reuse benefit.
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .timeout(std::time::Duration::from_secs(30))
+        .build()?;
     let resp = client
         .get(relay_url)
         .header("Accept", "application/activity+json")
@@ -59,6 +62,10 @@ pub async fn add(
         .context("relay actor has no inbox field")?
         .to_string();
 
+    if !inbox_uri.starts_with("https://") {
+        bail!("relay inbox must be https");
+    }
+
     // SSRF guard: reject inbox URIs pointing to private/internal hosts
     let inbox_host = url::Url::parse(&inbox_uri)
         .ok()
@@ -71,14 +78,15 @@ pub async fn add(
         _ => {}
     }
 
-    // Store the relay subscription
+    // Store the relay subscription (including persona used for signing)
     let id = gen_id();
     sqlx::query(
-        "INSERT INTO relays (id, actor_uri, inbox_uri, status) VALUES (?, ?, ?, 'pending')",
+        "INSERT INTO relays (id, actor_uri, inbox_uri, status, persona) VALUES (?, ?, ?, 'pending', ?)",
     )
     .bind(&id)
     .bind(relay_url)
     .bind(&inbox_uri)
+    .bind(persona)
     .execute(pool)
     .await
     .context("storing relay subscription")?;
@@ -97,11 +105,14 @@ pub async fn add(
     let body_bytes = serde_json::to_vec(&activity)?;
     let private_key = crate::persona::get_private_key(pool, persona).await?;
     let key_id = format!("{actor_uri}#main-key");
-    let inbox_domain = url::Url::parse(&inbox_uri)
+    let parsed_inbox = url::Url::parse(&inbox_uri);
+    let inbox_domain = parsed_inbox
+        .as_ref()
         .ok()
         .and_then(|u| u.host_str().map(|h| h.to_string()))
         .unwrap_or_default();
-    let inbox_path = url::Url::parse(&inbox_uri)
+    let inbox_path = parsed_inbox
+        .as_ref()
         .map(|u| u.path().to_string())
         .unwrap_or_else(|_| "/inbox".to_string());
 
@@ -135,22 +146,29 @@ pub async fn add(
 }
 
 /// Remove a relay subscription. Sends Undo{Follow} and deletes the record.
+/// Uses the persona stored at subscription time; falls back to `persona_override` if provided.
 pub async fn remove(
     pool: &SqlitePool,
     relay_url: &str,
     domain: &str,
-    persona: &str,
+    persona_override: Option<&str>,
 ) -> anyhow::Result<()> {
-    let row = sqlx::query_as::<_, (String, String)>(
-        "SELECT id, inbox_uri FROM relays WHERE actor_uri = ?",
+    let row = sqlx::query_as::<_, (String, String, String)>(
+        "SELECT id, inbox_uri, persona FROM relays WHERE actor_uri = ?",
     )
     .bind(relay_url)
     .fetch_optional(pool)
     .await?;
 
-    let (relay_id, inbox_uri) = match row {
+    let (relay_id, inbox_uri, stored_persona) = match row {
         Some(r) => r,
         None => bail!("relay not found: {relay_url}"),
+    };
+
+    let persona = match persona_override {
+        Some(p) => p.to_string(),
+        None if !stored_persona.is_empty() => stored_persona,
+        _ => bail!("no persona stored for this relay; pass --persona explicitly"),
     };
 
     // Send Undo{Follow} to the relay
@@ -170,13 +188,16 @@ pub async fn remove(
     });
 
     let body_bytes = serde_json::to_vec(&activity)?;
-    let private_key = crate::persona::get_private_key(pool, persona).await?;
+    let private_key = crate::persona::get_private_key(pool, &persona).await?;
     let key_id = format!("{actor_uri}#main-key");
-    let inbox_domain = url::Url::parse(&inbox_uri)
+    let parsed_inbox = url::Url::parse(&inbox_uri);
+    let inbox_domain = parsed_inbox
+        .as_ref()
         .ok()
         .and_then(|u| u.host_str().map(|h| h.to_string()))
         .unwrap_or_default();
-    let inbox_path = url::Url::parse(&inbox_uri)
+    let inbox_path = parsed_inbox
+        .as_ref()
         .map(|u| u.path().to_string())
         .unwrap_or_else(|_| "/inbox".to_string());
 
@@ -188,7 +209,10 @@ pub async fn remove(
         &body_bytes,
     )?;
 
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .timeout(std::time::Duration::from_secs(30))
+        .build()?;
     let _ = client
         .post(&inbox_uri)
         .headers(sig_headers)

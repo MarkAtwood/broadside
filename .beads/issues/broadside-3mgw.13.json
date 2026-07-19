@@ -1,0 +1,28 @@
+{
+  "id": "broadside-3mgw.13",
+  "title": "cli.rs card fetch uses reqwest::Client::new() (redirects enabled)",
+  "description": "In cli.rs around line 262, the 'post' CLI command creates a bare reqwest::Client::new() to pass to card::fetch_and_store(). This client follows redirects by default. An operator whose post content contains a URL that redirects to an internal host would cause the card fetcher to follow that redirect after the SSRF guard (which runs on the initial URL) has already passed. The same class of vulnerability as relay.rs. The server and relay contexts should use the redirect-disabled client pattern consistently.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:55:55.840195387Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T01:26:19.410278172Z",
+  "closed_at": "2026-07-19T01:26:19.410278172Z",
+  "close_reason": "Fixed: cli.rs card fetch uses no-redirect client.",
+  "labels": [
+    "review",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3mgw.13",
+      "depends_on_id": "broadside-3mgw",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:55:55.871594548Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

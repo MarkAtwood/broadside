@@ -1,0 +1,4 @@
+{"id":"019f77de-829d-7aa5-962f-57260adcc57a","issue_id":"broadside-3mgw.5","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:54:58.973698712Z"}
+{"id":"019f77de-82a2-7421-a6fa-0095c16f7ceb","issue_id":"broadside-3mgw.5","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:54:58.978271278Z"}
+{"id":"019f77de-82a6-7c2e-a16c-30127510ba95","issue_id":"broadside-3mgw.5","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-19T00:54:58.982798636Z"}
+{"id":"019f77fb-5700-7910-ac24-0e6b288ccde9","issue_id":"broadside-3mgw.5","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Accepted: ponytail comment. Clone cost negligible vs HTTP roundtrip.","created_at":"2026-07-19T01:26:28.352594889Z"}

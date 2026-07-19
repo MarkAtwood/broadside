@@ -1,0 +1,4 @@
+{"id":"019f77df-13ad-7a11-a73c-8e5441955d64","issue_id":"broadside-3mgw.10","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T00:55:36.109660263Z"}
+{"id":"019f77df-13b2-7907-80c9-74efa8ad99ff","issue_id":"broadside-3mgw.10","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-19T00:55:36.114592084Z"}
+{"id":"019f77df-13b7-7914-b5a0-82196102cff3","issue_id":"broadside-3mgw.10","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: security","created_at":"2026-07-19T00:55:36.119595401Z"}
+{"id":"019f77f6-869d-7637-b544-9d7e750fdbf2","issue_id":"broadside-3mgw.10","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Duplicate of broadside-3mgw.16 (same card image http:// scheme issue).","created_at":"2026-07-19T01:21:12.861408053Z"}

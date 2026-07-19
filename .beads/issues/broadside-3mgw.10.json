@@ -1,0 +1,28 @@
+{
+  "id": "broadside-3mgw.10",
+  "title": "card image fetch allows http:// URLs from untrusted OG metadata",
+  "description": "fetch_card_image() in card.rs has no scheme check on image_url extracted from og:image meta tags. An attacker who controls a page being previewed can set og:image to an http:// URL. The card fetcher then downloads image content over cleartext HTTP with no integrity guarantee. A network MitM on that HTTP connection can inject a malicious image payload and trigger vulnerabilities in the image decoder (image crate). The outer fetch_and_store() requires https:// for the page URL but does not impose the same requirement on image_url, which comes directly from untrusted HTML content.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T00:55:36.104153216Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T01:21:12.856426097Z",
+  "closed_at": "2026-07-19T01:21:12.856426097Z",
+  "close_reason": "Duplicate of broadside-3mgw.16 (same card image http:// scheme issue).",
+  "labels": [
+    "review",
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3mgw.10",
+      "depends_on_id": "broadside-3mgw",
+      "type": "parent-child",
+      "created_at": "2026-07-19T00:55:36.134617213Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}
