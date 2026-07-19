@@ -1,16 +1,11 @@
 # Build stage — statically linked musl binary
-FROM docker.io/library/rust:1.96-bookworm AS builder
-
-RUN rustup target add x86_64-unknown-linux-musl && \
-    apt-get update && apt-get install -y musl-tools && \
-    rm -rf /var/lib/apt/lists/*
+FROM docker.io/clux/muslrust:stable AS builder
 
 WORKDIR /build
 COPY Cargo.toml Cargo.lock ./
 COPY src/ src/
 
-RUN cargo build --release --target x86_64-unknown-linux-musl && \
-    strip target/x86_64-unknown-linux-musl/release/broadside
+RUN cargo build --release && strip target/x86_64-unknown-linux-musl/release/broadside
 
 # Runtime stage — scratch (just the binary + CA certs)
 FROM scratch
