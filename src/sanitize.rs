@@ -51,3 +51,23 @@ pub fn html_to_text(html: &str) -> String {
         .clean(html)
         .to_string()
 }
+
+/// Truncate a string at a UTF-8 safe boundary.
+pub fn truncate_utf8(s: &mut String, max_len: usize) {
+    if s.len() <= max_len {
+        return;
+    }
+    let mut end = max_len;
+    while end > 0 && !s.is_char_boundary(end) {
+        end -= 1;
+    }
+    s.truncate(end);
+}
+
+/// Escape a string for safe interpolation in double-quoted HTML attributes.
+pub fn escape_html_attr(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('"', "&quot;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+}

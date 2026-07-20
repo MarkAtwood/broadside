@@ -176,6 +176,14 @@ pub async fn fetch_and_store(
         String::new()
     };
 
+    // Sanitize remote-supplied metadata: strip HTML and cap field lengths
+    let mut title = crate::sanitize::html_to_text(&meta.title);
+    let mut description = crate::sanitize::html_to_text(&meta.description);
+    let mut site_name = crate::sanitize::html_to_text(&meta.site_name);
+    crate::sanitize::truncate_utf8(&mut title, 512);
+    crate::sanitize::truncate_utf8(&mut description, 2048);
+    crate::sanitize::truncate_utf8(&mut site_name, 256);
+
     let id = gen_id();
     sqlx::query(
         "INSERT OR REPLACE INTO cards (id, post_id, url, title, description, image_url, image_path, site_name, card_type) \
@@ -184,11 +192,11 @@ pub async fn fetch_and_store(
     .bind(&id)
     .bind(post_id)
     .bind(url)
-    .bind(&meta.title)
-    .bind(&meta.description)
+    .bind(&title)
+    .bind(&description)
     .bind(&meta.image_url)
     .bind(&image_path)
-    .bind(&meta.site_name)
+    .bind(&site_name)
     .bind(&meta.card_type)
     .execute(pool)
     .await

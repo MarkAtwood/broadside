@@ -953,6 +953,11 @@ async fn handle_inbox(
                 }
             }
 
+            // Reject oversized URIs before DB insert (256KB body cap allows ~256KB per field)
+            if follower_actor.len() > 2048 || inbox_uri.len() > 2048 {
+                return StatusCode::BAD_REQUEST;
+            }
+
             // Insert follower
             let follower_id = crate::id::gen_id();
             if let Err(e) = sqlx::query(
@@ -1227,9 +1232,10 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
                 let name = f["name"].as_str().unwrap_or("");
                 let value = f["value"].as_str().unwrap_or("");
                 let value_html = if value.starts_with("https://") || value.starts_with("http://") {
+                    let escaped = crate::sanitize::escape_html_attr(value);
                     format!(
-                        r#"<a href="{v}" rel="nofollow noopener noreferrer">{v}</a>"#,
-                        v = ammonia::clean(value)
+                        r#"<a href="{escaped}" rel="nofollow noopener noreferrer">{display}</a>"#,
+                        display = ammonia::clean(value)
                     )
                 } else {
                     ammonia::clean(value).to_string()

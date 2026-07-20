@@ -6,18 +6,6 @@ use crate::sanitize;
 
 const MAX_CONTENT_LEN: usize = 5000;
 
-/// Truncate a string at a UTF-8 safe boundary.
-fn truncate_utf8(s: &mut String, max_len: usize) {
-    if s.len() <= max_len {
-        return;
-    }
-    let mut end = max_len;
-    while end > 0 && !s.is_char_boundary(end) {
-        end -= 1;
-    }
-    s.truncate(end);
-}
-
 /// Poll a single feed and create posts for new entries.
 pub async fn poll_feed(
     pool: &SqlitePool,
@@ -74,16 +62,18 @@ pub async fn poll_feed(
 
         if let Some(ref url) = link {
             // Use ammonia to produce a safe <a> tag (handles entity encoding)
-            let link_html = format!(r#"<p><a href="{url}">{url}</a></p>"#);
+            let escaped_url = crate::sanitize::escape_html_attr(url);
+            let link_html = format!(r#"<p><a href="{escaped_url}">{escaped_url}</a></p>"#);
             html.push_str(&sanitize::sanitize_html(&link_html));
         }
 
         if html.len() > MAX_CONTENT_LEN {
-            truncate_utf8(&mut html, MAX_CONTENT_LEN);
+            crate::sanitize::truncate_utf8(&mut html, MAX_CONTENT_LEN);
             // Re-sanitize truncated HTML to close any open tags
             html = sanitize::sanitize_html(&html);
             if let Some(ref url) = link {
-                let link_html = format!(r#"<a href="{url}">read more</a>"#);
+                let escaped_url = crate::sanitize::escape_html_attr(url);
+                let link_html = format!(r#"<a href="{escaped_url}">read more</a>"#);
                 html.push_str(&sanitize::sanitize_html(&link_html));
             }
         }
