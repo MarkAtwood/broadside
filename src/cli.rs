@@ -66,6 +66,19 @@ enum Command {
     Serve,
     /// Register with fediverse census services
     Census,
+    /// Manage decentralized identifiers
+    Did {
+        #[command(subcommand)]
+        command: DidCommand,
+    },
+}
+
+#[derive(Subcommand)]
+enum DidCommand {
+    /// Backfill DID keys for existing personas that lack them
+    Backfill,
+    /// Recover a persona by entering a BIP-39 recovery phrase
+    Recover,
 }
 
 #[derive(Subcommand)]
@@ -449,6 +462,82 @@ impl Cli {
                 println!("  https://the-federation.info/{domain}");
                 println!("  https://fedidb.org/network?s={domain}");
                 println!("  https://fediverse.observer/{domain}");
+            }
+            Command::Did { command } => {
+                let pool = connect_db(&self.data_dir).await?;
+                match command {
+                    DidCommand::Backfill => {
+                        let rows = sqlx::query_as::<_, (String, String)>(
+                            "SELECT id, username FROM personas WHERE did_key IS NULL",
+                        )
+                        .fetch_all(&pool)
+                        .await
+                        .context("querying personas without DID")?;
+
+                        if rows.is_empty() {
+                            println!("All personas already have DID keys.");
+                        } else {
+                            for (id, username) in &rows {
+                                let (mut priv_key, pub_key) =
+                                    broadside::did::generate_recovery_keypair();
+                                let did_key = broadside::did::ed25519_to_did_key(&pub_key);
+                                let recovery_hex = broadside::did::hex_encode(&pub_key);
+                                let phrase = broadside::did::private_key_to_mnemonic(&priv_key);
+                                zeroize::Zeroize::zeroize(&mut priv_key);
+
+                                sqlx::query(
+                                    "UPDATE personas SET did_key = ?, recovery_pubkey = ? WHERE id = ?",
+                                )
+                                .bind(&did_key)
+                                .bind(&recovery_hex)
+                                .bind(id)
+                                .execute(&pool)
+                                .await
+                                .with_context(|| {
+                                    format!("updating DID for @{username}")
+                                })?;
+
+                                println!("@{username}: {did_key}");
+                                eprintln!("  Recovery phrase: {phrase}");
+                            }
+                            eprintln!();
+                            eprintln!(
+                                "Save the recovery phrases above — they will not be shown again."
+                            );
+                        }
+                    }
+                    DidCommand::Recover => {
+                        eprintln!("Enter 24-word recovery phrase:");
+                        let mut phrase = String::new();
+                        std::io::stdin()
+                            .read_line(&mut phrase)
+                            .context("reading recovery phrase")?;
+                        let phrase = phrase.trim();
+
+                        let priv_key = broadside::did::mnemonic_to_private_key(phrase)?;
+                        let pub_key = broadside::did::ed25519_public_from_private(&priv_key);
+                        let did_key = broadside::did::ed25519_to_did_key(&pub_key);
+
+                        let row = sqlx::query_as::<_, (String, String)>(
+                            "SELECT id, username FROM personas WHERE did_key = ?",
+                        )
+                        .bind(&did_key)
+                        .fetch_optional(&pool)
+                        .await
+                        .context("looking up persona by DID")?;
+
+                        match row {
+                            Some((id, username)) => {
+                                println!("Found persona: @{username} (id: {id})");
+                                println!("DID: {did_key}");
+                            }
+                            None => {
+                                println!("No persona found for DID: {did_key}");
+                                println!("This phrase may belong to a different instance.");
+                            }
+                        }
+                    }
+                }
             }
             Command::FeedPoll => {
                 let config_path = self
