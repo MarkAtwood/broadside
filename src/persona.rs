@@ -24,7 +24,7 @@ fn generate_keypair() -> anyhow::Result<(String, String)> {
     Ok((private_pem.to_string(), public_pem))
 }
 
-/// Create a new persona with a fresh RSA keypair.
+/// Create a new persona with a fresh RSA keypair and Ed25519 recovery keypair.
 pub async fn add(
     pool: &SqlitePool,
     username: &str,
@@ -39,19 +39,34 @@ pub async fn add(
     let id = gen_id();
     let display = display_name.unwrap_or(username);
 
+    // Generate Ed25519 recovery keypair for DID identity
+    let (mut recovery_private, recovery_public) = crate::did::generate_recovery_keypair();
+    let did_key = crate::did::ed25519_to_did_key(&recovery_public);
+    let recovery_pubkey_hex = crate::did::hex_encode(&recovery_public);
+    let recovery_phrase = crate::did::private_key_to_mnemonic(&recovery_private);
+    // Zeroize private key — only the mnemonic leaves this function
+    zeroize::Zeroize::zeroize(&mut recovery_private);
+
     sqlx::query(
-        "INSERT INTO personas (id, username, display_name, private_key, public_key) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO personas (id, username, display_name, private_key, public_key, did_key, recovery_pubkey) \
+         VALUES (?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&id)
     .bind(username)
     .bind(display)
     .bind(&private_pem)
     .bind(&public_pem)
+    .bind(&did_key)
+    .bind(&recovery_pubkey_hex)
     .execute(pool)
     .await
     .with_context(|| format!("inserting persona {username}"))?;
 
     println!("Created persona @{username} (id: {id})");
+    eprintln!("DID: {did_key}");
+    eprintln!();
+    eprintln!("RECOVERY PHRASE (save this — it will not be shown again):");
+    eprintln!("{recovery_phrase}");
     Ok(())
 }
 

@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS personas (
     metadata    TEXT NOT NULL DEFAULT '[]',
     private_key TEXT NOT NULL,
     public_key  TEXT NOT NULL,
+    did_key     TEXT,
+    recovery_pubkey TEXT,
     created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
@@ -92,7 +94,7 @@ CREATE TABLE IF NOT EXISTS cards (
 "#;
 
 /// Current schema version. Bump this when adding migrations.
-const CURRENT_SCHEMA_VERSION: i64 = 3;
+const CURRENT_SCHEMA_VERSION: i64 = 4;
 
 /// Migrations to apply for each version bump. Index 0 = migration from version 0 to 1, etc.
 /// Version 0 is the initial schema (SCHEMA constant above).
@@ -115,6 +117,9 @@ const MIGRATIONS: &[&str] = &[
     );",
     // Version 2 -> 3: store persona used when subscribing to a relay
     "ALTER TABLE relays ADD COLUMN persona TEXT NOT NULL DEFAULT '';",
+    // Version 3 -> 4: DID identity support (did:key + recovery keypair)
+    "ALTER TABLE personas ADD COLUMN did_key TEXT;
+     ALTER TABLE personas ADD COLUMN recovery_pubkey TEXT;",
 ];
 
 async fn ensure_migrations(pool: &SqlitePool) -> anyhow::Result<()> {
