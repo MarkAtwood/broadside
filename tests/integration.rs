@@ -578,7 +578,10 @@ async fn test_did_document_endpoint() {
 
     // id is did:web
     let id = doc["id"].as_str().unwrap();
-    assert!(id.starts_with("did:web:"), "id should be did:web, got: {id}");
+    assert!(
+        id.starts_with("did:web:"),
+        "id should be did:web, got: {id}"
+    );
     assert!(id.ends_with(":users:test"));
 
     // Verification methods: RSA (main-key) + Ed25519 (recovery-key)
@@ -703,10 +706,7 @@ async fn test_did_key_is_consistent_across_endpoints() {
         .as_array()
         .unwrap()
         .iter()
-        .find(|v| {
-            v.as_str()
-                .map_or(false, |s| s.starts_with("did:key:"))
-        })
+        .find(|v| v.as_str().map_or(false, |s| s.starts_with("did:key:")))
         .expect("actor should have did:key in alsoKnownAs")
         .as_str()
         .unwrap();
@@ -716,10 +716,7 @@ async fn test_did_key_is_consistent_across_endpoints() {
         .as_array()
         .unwrap()
         .iter()
-        .find(|v| {
-            v.as_str()
-                .map_or(false, |s| s.starts_with("did:key:"))
-        })
+        .find(|v| v.as_str().map_or(false, |s| s.starts_with("did:key:")))
         .expect("DID doc should have did:key in alsoKnownAs")
         .as_str()
         .unwrap();
