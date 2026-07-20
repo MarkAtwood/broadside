@@ -326,8 +326,8 @@ impl Cli {
                         .unwrap_or(0);
                 }
 
-                let pending = broadside::db_extras::delivery_count_pending(&pool).await?;
-                let dead = broadside::db_extras::delivery_count_dead(&pool).await?;
+                let pending = fieldwork::delivery_db::count_pending(&pool).await?;
+                let dead = fieldwork::delivery_db::count_dead(&pool).await?;
 
                 println!("Personas:   {personas}");
                 println!("Followers:  {followers}");

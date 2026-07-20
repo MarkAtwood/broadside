@@ -387,15 +387,15 @@ pub async fn inspect(pool: &Pool) -> anyhow::Result<()> {
 /// CLI: retry all dead-lettered deliveries.
 pub async fn retry_dead(pool: &Pool) -> anyhow::Result<()> {
     let now = chrono::Utc::now().timestamp();
-    let count = crate::db_extras::delivery_retry_all_dead(pool, now).await?;
+    let count = fieldwork::delivery_db::retry_all_dead(pool, now).await?;
     println!("Retrying {count} dead-lettered deliveries.");
     Ok(())
 }
 
 /// CLI: delivery stats.
 pub async fn stats(pool: &Pool) -> anyhow::Result<()> {
-    let pending = crate::db_extras::delivery_count_pending(pool).await?;
-    let dead = crate::db_extras::delivery_count_dead(pool).await?;
+    let pending = fieldwork::delivery_db::count_pending(pool).await?;
+    let dead = fieldwork::delivery_db::count_dead(pool).await?;
 
     println!("Pending: {pending}");
     println!("Dead:    {dead}");

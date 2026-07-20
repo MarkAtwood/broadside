@@ -290,34 +290,6 @@ pub async fn update_persona_media(
     Ok(())
 }
 
-// --- delivery_queue aggregates ---
-
-/// Count pending deliveries (not yet delivered, not dead).
-pub async fn delivery_count_pending(pool: &Pool) -> anyhow::Result<i64> {
-    match pool {
-        Pool::Sqlite(sq) => {
-            let (count,) = sqlx::query_as::<_, (i64,)>(
-                "SELECT COUNT(*) FROM delivery_queue WHERE delivered_at IS NULL AND dead_at IS NULL",
-            )
-            .fetch_one(sq)
-            .await?;
-            Ok(count)
-        }
-    }
-}
-
-/// Count dead-lettered deliveries.
-pub async fn delivery_count_dead(pool: &Pool) -> anyhow::Result<i64> {
-    match pool {
-        Pool::Sqlite(sq) => {
-            let (count,) =
-                sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM delivery_queue WHERE dead_at IS NOT NULL")
-                    .fetch_one(sq)
-                    .await?;
-            Ok(count)
-        }
-    }
-}
 
 /// List dead-lettered deliveries (up to 50).
 pub async fn delivery_list_dead(
@@ -336,21 +308,6 @@ pub async fn delivery_list_dead(
     }
 }
 
-/// Retry all dead-lettered deliveries by resetting their state. Returns rows affected.
-pub async fn delivery_retry_all_dead(pool: &Pool, now: i64) -> anyhow::Result<u64> {
-    match pool {
-        Pool::Sqlite(sq) => {
-            let result = sqlx::query(
-                "UPDATE delivery_queue SET dead_at = NULL, last_error = NULL, attempts = 0, next_attempt_at = ? \
-                 WHERE dead_at IS NOT NULL",
-            )
-            .bind(now)
-            .execute(sq)
-            .await?;
-            Ok(result.rows_affected())
-        }
-    }
-}
 
 // --- 410 Gone follower removal ---
 

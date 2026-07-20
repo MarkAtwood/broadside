@@ -1271,7 +1271,7 @@ async fn health(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
         .map(|v| v.len() as i64)
         .unwrap_or(0);
 
-    let pending = crate::db_extras::delivery_count_pending(&state.pool)
+    let pending = fieldwork::delivery_db::count_pending(&state.pool)
         .await
         .unwrap_or(0);
 
