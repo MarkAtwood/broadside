@@ -277,7 +277,7 @@ checksum = "e79769241dcd44edf79a732545e8b5cec84c247ac060f5252cd51885d093a8fc"
 
 [[package]]
 name = "broadside"
-version = "0.3.1"
+version = "0.4.0"
 dependencies = [
  "ammonia",
  "anyhow",
