@@ -4,7 +4,7 @@ use rsa::rand_core::OsRng;
 use rsa::RsaPrivateKey;
 use sqlx::SqlitePool;
 
-use crate::id::gen_id;
+use crate::id::gen_int_id;
 
 /// Wrap a raw SqlitePool in fieldwork's Pool enum for shared module calls.
 fn fw_pool(pool: &SqlitePool) -> fieldwork::db::Pool {
@@ -12,7 +12,7 @@ fn fw_pool(pool: &SqlitePool) -> fieldwork::db::Pool {
 }
 
 /// Get the single operator user_id. Broadside is single-user; this returns the first user.
-pub async fn get_operator_user_id(pool: &SqlitePool) -> anyhow::Result<String> {
+pub async fn get_operator_user_id(pool: &SqlitePool) -> anyhow::Result<i64> {
     let fwp = fw_pool(pool);
     let users = fieldwork::tenant_db::list_users(&fwp)
         .await
@@ -54,7 +54,7 @@ pub async fn add(
         );
     }
     let (private_pem, public_pem) = generate_keypair()?;
-    let id = gen_id();
+    let id = gen_int_id();
     let display = display_name.unwrap_or(username);
     let now = chrono::Utc::now().timestamp();
     let user_id = get_operator_user_id(pool).await?;
@@ -68,7 +68,7 @@ pub async fn add(
 
     let fwp = fw_pool(pool);
     let row = fieldwork::persona_db::PersonaRow {
-        id: id.clone(),
+        id,
         user_id,
         username: username.to_string(),
         display_name: display.to_string(),
@@ -90,7 +90,7 @@ pub async fn add(
         .await
         .with_context(|| format!("inserting persona {username}"))?;
 
-    crate::db_extras::set_persona_did(pool, &id, &did_key, &recovery_pubkey_hex)
+    crate::db_extras::set_persona_did(pool, id, &did_key, &recovery_pubkey_hex)
         .await
         .with_context(|| format!("setting DID for persona {username}"))?;
 
@@ -115,7 +115,7 @@ pub async fn list(pool: &SqlitePool) -> anyhow::Result<()> {
     }
 
     for row in &rows {
-        let followers = fieldwork::followers_db::follower_count(&fwp, &row.id)
+        let followers = fieldwork::followers_db::follower_count(&fwp, row.id)
             .await
             .unwrap_or(0);
         println!(
@@ -146,7 +146,7 @@ pub async fn update(
     if display_name.is_some() || bio.is_some() {
         fieldwork::persona_db::update_persona_profile(
             &fwp,
-            &persona_id,
+            persona_id,
             display_name,
             bio,
             None,
@@ -156,7 +156,7 @@ pub async fn update(
     }
 
     if avatar.is_some() || header.is_some() {
-        crate::db_extras::update_persona_media(pool, &persona_id, avatar, header).await?;
+        crate::db_extras::update_persona_media(pool, persona_id, avatar, header).await?;
     }
 
     println!("Updated persona @{username}");
@@ -184,7 +184,7 @@ pub async fn get_public_key(pool: &SqlitePool, username: &str) -> anyhow::Result
 }
 
 /// Look up a persona's ID by username.
-pub async fn get_id(pool: &SqlitePool, username: &str) -> anyhow::Result<String> {
+pub async fn get_id(pool: &SqlitePool, username: &str) -> anyhow::Result<i64> {
     let fwp = fieldwork::db::Pool::Sqlite(pool.clone());
     let row = fieldwork::persona_db::get_persona_by_username(&fwp, username)
         .await

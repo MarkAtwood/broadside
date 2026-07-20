@@ -88,7 +88,7 @@ async fn watch_loop(pool: &SqlitePool, config: &WatchConfig, _domain: &str) -> a
         };
 
         let dest = published_path.join(file_path.file_name().unwrap_or_default());
-        match process_file_content(pool, &persona_id, &file_path, &content).await {
+        match process_file_content(pool, persona_id, &file_path, &content).await {
             Ok(post_id) => {
                 tracing::info!(post_id, file = %file_path.display(), "published from directory");
             }
@@ -110,7 +110,7 @@ async fn watch_loop(pool: &SqlitePool, config: &WatchConfig, _domain: &str) -> a
 
 async fn process_file_content(
     pool: &SqlitePool,
-    persona_id: &str,
+    persona_id: i64,
     file_path: &Path,
     content: &str,
 ) -> anyhow::Result<String> {

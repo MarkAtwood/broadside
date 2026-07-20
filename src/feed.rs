@@ -100,8 +100,8 @@ pub async fn poll_feed(
         let fwp = fw_pool(pool);
         let post = fieldwork::posts_db::PostRow {
             id,
-            user_id: user_id.clone(),
-            persona_id: persona_id.clone(),
+            user_id,
+            persona_id,
             ap_id,
             in_reply_to_id: None,
             in_reply_to_uri: None,
@@ -172,7 +172,7 @@ pub async fn poll_feed(
                 domain.to_string(),
             );
 
-            if let Err(e) = crate::delivery::fan_out(pool, &id_str, &persona_id).await {
+            if let Err(e) = crate::delivery::fan_out(pool, &id_str, persona_id).await {
                 tracing::error!(post_id = %id_str, error = %e, "fan_out failed for new post");
             }
             new_count += 1;
@@ -182,7 +182,7 @@ pub async fn poll_feed(
 
     if let Some(ref nid) = newest_id {
         let now = chrono::Utc::now().timestamp();
-        crate::db_extras::upsert_feed_state(pool, &config.url, &persona_id, nid, now).await?;
+        crate::db_extras::upsert_feed_state(pool, &config.url, persona_id, nid, now).await?;
     }
 
     if new_count > 0 {

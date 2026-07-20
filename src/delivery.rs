@@ -55,7 +55,7 @@ impl CircuitBreaker {
 ///
 /// Stores a broadside-specific JSON stub `{"post_id":"..."}` in activity_json.
 /// The delivery worker expands this into a full Create activity at send time.
-pub async fn fan_out(pool: &SqlitePool, post_id: &str, persona_id: &str) -> anyhow::Result<u64> {
+pub async fn fan_out(pool: &SqlitePool, post_id: &str, persona_id: i64) -> anyhow::Result<u64> {
     let now = chrono::Utc::now().timestamp();
     let fwp = fw_pool(pool);
 
@@ -196,7 +196,7 @@ async fn process_batch(
         let fw_post = fieldwork::posts_db::get_post(&fwp, post_id_int).await?;
         let (post_id, content_html, created_at_epoch, username) = match fw_post {
             Some(p) => {
-                let persona = fieldwork::persona_db::get_persona_by_id(&fwp, &p.persona_id).await?;
+                let persona = fieldwork::persona_db::get_persona_by_id(&fwp, p.persona_id).await?;
                 let uname = persona.map(|r| r.username).unwrap_or_default();
                 (p.id.to_string(), p.content_html, p.created_at, uname)
             }
@@ -314,7 +314,7 @@ async fn process_batch(
                 fieldwork::delivery_db::mark_delivered(&fwp, delivery_id, delivered_at).await?;
 
                 let removed = crate::db_extras::remove_followers_by_inbox(
-                    pool, target_inbox, sender_persona_id,
+                    pool, target_inbox, *sender_persona_id,
                 )
                 .await?;
 

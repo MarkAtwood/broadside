@@ -18,7 +18,7 @@ async fn test_server() -> (String, tempfile::TempDir) {
     let persona_id = broadside::persona::get_id(&pool, "test").await.unwrap();
     broadside::post::create(
         &pool,
-        &persona_id,
+        persona_id,
         "<p>Hello fediverse!</p>",
         "Hello fediverse!",
         Some("test-post-1"),
@@ -749,12 +749,12 @@ async fn test_post_dedup_via_source_ref() {
     broadside::persona::add(&pool, "dedup", None).await.unwrap();
     let pid = broadside::persona::get_id(&pool, "dedup").await.unwrap();
 
-    let id1 = broadside::post::create(&pool, &pid, "<p>a</p>", "a", Some("ref-1"))
+    let id1 = broadside::post::create(&pool, pid, "<p>a</p>", "a", Some("ref-1"))
         .await
         .unwrap();
     assert!(!id1.is_empty());
 
     // Same source_ref should fail with UNIQUE constraint
-    let result = broadside::post::create(&pool, &pid, "<p>b</p>", "b", Some("ref-1")).await;
+    let result = broadside::post::create(&pool, pid, "<p>b</p>", "b", Some("ref-1")).await;
     assert!(result.is_err(), "duplicate source_ref should be rejected");
 }

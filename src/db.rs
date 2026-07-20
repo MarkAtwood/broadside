@@ -67,7 +67,7 @@ pub async fn init_data_dir(data_dir: &Path) -> anyhow::Result<()> {
     if fieldwork::tenant_db::list_users(&fw_pool).await.map(|v| v.is_empty()).unwrap_or(true) {
         let _ = fieldwork::tenant_db::create_user(
             &fw_pool,
-            "legacy-operator",
+            1000000000000i64,
             "admin@localhost",
             None,
             "admin",

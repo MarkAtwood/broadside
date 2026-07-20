@@ -258,7 +258,7 @@ impl Cli {
                     (h, text)
                 };
                 let post_id =
-                    broadside::post::create(&pool, &persona_id, &html, &plain, None).await?;
+                    broadside::post::create(&pool, persona_id, &html, &plain, None).await?;
 
                 for media_path in &media {
                     let path = std::path::Path::new(media_path);
@@ -293,7 +293,7 @@ impl Cli {
                     }
                 }
 
-                let queued = broadside::delivery::fan_out(&pool, &post_id, &persona_id).await?;
+                let queued = broadside::delivery::fan_out(&pool, &post_id, persona_id).await?;
                 println!(
                     "Created post {post_id} ({} media, queued {queued} deliveries)",
                     media.len()
@@ -319,10 +319,10 @@ impl Cli {
                 let mut followers = 0i64;
                 let mut posts = 0i64;
                 for p in &persona_list {
-                    followers += fieldwork::followers_db::follower_count(&fwp, &p.id)
+                    followers += fieldwork::followers_db::follower_count(&fwp, p.id)
                         .await
                         .unwrap_or(0);
-                    posts += fieldwork::posts_db::posts_count(&fwp, &p.id)
+                    posts += fieldwork::posts_db::posts_count(&fwp, p.id)
                         .await
                         .unwrap_or(0);
                 }
@@ -350,7 +350,7 @@ impl Cli {
                     FollowersCommand::List { persona } => {
                         let persona_id = broadside::persona::get_id(&pool, &persona).await?;
                         let rows = broadside::db_extras::list_followers_with_dates(
-                            &pool, &persona_id,
+                            &pool, persona_id,
                         )
                         .await?;
                         if rows.is_empty() {
@@ -368,7 +368,7 @@ impl Cli {
                         let fwp = fieldwork::db::Pool::Sqlite(pool.clone());
                         let personas = fieldwork::persona_db::list_personas(&fwp).await?;
                         for p in &personas {
-                            let count = fieldwork::followers_db::follower_count(&fwp, &p.id)
+                            let count = fieldwork::followers_db::follower_count(&fwp, p.id)
                                 .await
                                 .unwrap_or(0);
                             println!("@{}: {count}", p.username);
@@ -477,7 +477,7 @@ impl Cli {
                                 // priv_key is Zeroizing — auto-zeroized on drop
 
                                 broadside::db_extras::set_persona_did(
-                                    &pool, id, &did_key, &recovery_hex,
+                                    &pool, *id, &did_key, &recovery_hex,
                                 )
                                 .await
                                 .with_context(|| {

@@ -342,7 +342,7 @@ async fn nodeinfo(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     // N+1 queries — acceptable at nodeinfo frequency (cached 5 min).
     let mut post_count = 0i64;
     for p in &personas {
-        post_count += fieldwork::posts_db::posts_count(&fwp, &p.id).await.unwrap_or(0);
+        post_count += fieldwork::posts_db::posts_count(&fwp, p.id).await.unwrap_or(0);
     }
 
     let doc = serde_json::json!({
@@ -519,7 +519,7 @@ async fn outbox(
         Err(_) => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
     };
 
-    let total = crate::post::count_for_persona(&state.pool, &persona_id)
+    let total = crate::post::count_for_persona(&state.pool, persona_id)
         .await
         .unwrap_or(0);
 
@@ -558,7 +558,7 @@ async fn outbox(
         .saturating_mul(per_page as u64)
         .min(i64::MAX as u64) as i64;
 
-    let posts = crate::post::list_for_persona(&state.pool, &persona_id, per_page, offset)
+    let posts = crate::post::list_for_persona(&state.pool, persona_id, per_page, offset)
         .await
         .unwrap_or_default();
 
@@ -630,7 +630,7 @@ async fn followers_collection(
     };
 
     let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
-    let count = fieldwork::followers_db::follower_count(&fwp, &persona_id)
+    let count = fieldwork::followers_db::follower_count(&fwp, persona_id)
         .await
         .unwrap_or(0);
 
@@ -1117,7 +1117,7 @@ async fn handle_inbox(
 
             // Insert follower row
             if let Err(e) = fieldwork::followers_db::add_follower(
-                &fwp, &persona_id, &user_id, remote_account_id, now,
+                &fwp, persona_id, user_id, remote_account_id, now,
             )
             .await
             {
@@ -1229,7 +1229,7 @@ async fn handle_inbox(
                     match fieldwork::actor_cache::get_by_actor_uri(&fwp, &actor_uri).await {
                         Ok(Some(remote_acct)) => {
                             match fieldwork::followers_db::remove_follower(
-                                &fwp, &pid, remote_acct.id,
+                                &fwp, pid, remote_acct.id,
                             )
                             .await
                             {
@@ -1368,7 +1368,7 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
         .map(|dt| dt.format("%Y-%m-%d").to_string())
         .unwrap_or_else(|| format!("{created_at_epoch}"));
 
-    let posts = crate::post::list_for_persona(&state.pool, &persona_id, 20, 0)
+    let posts = crate::post::list_for_persona(&state.pool, persona_id, 20, 0)
         .await
         .unwrap_or_default();
 
@@ -1430,11 +1430,11 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
         format!("<div class=\"bio\">{}</div>", ammonia::clean(&bio))
     };
 
-    let follower_count = fieldwork::followers_db::follower_count(&fwp, &persona_id)
+    let follower_count = fieldwork::followers_db::follower_count(&fwp, persona_id)
         .await
         .unwrap_or(0);
 
-    let post_count = crate::post::count_for_persona(&state.pool, &persona_id)
+    let post_count = crate::post::count_for_persona(&state.pool, persona_id)
         .await
         .unwrap_or(0);
 

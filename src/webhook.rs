@@ -80,7 +80,7 @@ pub async fn handle_webhook(
     };
     let text = sanitize::html_to_text(&html);
 
-    let post_id = match crate::post::create(&state.pool, &persona_id, &html, &text, None).await {
+    let post_id = match crate::post::create(&state.pool, persona_id, &html, &text, None).await {
         Ok(id) => id,
         Err(e) => {
             tracing::error!(error = %e, "webhook post creation failed");
@@ -116,7 +116,7 @@ pub async fn handle_webhook(
         state.domain.clone(),
     );
 
-    match crate::delivery::fan_out(&state.pool, &post_id, &persona_id).await {
+    match crate::delivery::fan_out(&state.pool, &post_id, persona_id).await {
         Ok(queued) => {
             tracing::info!(
                 persona = persona_name,

@@ -50,7 +50,7 @@ pub async fn source_ref_exists(pool: &SqlitePool, source_ref: &str) -> anyhow::R
 #[derive(Debug, sqlx::FromRow)]
 pub struct PostWithMeta {
     pub id: String,
-    pub persona_id: String,
+    pub persona_id: i64,
     pub content_html: String,
     pub content: String,
     pub created_at: i64,
@@ -60,7 +60,7 @@ pub struct PostWithMeta {
 /// List posts for a persona, joined with broadside_post_meta for source_ref.
 pub async fn list_posts_with_meta(
     pool: &SqlitePool,
-    persona_id: &str,
+    persona_id: i64,
     limit: i64,
     offset: i64,
 ) -> anyhow::Result<Vec<PostWithMeta>> {
@@ -85,7 +85,7 @@ pub async fn list_posts_with_meta(
 pub async fn upsert_feed_state(
     pool: &SqlitePool,
     feed_url: &str,
-    persona_id: &str,
+    persona_id: i64,
     last_seen_id: &str,
     last_poll: i64,
 ) -> anyhow::Result<()> {
@@ -110,7 +110,7 @@ pub async fn upsert_feed_state(
 /// Set did_key and recovery_pubkey for a persona.
 pub async fn set_persona_did(
     pool: &SqlitePool,
-    persona_id: &str,
+    persona_id: i64,
     did_key: &str,
     recovery_pubkey_hex: &str,
 ) -> anyhow::Result<()> {
@@ -156,8 +156,8 @@ pub async fn get_did_and_recovery_by_username(
 pub async fn find_persona_by_did(
     pool: &SqlitePool,
     did_key: &str,
-) -> anyhow::Result<Option<(String, String)>> {
-    let row = sqlx::query_as::<_, (String, String)>(
+) -> anyhow::Result<Option<(i64, String)>> {
+    let row = sqlx::query_as::<_, (i64, String)>(
         "SELECT id, username FROM personas WHERE did_key = ?",
     )
     .bind(did_key)
@@ -170,8 +170,8 @@ pub async fn find_persona_by_did(
 /// List personas that lack a did_key. Returns (id, username) pairs.
 pub async fn list_personas_without_did(
     pool: &SqlitePool,
-) -> anyhow::Result<Vec<(String, String)>> {
-    let rows = sqlx::query_as::<_, (String, String)>(
+) -> anyhow::Result<Vec<(i64, String)>> {
+    let rows = sqlx::query_as::<_, (i64, String)>(
         "SELECT id, username FROM personas WHERE did_key IS NULL",
     )
     .fetch_all(pool)
@@ -197,7 +197,7 @@ pub async fn update_fields_json(
 /// Update avatar_media_id and/or header_media_id for a persona.
 pub async fn update_persona_media(
     pool: &SqlitePool,
-    persona_id: &str,
+    persona_id: i64,
     avatar: Option<&str>,
     header: Option<&str>,
 ) -> anyhow::Result<()> {
@@ -280,7 +280,7 @@ pub async fn delivery_retry_all_dead(pool: &SqlitePool, now: i64) -> anyhow::Res
 pub async fn remove_followers_by_inbox(
     pool: &SqlitePool,
     inbox_url: &str,
-    persona_id: &str,
+    persona_id: i64,
 ) -> anyhow::Result<u64> {
     let result = sqlx::query(
         "DELETE FROM followers WHERE remote_account_id IN \
@@ -300,7 +300,7 @@ pub async fn remove_followers_by_inbox(
 /// List followers for a persona with actor_uri and accepted_at date.
 pub async fn list_followers_with_dates(
     pool: &SqlitePool,
-    persona_id: &str,
+    persona_id: i64,
 ) -> anyhow::Result<Vec<(String, i64)>> {
     let rows = sqlx::query_as::<_, (String, i64)>(
         "SELECT ra.actor_uri, f.accepted_at \

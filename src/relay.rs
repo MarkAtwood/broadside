@@ -90,7 +90,7 @@ pub async fn add(
     let temp_follow_id = format!("{actor_uri}/relay-follow/pending");
 
     // Store the relay subscription
-    let id = fieldwork::relay::subscribe(&fwp, relay_url, &inbox_url, Some(&persona_id), &temp_follow_id)
+    let id = fieldwork::relay::subscribe(&fwp, relay_url, &inbox_url, Some(persona_id), &temp_follow_id)
         .await
         .context("storing relay subscription")?;
 
@@ -165,7 +165,7 @@ pub async fn remove(
     // Resolve persona: use override username, or look up stored persona_id's username
     let persona_username = if let Some(p) = persona_override {
         p.to_string()
-    } else if let Some(ref pid) = relay_row.persona_id {
+    } else if let Some(pid) = relay_row.persona_id {
         let persona = fieldwork::persona_db::get_persona_by_id(&fwp, pid)
             .await
             .context("looking up persona for relay")?

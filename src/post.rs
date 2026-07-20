@@ -11,7 +11,7 @@ fn fw_pool(pool: &SqlitePool) -> fieldwork::db::Pool {
 /// Create a post from plain text or HTML content.
 pub async fn create(
     pool: &SqlitePool,
-    persona_id: &str,
+    persona_id: i64,
     content_html: &str,
     content_text: &str,
     source_ref: Option<&str>,
@@ -29,7 +29,7 @@ pub async fn create(
     let post = fieldwork::posts_db::PostRow {
         id,
         user_id,
-        persona_id: persona_id.to_string(),
+        persona_id,
         ap_id,
         in_reply_to_id: None,
         in_reply_to_uri: None,
@@ -74,7 +74,7 @@ pub fn text_to_html(text: &str) -> String {
 /// Fetch recent posts for a persona, newest first.
 pub async fn list_for_persona(
     pool: &SqlitePool,
-    persona_id: &str,
+    persona_id: i64,
     limit: i64,
     offset: i64,
 ) -> anyhow::Result<Vec<PostRow>> {
@@ -93,7 +93,7 @@ pub async fn list_for_persona(
 }
 
 /// Count total posts for a persona.
-pub async fn count_for_persona(pool: &SqlitePool, persona_id: &str) -> anyhow::Result<i64> {
+pub async fn count_for_persona(pool: &SqlitePool, persona_id: i64) -> anyhow::Result<i64> {
     let fwp = fw_pool(pool);
     let count = fieldwork::posts_db::posts_count(&fwp, persona_id).await?;
     Ok(count)
@@ -102,7 +102,7 @@ pub async fn count_for_persona(pool: &SqlitePool, persona_id: &str) -> anyhow::R
 #[derive(Debug, sqlx::FromRow)]
 pub struct PostRow {
     pub id: String,
-    pub persona_id: String,
+    pub persona_id: i64,
     pub content_html: String,
     pub content: String,
     pub created_at: i64,
