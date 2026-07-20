@@ -387,10 +387,9 @@ async fn actor(
     if wants_html {
         return serve_profile_html(&state, &username).await;
     }
-    // r9da.33: column order must match the 10-element tuple exactly:
-    // id, username, display_name, bio, public_key, avatar_path, header_path, created_at, metadata, did_key
-    let row = sqlx::query_as::<_, (String, String, String, String, String, Option<String>, Option<String>, String, String, Option<String>)>(
-        "SELECT id, username, display_name, bio, public_key, avatar_path, header_path, created_at, metadata, did_key \
+    // Canonical schema: column names use _pem, _media_id, fields_json, created_at is INTEGER
+    let row = sqlx::query_as::<_, (String, String, String, String, String, Option<i64>, Option<i64>, i64, String, Option<String>)>(
+        "SELECT id, username, display_name, bio, public_key_pem, avatar_media_id, header_media_id, created_at, fields_json, did_key \
          FROM personas WHERE username = ?",
     )
     .bind(&username)
@@ -403,15 +402,19 @@ async fn actor(
         display_name,
         bio,
         public_key,
-        avatar_path,
-        header_path,
-        created_at,
+        avatar_media_id,
+        header_media_id,
+        created_at_epoch,
         metadata_json,
         did_key,
     ) = match row {
         Ok(Some(r)) => r,
         _ => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
     };
+
+    let created_at = chrono::DateTime::from_timestamp(created_at_epoch, 0)
+        .map(|dt| dt.format("%Y-%m-%dT%H:%M:%SZ").to_string())
+        .unwrap_or_else(|| format!("{created_at_epoch}"));
 
     let actor_uri = format!("https://{}/users/{}", state.domain, username);
 
@@ -451,19 +454,36 @@ async fn actor(
     }
     doc["alsoKnownAs"] = serde_json::Value::Array(aka);
 
-    if let Some(ref avatar) = avatar_path {
-        doc["icon"] = serde_json::json!({
-            "type": "Image",
-            "mediaType": "image/png",
-            "url": format!("https://{}/{}", state.domain, avatar)
-        });
+    // Resolve avatar/header media IDs to file paths
+    if let Some(mid) = avatar_media_id {
+        if let Ok(Some((path, mime))) = sqlx::query_as::<_, (String, String)>(
+            "SELECT file_path, mime_type FROM media WHERE id = ?",
+        )
+        .bind(mid)
+        .fetch_optional(&state.pool)
+        .await
+        {
+            doc["icon"] = serde_json::json!({
+                "type": "Image",
+                "mediaType": mime,
+                "url": format!("https://{}/{}", state.domain, path)
+            });
+        }
     }
-    if let Some(ref header) = header_path {
-        doc["image"] = serde_json::json!({
-            "type": "Image",
-            "mediaType": "image/png",
-            "url": format!("https://{}/{}", state.domain, header)
-        });
+    if let Some(mid) = header_media_id {
+        if let Ok(Some((path, mime))) = sqlx::query_as::<_, (String, String)>(
+            "SELECT file_path, mime_type FROM media WHERE id = ?",
+        )
+        .bind(mid)
+        .fetch_optional(&state.pool)
+        .await
+        {
+            doc["image"] = serde_json::json!({
+                "type": "Image",
+                "mediaType": mime,
+                "url": format!("https://{}/{}", state.domain, path)
+            });
+        }
     }
 
     // Profile metadata fields (e.g., "Website", "GitHub")
@@ -572,11 +592,12 @@ async fn outbox(
             .collect();
         let attachments =
             crate::media::attachments_for_post(&state.pool, &p.id, &state.domain).await;
+        let published = p.published_at_iso();
         items.push(serde_json::json!({
             "id": format!("{}/activity", post_uri),
             "type": "Create",
             "actor": actor_uri,
-            "published": p.published_at,
+            "published": published,
             "to": ["https://www.w3.org/ns/activitystreams#Public"],
             "cc": [format!("{}/followers", actor_uri)],
             "object": {
@@ -584,7 +605,7 @@ async fn outbox(
                 "type": "Note",
                 "attributedTo": actor_uri,
                 "content": processed_html,
-                "published": p.published_at,
+                "published": published,
                 "to": ["https://www.w3.org/ns/activitystreams#Public"],
                 "cc": [format!("{}/followers", actor_uri)],
                 "tag": tag_json,
@@ -692,7 +713,7 @@ async fn did_document(
     Path(username): Path<String>,
 ) -> impl IntoResponse {
     let row = sqlx::query_as::<_, (String, Option<String>, Option<String>)>(
-        "SELECT public_key, did_key, recovery_pubkey FROM personas WHERE username = ?",
+        "SELECT public_key_pem, did_key, recovery_pubkey FROM personas WHERE username = ?",
     )
     .bind(&username)
     .fetch_optional(&state.pool)
@@ -1060,18 +1081,78 @@ async fn handle_inbox(
                 return StatusCode::BAD_REQUEST;
             }
 
-            // Insert follower
-            let follower_id = crate::id::gen_id();
+            // Upsert into remote_accounts, then insert follower
+            let now = chrono::Utc::now().timestamp();
+            let user_id = match crate::persona::get_operator_user_id(&state.pool).await {
+                Ok(uid) => uid,
+                Err(_) => return StatusCode::INTERNAL_SERVER_ERROR,
+            };
+
+            // Extract domain from follower actor URI
+            let follower_domain = url::Url::parse(follower_actor)
+                .ok()
+                .and_then(|u| u.host_str().map(|h| h.to_string()))
+                .unwrap_or_default();
+
+            // Extract public key from actor doc for remote_accounts
+            let remote_pub_key = actor_doc["publicKey"]["publicKeyPem"]
+                .as_str()
+                .unwrap_or("")
+                .to_string();
+            let remote_key_id = actor_doc["publicKey"]["id"]
+                .as_str()
+                .unwrap_or(follower_actor)
+                .to_string();
+
             if let Err(e) = sqlx::query(
-                "INSERT OR IGNORE INTO followers \
-                 (id, persona_id, actor_uri, inbox_uri, shared_inbox_uri) \
-                 VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO remote_accounts \
+                 (actor_uri, username, domain, display_name, public_key_pem, public_key_id, inbox_url, shared_inbox_url, last_fetched_at) \
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) \
+                 ON CONFLICT(actor_uri) DO UPDATE SET \
+                 inbox_url = excluded.inbox_url, shared_inbox_url = excluded.shared_inbox_url, \
+                 public_key_pem = excluded.public_key_pem, last_fetched_at = excluded.last_fetched_at",
             )
-            .bind(&follower_id)
-            .bind(&persona_id)
             .bind(follower_actor)
+            .bind(actor_doc["preferredUsername"].as_str().unwrap_or(""))
+            .bind(&follower_domain)
+            .bind(actor_doc["name"].as_str().unwrap_or(""))
+            .bind(&remote_pub_key)
+            .bind(&remote_key_id)
             .bind(&inbox_uri)
             .bind(&shared_inbox_uri)
+            .bind(now)
+            .execute(&state.pool)
+            .await
+            {
+                tracing::error!(error = %e, follower = follower_actor, "failed to upsert remote_account");
+                return StatusCode::INTERNAL_SERVER_ERROR;
+            }
+
+            // Look up the remote_account_id
+            let remote_account_id = match sqlx::query_as::<_, (i64,)>(
+                "SELECT id FROM remote_accounts WHERE actor_uri = ?",
+            )
+            .bind(follower_actor)
+            .fetch_one(&state.pool)
+            .await
+            {
+                Ok((id,)) => id,
+                Err(e) => {
+                    tracing::error!(error = %e, "failed to find remote_account after upsert");
+                    return StatusCode::INTERNAL_SERVER_ERROR;
+                }
+            };
+
+            // Insert follower row
+            if let Err(e) = sqlx::query(
+                "INSERT OR IGNORE INTO followers \
+                 (persona_id, user_id, remote_account_id, accepted_at) \
+                 VALUES (?, ?, ?, ?)",
+            )
+            .bind(&persona_id)
+            .bind(&user_id)
+            .bind(remote_account_id)
+            .bind(now)
             .execute(&state.pool)
             .await
             {
@@ -1087,7 +1168,7 @@ async fn handle_inbox(
             // Send Accept in a background task
             let accept = serde_json::json!({
                 "@context": "https://www.w3.org/ns/activitystreams",
-                "id": format!("https://{}/users/{}#accept/{}", state.domain, username, follower_id),
+                "id": format!("https://{}/users/{}#accept/{}", state.domain, username, remote_account_id),
                 "type": "Accept",
                 "actor": format!("https://{}/users/{}", state.domain, username),
                 "object": activity
@@ -1180,10 +1261,11 @@ async fn handle_inbox(
 
                 if let Some(pid) = target_persona_id {
                     match sqlx::query(
-                        "DELETE FROM followers WHERE actor_uri = ? AND persona_id = ?",
+                        "DELETE FROM followers WHERE persona_id = ? AND remote_account_id IN \
+                         (SELECT id FROM remote_accounts WHERE actor_uri = ?)",
                     )
-                    .bind(&actor_uri)
                     .bind(&pid)
+                    .bind(&actor_uri)
                     .execute(&state.pool)
                     .await
                     {
@@ -1220,7 +1302,7 @@ async fn health(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
         .unwrap_or(0);
 
     let pending =
-        sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM delivery_queue WHERE status = 'pending'")
+        sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM delivery_queue WHERE delivered_at IS NULL AND dead_at IS NULL")
             .fetch_one(&state.pool)
             .await
             .map(|(c,)| c)
@@ -1305,17 +1387,21 @@ async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 // Acceptable for a low-traffic profile page. Ceiling: combine into a single query with
 // COUNT() subqueries if profiling shows this as a bottleneck.
 async fn serve_profile_html(state: &AppState, username: &str) -> axum::response::Response {
-    let row = sqlx::query_as::<_, (String, String, String, String)>(
-        "SELECT display_name, bio, created_at, metadata FROM personas WHERE username = ?",
+    let row = sqlx::query_as::<_, (String, String, i64, String)>(
+        "SELECT display_name, bio, created_at, fields_json FROM personas WHERE username = ?",
     )
     .bind(username)
     .fetch_optional(&state.pool)
     .await;
 
-    let (display_name, bio, created_at, metadata_json) = match row {
+    let (display_name, bio, created_at_epoch, metadata_json) = match row {
         Ok(Some(r)) => r,
         _ => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
     };
+
+    let created_at = chrono::DateTime::from_timestamp(created_at_epoch, 0)
+        .map(|dt| dt.format("%Y-%m-%d").to_string())
+        .unwrap_or_else(|| format!("{created_at_epoch}"));
 
     let persona_id = match crate::persona::get_id(&state.pool, username).await {
         Ok(id) => id,
@@ -1364,7 +1450,8 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
     let mut posts_html = String::new();
     for p in &posts {
         let (processed, _) = crate::content::process_content(&p.content_html, &state.domain);
-        let date_display = p.published_at.get(..10).unwrap_or(&p.published_at);
+        let ts = p.published_at_iso();
+        let date_display = ts.get(..10).unwrap_or(&ts);
         let _ = write!(
             posts_html,
             r#"<article class="post">
@@ -1372,7 +1459,7 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
                 <footer><time datetime="{ts}">{date}</time></footer>
             </article>"#,
             content = processed,
-            ts = p.published_at,
+            ts = ts,
             date = date_display,
         );
     }
@@ -1445,7 +1532,7 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
         fields_html = fields_html,
         post_count = post_count,
         follower_count = follower_count,
-        created_at = created_at.get(..10).unwrap_or(&created_at),
+        created_at = created_at,
         posts_html = posts_html,
     );
 

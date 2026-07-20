@@ -36,7 +36,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Shared fediverse building blocks (path dep for local dev; use git dep for CI)
-fieldwork = { path = "../fedistract/fieldwork", features = ["sanitize", "content", "inbox", "theme", "nodeinfo", "webfinger"] }
+fieldwork = { path = "../fedistract/fieldwork", features = ["sanitize", "content", "inbox", "theme", "nodeinfo", "webfinger", "db-sqlite"] }
 cavage-httpsig = { path = "../fedistract/cavage-httpsig" }
 ssrf-guard = { path = "../fedistract/ssrf-guard", features = ["reqwest"] }
 

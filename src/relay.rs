@@ -2,7 +2,7 @@ use anyhow::{bail, Context};
 use sqlx::SqlitePool;
 use std::sync::Arc;
 
-use crate::id::gen_id;
+use crate::id::gen_int_id;
 use crate::server::SsrfSafeResolver;
 use crate::signatures;
 
@@ -31,13 +31,13 @@ pub async fn add(
     }
 
     // Check if already subscribed
-    let existing = sqlx::query_as::<_, (String,)>("SELECT status FROM relays WHERE actor_uri = ?")
+    let existing = sqlx::query_as::<_, (String,)>("SELECT state FROM relays WHERE actor_uri = ?")
         .bind(relay_url)
         .fetch_optional(pool)
         .await?;
 
-    if let Some((status,)) = existing {
-        bail!("relay already registered (status: {status})");
+    if let Some((state,)) = existing {
+        bail!("relay already registered (state: {state})");
     }
 
     // ponytail: new Client per CLI invocation; CLI runs once and exits, no reuse benefit.
@@ -60,17 +60,17 @@ pub async fn add(
     let actor: serde_json::Value =
         serde_json::from_slice(&body).context("parsing relay actor document")?;
 
-    let inbox_uri = actor["inbox"]
+    let inbox_url = actor["inbox"]
         .as_str()
         .context("relay actor has no inbox field")?
         .to_string();
 
-    if !inbox_uri.starts_with("https://") {
+    if !inbox_url.starts_with("https://") {
         bail!("relay inbox must be https");
     }
 
     // SSRF guard: reject inbox URIs pointing to private/internal hosts
-    let inbox_host = url::Url::parse(&inbox_uri)
+    let inbox_host = url::Url::parse(&inbox_url)
         .ok()
         .and_then(|u| u.host_str().map(|h| h.to_string()));
     match inbox_host {
@@ -81,15 +81,21 @@ pub async fn add(
         _ => {}
     }
 
-    // Store the relay subscription (including persona used for signing)
-    let id = gen_id();
+    // Resolve persona username to persona_id for the FK
+    let persona_id = crate::persona::get_id(pool, persona).await?;
+    let now = chrono::Utc::now().timestamp();
+
+    // Store the relay subscription
+    let id = gen_int_id();
     sqlx::query(
-        "INSERT INTO relays (id, actor_uri, inbox_uri, status, persona) VALUES (?, ?, ?, 'pending', ?)",
+        "INSERT INTO relays (id, actor_uri, inbox_url, persona_id, state, created_at) \
+         VALUES (?, ?, ?, ?, 'pending', ?)",
     )
-    .bind(&id)
+    .bind(id)
     .bind(relay_url)
-    .bind(&inbox_uri)
-    .bind(persona)
+    .bind(&inbox_url)
+    .bind(&persona_id)
+    .bind(now)
     .execute(pool)
     .await
     .context("storing relay subscription")?;
@@ -108,7 +114,7 @@ pub async fn add(
     let body_bytes = serde_json::to_vec(&activity)?;
     let private_key = crate::persona::get_private_key(pool, persona).await?;
     let key_id = format!("{actor_uri}#main-key");
-    let parsed_inbox = url::Url::parse(&inbox_uri);
+    let parsed_inbox = url::Url::parse(&inbox_url);
     let inbox_domain = parsed_inbox
         .as_ref()
         .ok()
@@ -128,7 +134,7 @@ pub async fn add(
     )?;
 
     let resp = client
-        .post(&inbox_uri)
+        .post(&inbox_url)
         .headers(sig_headers)
         .header("Content-Type", "application/activity+json")
         .body(body_bytes)
@@ -149,33 +155,42 @@ pub async fn add(
 }
 
 /// Remove a relay subscription. Sends Undo{Follow} and deletes the record.
-/// Uses the persona stored at subscription time; falls back to `persona_override` if provided.
 pub async fn remove(
     pool: &SqlitePool,
     relay_url: &str,
     domain: &str,
     persona_override: Option<&str>,
 ) -> anyhow::Result<()> {
-    let row = sqlx::query_as::<_, (String, String, String)>(
-        "SELECT id, inbox_uri, persona FROM relays WHERE actor_uri = ?",
+    let row = sqlx::query_as::<_, (String, String, Option<String>)>(
+        "SELECT CAST(id AS TEXT), inbox_url, persona_id FROM relays WHERE actor_uri = ?",
     )
     .bind(relay_url)
     .fetch_optional(pool)
     .await?;
 
-    let (relay_id, inbox_uri, stored_persona) = match row {
+    let (relay_id, inbox_url, stored_persona_id) = match row {
         Some(r) => r,
         None => bail!("relay not found: {relay_url}"),
     };
 
-    let persona = match persona_override {
-        Some(p) => p.to_string(),
-        None if !stored_persona.is_empty() => stored_persona,
-        _ => bail!("no persona stored for this relay; pass --persona explicitly"),
+    // Resolve persona: use override username, or look up stored persona_id's username
+    let persona_username = if let Some(p) = persona_override {
+        p.to_string()
+    } else if let Some(ref pid) = stored_persona_id {
+        let (uname,) = sqlx::query_as::<_, (String,)>(
+            "SELECT username FROM personas WHERE id = ?",
+        )
+        .bind(pid)
+        .fetch_one(pool)
+        .await
+        .context("looking up persona for relay")?;
+        uname
+    } else {
+        bail!("no persona stored for this relay; pass --persona explicitly");
     };
 
     // Send Undo{Follow} to the relay
-    let actor_uri = format!("https://{domain}/users/{persona}");
+    let actor_uri = format!("https://{domain}/users/{persona_username}");
     let follow_id = format!("{actor_uri}/relay-follow/{relay_id}");
     let activity = serde_json::json!({
         "@context": "https://www.w3.org/ns/activitystreams",
@@ -191,9 +206,9 @@ pub async fn remove(
     });
 
     let body_bytes = serde_json::to_vec(&activity)?;
-    let private_key = crate::persona::get_private_key(pool, &persona).await?;
+    let private_key = crate::persona::get_private_key(pool, &persona_username).await?;
     let key_id = format!("{actor_uri}#main-key");
-    let parsed_inbox = url::Url::parse(&inbox_uri);
+    let parsed_inbox = url::Url::parse(&inbox_url);
     let inbox_domain = parsed_inbox
         .as_ref()
         .ok()
@@ -218,7 +233,7 @@ pub async fn remove(
         .dns_resolver(Arc::new(SsrfSafeResolver))
         .build()?;
     let _ = client
-        .post(&inbox_uri)
+        .post(&inbox_url)
         .headers(sig_headers)
         .header("Content-Type", "application/activity+json")
         .body(body_bytes)
@@ -237,8 +252,8 @@ pub async fn remove(
 
 /// List all relay subscriptions.
 pub async fn list(pool: &SqlitePool) -> anyhow::Result<()> {
-    let rows = sqlx::query_as::<_, (String, String, String, String)>(
-        "SELECT actor_uri, inbox_uri, status, created_at FROM relays ORDER BY created_at",
+    let rows = sqlx::query_as::<_, (String, String, String, i64)>(
+        "SELECT actor_uri, inbox_url, state, created_at FROM relays ORDER BY created_at",
     )
     .fetch_all(pool)
     .await?;
@@ -249,16 +264,19 @@ pub async fn list(pool: &SqlitePool) -> anyhow::Result<()> {
     }
 
     println!("Relay subscriptions ({}):", rows.len());
-    for (actor_uri, inbox_uri, status, created_at) in &rows {
-        let marker = match status.as_str() {
+    for (actor_uri, inbox_url, state, created_at) in &rows {
+        let marker = match state.as_str() {
             "active" => "✓",
             "pending" => "◐",
             "rejected" => "✗",
             _ => "?",
         };
+        let created_str = chrono::DateTime::from_timestamp(*created_at, 0)
+            .map(|dt| dt.format("%Y-%m-%d").to_string())
+            .unwrap_or_else(|| format!("{created_at}"));
         println!("  {marker} {actor_uri}");
-        println!("    inbox: {inbox_uri}");
-        println!("    status: {status}  since: {created_at}");
+        println!("    inbox: {inbox_url}");
+        println!("    state: {state}  since: {created_str}");
     }
     Ok(())
 }
@@ -266,7 +284,7 @@ pub async fn list(pool: &SqlitePool) -> anyhow::Result<()> {
 /// Activate a relay subscription (called when we receive an Accept from the relay).
 pub async fn activate(pool: &SqlitePool, relay_actor_uri: &str) -> anyhow::Result<bool> {
     let result = sqlx::query(
-        "UPDATE relays SET status = 'active' WHERE actor_uri = ? AND status = 'pending'",
+        "UPDATE relays SET state = 'active' WHERE actor_uri = ? AND state = 'pending'",
     )
     .bind(relay_actor_uri)
     .execute(pool)

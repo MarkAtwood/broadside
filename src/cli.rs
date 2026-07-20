@@ -215,7 +215,7 @@ impl Cli {
                                 })
                                 .collect();
                             let json = serde_json::to_string(&metadata)?;
-                            sqlx::query("UPDATE personas SET metadata = ? WHERE username = ?")
+                            sqlx::query("UPDATE personas SET fields_json = ? WHERE username = ?")
                                 .bind(&json)
                                 .bind(&username)
                                 .execute(&pool)
@@ -323,12 +323,12 @@ impl Cli {
                     .fetch_one(&pool)
                     .await?;
                 let (pending,) = sqlx::query_as::<_, (i64,)>(
-                    "SELECT COUNT(*) FROM delivery_queue WHERE status = 'pending'",
+                    "SELECT COUNT(*) FROM delivery_queue WHERE delivered_at IS NULL AND dead_at IS NULL",
                 )
                 .fetch_one(&pool)
                 .await?;
                 let (dead,) = sqlx::query_as::<_, (i64,)>(
-                    "SELECT COUNT(*) FROM delivery_queue WHERE status = 'dead'",
+                    "SELECT COUNT(*) FROM delivery_queue WHERE dead_at IS NOT NULL",
                 )
                 .fetch_one(&pool)
                 .await?;
@@ -352,9 +352,11 @@ impl Cli {
                 match command {
                     FollowersCommand::List { persona } => {
                         let persona_id = broadside::persona::get_id(&pool, &persona).await?;
-                        let rows = sqlx::query_as::<_, (String, String)>(
-                            "SELECT actor_uri, followed_at FROM followers \
-                             WHERE persona_id = ? ORDER BY followed_at",
+                        let rows = sqlx::query_as::<_, (String, i64)>(
+                            "SELECT ra.actor_uri, f.accepted_at \
+                             FROM followers f \
+                             JOIN remote_accounts ra ON ra.id = f.remote_account_id \
+                             WHERE f.persona_id = ? ORDER BY f.accepted_at",
                         )
                         .bind(&persona_id)
                         .fetch_all(&pool)
@@ -362,14 +364,17 @@ impl Cli {
                         if rows.is_empty() {
                             println!("No followers for @{persona}.");
                         } else {
-                            for (uri, date) in &rows {
+                            for (uri, accepted_at) in &rows {
+                                let date = chrono::DateTime::from_timestamp(*accepted_at, 0)
+                                    .map(|dt| dt.format("%Y-%m-%d").to_string())
+                                    .unwrap_or_else(|| format!("{accepted_at}"));
                                 println!("{uri}  (since {date})");
                             }
                         }
                     }
                     FollowersCommand::Count => {
                         let rows = sqlx::query_as::<_, (String, i64)>(
-                            "SELECT p.username, COUNT(f.id) \
+                            "SELECT p.username, COUNT(f.remote_account_id) \
                              FROM personas p LEFT JOIN followers f ON f.persona_id = p.id \
                              GROUP BY p.id ORDER BY p.username",
                         )

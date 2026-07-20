@@ -5,7 +5,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
 
-use crate::id::gen_id;
+use crate::id::gen_int_id;
 use crate::signatures;
 
 /// Retry delays by attempt number (0-indexed after the first immediate try).
@@ -58,39 +58,58 @@ impl CircuitBreaker {
 }
 
 /// Fan out a post to all followers' inboxes and active relay inboxes.
+///
+/// Stores a broadside-specific JSON stub `{"post_id":"..."}` in activity_json.
+/// The delivery worker expands this into a full Create activity at send time.
 pub async fn fan_out(pool: &SqlitePool, post_id: &str, persona_id: &str) -> anyhow::Result<u64> {
+    // Query follower inboxes via remote_accounts JOIN
     let rows = sqlx::query_as::<_, (String, Option<String>)>(
-        "SELECT inbox_uri, shared_inbox_uri FROM followers WHERE persona_id = ?",
+        "SELECT ra.inbox_url, ra.shared_inbox_url \
+         FROM followers f \
+         JOIN remote_accounts ra ON ra.id = f.remote_account_id \
+         WHERE f.persona_id = ?",
     )
     .bind(persona_id)
     .fetch_all(pool)
     .await
     .context("querying followers for fan-out")?;
 
+    let now = chrono::Utc::now().timestamp();
+    // ponytail: store post_id in activity_json as a broadside-specific stub.
+    // The delivery worker expands this into the full Create activity at send time
+    // (needs domain which isn't available here).
+    let stub = serde_json::json!({"post_id": post_id}).to_string();
+
     // ponytail: .to_string() calls below allocate into HashSet<String> for dedup ownership;
     // unavoidable since `target` is a borrow from the loop iteration.
     let mut seen = HashSet::new();
     let mut queued = 0u64;
 
-    for (inbox_uri, shared_inbox_uri) in &rows {
-        let target = shared_inbox_uri.as_deref().unwrap_or(inbox_uri.as_str());
+    for (inbox_url, shared_inbox_url) in &rows {
+        let target = shared_inbox_url.as_deref().unwrap_or(inbox_url.as_str());
         if !seen.insert(target.to_string()) {
             continue;
         }
 
-        let id = gen_id();
-        sqlx::query("INSERT INTO delivery_queue (id, post_id, inbox_uri) VALUES (?, ?, ?)")
-            .bind(&id)
-            .bind(post_id)
-            .bind(target)
-            .execute(pool)
-            .await?;
+        let id = gen_int_id();
+        sqlx::query(
+            "INSERT INTO delivery_queue (id, target_inbox, sender_persona_id, activity_json, next_attempt_at, created_at) \
+             VALUES (?, ?, ?, ?, ?, ?)",
+        )
+        .bind(id)
+        .bind(target)
+        .bind(persona_id)
+        .bind(&stub)
+        .bind(now)
+        .bind(now)
+        .execute(pool)
+        .await?;
         queued += 1;
     }
 
     // Also deliver to all active relay inboxes
     let relays =
-        sqlx::query_as::<_, (String,)>("SELECT inbox_uri FROM relays WHERE status = 'active'")
+        sqlx::query_as::<_, (String,)>("SELECT inbox_url FROM relays WHERE state = 'active'")
             .fetch_all(pool)
             .await
             .context("querying relays for fan-out")?;
@@ -99,13 +118,19 @@ pub async fn fan_out(pool: &SqlitePool, post_id: &str, persona_id: &str) -> anyh
         if !seen.insert(relay_inbox.clone()) {
             continue;
         }
-        let id = gen_id();
-        sqlx::query("INSERT INTO delivery_queue (id, post_id, inbox_uri) VALUES (?, ?, ?)")
-            .bind(&id)
-            .bind(post_id)
-            .bind(relay_inbox)
-            .execute(pool)
-            .await?;
+        let id = gen_int_id();
+        sqlx::query(
+            "INSERT INTO delivery_queue (id, target_inbox, sender_persona_id, activity_json, next_attempt_at, created_at) \
+             VALUES (?, ?, ?, ?, ?, ?)",
+        )
+        .bind(id)
+        .bind(relay_inbox)
+        .bind(persona_id)
+        .bind(&stub)
+        .bind(now)
+        .bind(now)
+        .execute(pool)
+        .await?;
         queued += 1;
     }
 
@@ -146,34 +171,36 @@ async fn process_batch(
     client: &reqwest::Client,
     breaker: &Arc<Mutex<CircuitBreaker>>,
 ) -> anyhow::Result<u32> {
-    let now = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
+    let now = chrono::Utc::now().timestamp();
 
-    let rows = sqlx::query_as::<_, (String, String, String, i32)>(
-        "SELECT dq.id, dq.post_id, dq.inbox_uri, dq.attempts \
+    // Canonical schema: pending = delivered_at IS NULL AND dead_at IS NULL
+    let rows = sqlx::query_as::<_, (i64, String, String, String, i32)>(
+        "SELECT dq.id, dq.sender_persona_id, dq.target_inbox, dq.activity_json, dq.attempts \
          FROM delivery_queue dq \
-         WHERE dq.status = 'pending' AND dq.next_retry <= ? \
-         ORDER BY dq.next_retry ASC LIMIT 50",
+         WHERE dq.delivered_at IS NULL AND dq.dead_at IS NULL AND dq.next_attempt_at <= ? \
+         ORDER BY dq.next_attempt_at ASC LIMIT 50",
     )
-    .bind(&now)
+    .bind(now)
     .fetch_all(pool)
     .await?;
 
     let mut processed = 0u32;
-    // Cache per-post data: (serialized_body, private_key, actor_uri)
+    // Cache per-post: (serialized_body, private_key, actor_uri)
     // ponytail: body is .clone()'d per inbox send. Bodies are typically <10KB JSON;
     // memcpy cost is negligible vs the HTTP roundtrip (~100ms+). Upgrade path: Arc<Vec<u8>>.
     let mut post_cache: HashMap<String, (Vec<u8>, String, String)> = HashMap::new();
 
-    for (delivery_id, post_id, inbox_uri, attempts) in rows {
+    for (delivery_id_int, sender_persona_id, target_inbox, activity_json, attempts) in rows {
+        let delivery_id = delivery_id_int.to_string();
         // Re-validate inbox URI at delivery time (defense against DNS rebinding)
-        if !inbox_uri.starts_with("https://") {
-            mark_dead(pool, &delivery_id, "inbox_uri not https").await?;
+        if !target_inbox.starts_with("https://") {
+            mark_dead(pool, &delivery_id, "target_inbox not https").await?;
             processed += 1;
             continue;
         }
-        let inbox_domain = extract_domain(&inbox_uri);
+        let inbox_domain = extract_domain(&target_inbox);
         if crate::server::is_private_host_resolved(&inbox_domain).await {
-            mark_dead(pool, &delivery_id, "inbox_uri resolves to private host").await?;
+            mark_dead(pool, &delivery_id, "target_inbox resolves to private host").await?;
             processed += 1;
             continue;
         }
@@ -186,25 +213,43 @@ async fn process_batch(
             }
         }
 
-        // Build activity body once per post_id, reuse for all inboxes
-        if !post_cache.contains_key(&post_id) {
-            let post = sqlx::query_as::<_, (String, String, String)>(
-                "SELECT p.content_html, p.published_at, pe.username \
-                 FROM posts p JOIN personas pe ON pe.id = p.persona_id \
-                 WHERE p.id = ?",
-            )
-            .bind(&post_id)
-            .fetch_optional(pool)
-            .await?;
+        // Extract post_id from the activity_json stub ({"post_id":"..."})
+        let post_id = match serde_json::from_str::<serde_json::Value>(&activity_json)
+            .ok()
+            .and_then(|v| v["post_id"].as_str().map(|s| s.to_string()))
+        {
+            Some(pid) => pid,
+            None => {
+                mark_dead(pool, &delivery_id, "missing post_id in activity_json").await?;
+                processed += 1;
+                continue;
+            }
+        };
 
-            let (content_html, published_at, username) = match post {
-                Some(p) => p,
-                None => {
-                    mark_dead(pool, &delivery_id, "post not found").await?;
-                    processed += 1;
-                    continue;
-                }
-            };
+        let post = sqlx::query_as::<_, (String, String, i64, String)>(
+            "SELECT p.id, p.content_html, p.created_at, pe.username \
+             FROM posts p JOIN personas pe ON pe.id = p.persona_id \
+             WHERE p.id = ?",
+        )
+        .bind(&post_id)
+        .fetch_optional(pool)
+        .await?;
+
+        let (post_id, content_html, created_at_epoch, username) = match post {
+            Some(p) => p,
+            None => {
+                mark_dead(pool, &delivery_id, "post not found").await?;
+                processed += 1;
+                continue;
+            }
+        };
+
+        // Build activity body, cache per post
+        let cache_key = post_id.clone();
+        if !post_cache.contains_key(&cache_key) {
+            let published_at = chrono::DateTime::from_timestamp(created_at_epoch, 0)
+                .map(|dt| dt.format("%Y-%m-%dT%H:%M:%SZ").to_string())
+                .unwrap_or_else(|| format!("{created_at_epoch}"));
 
             let actor_uri = format!("https://{domain}/users/{username}");
             let post_uri = format!("{actor_uri}/statuses/{post_id}");
@@ -262,12 +307,12 @@ async fn process_batch(
 
             let body = serde_json::to_vec(&activity)?;
             let private_key = crate::persona::get_private_key(pool, &username).await?;
-            post_cache.insert(post_id.clone(), (body, private_key, actor_uri));
+            post_cache.insert(cache_key.clone(), (body, private_key, actor_uri));
         }
 
-        let (body, private_key, actor_uri) = post_cache.get(&post_id).expect("just inserted");
+        let (body, private_key, actor_uri) = post_cache.get(&cache_key).expect("just inserted");
         let key_id = format!("{actor_uri}#main-key");
-        let target_path = url::Url::parse(&inbox_uri)
+        let target_path = url::Url::parse(&target_inbox)
             .map(|u| u.path().to_string())
             .unwrap_or_else(|_| "/inbox".to_string());
 
@@ -276,7 +321,7 @@ async fn process_batch(
             {
                 Ok(h) => h,
                 Err(e) => {
-                    tracing::error!(inbox = %inbox_uri, error = %e, "failed to sign request");
+                    tracing::error!(inbox = %target_inbox, error = %e, "failed to sign request");
                     mark_dead(pool, &delivery_id, "signing failed").await?;
                     processed += 1;
                     continue;
@@ -284,7 +329,7 @@ async fn process_batch(
             };
 
         let result = client
-            .post(&inbox_uri)
+            .post(&target_inbox)
             .headers(sig_headers)
             .header("Content-Type", "application/activity+json")
             .body(body.clone())
@@ -293,45 +338,38 @@ async fn process_batch(
 
         match result {
             Ok(resp) if resp.status().is_success() => {
-                sqlx::query("DELETE FROM delivery_queue WHERE id = ?")
+                let delivered_at = chrono::Utc::now().timestamp();
+                sqlx::query("UPDATE delivery_queue SET delivered_at = ? WHERE id = ?")
+                    .bind(delivered_at)
                     .bind(&delivery_id)
                     .execute(pool)
                     .await?;
                 breaker.lock().await.record_success(&inbox_domain);
-                tracing::debug!(inbox = inbox_uri, "delivered");
+                tracing::debug!(inbox = target_inbox, "delivered");
             }
             Ok(resp) if resp.status().as_u16() == 410 => {
-                // Get the persona_id from the post so we only delete that persona's followers
-                let persona_id =
-                    sqlx::query_as::<_, (String,)>("SELECT persona_id FROM posts WHERE id = ?")
-                        .bind(&post_id)
-                        .fetch_optional(pool)
-                        .await?
-                        .map(|(pid,)| pid);
-
-                sqlx::query("DELETE FROM delivery_queue WHERE id = ?")
+                // 410 Gone — remove followers pointing to this inbox
+                let delivered_at = chrono::Utc::now().timestamp();
+                sqlx::query("UPDATE delivery_queue SET delivered_at = ? WHERE id = ?")
+                    .bind(delivered_at)
                     .bind(&delivery_id)
                     .execute(pool)
                     .await?;
 
-                let removed = if let Some(pid) = &persona_id {
-                    sqlx::query(
-                        "DELETE FROM followers WHERE persona_id = ? AND (inbox_uri = ? OR shared_inbox_uri = ?)",
-                    )
-                    .bind(pid)
-                    .bind(&inbox_uri)
-                    .bind(&inbox_uri)
-                    .execute(pool)
-                    .await?
-                } else {
-                    sqlx::query("DELETE FROM followers WHERE inbox_uri = ? OR shared_inbox_uri = ?")
-                        .bind(&inbox_uri)
-                        .bind(&inbox_uri)
-                        .execute(pool)
-                        .await?
-                };
+                // Remove followers whose remote_account points at this inbox
+                let removed = sqlx::query(
+                    "DELETE FROM followers WHERE remote_account_id IN \
+                     (SELECT id FROM remote_accounts WHERE inbox_url = ? OR shared_inbox_url = ?) \
+                     AND persona_id = ?",
+                )
+                .bind(&target_inbox)
+                .bind(&target_inbox)
+                .bind(&sender_persona_id)
+                .execute(pool)
+                .await?;
+
                 tracing::info!(
-                    inbox = inbox_uri,
+                    inbox = target_inbox,
                     removed = removed.rows_affected(),
                     "410 Gone — removed followers"
                 );
@@ -370,15 +408,13 @@ async fn handle_retry(
         .get(attempts as usize)
         .copied()
         .unwrap_or(Duration::from_secs(28800));
-    let next_retry = chrono::Utc::now()
-        + chrono::Duration::from_std(delay).unwrap_or(chrono::Duration::hours(8));
-    let next_retry_str = next_retry.format("%Y-%m-%dT%H:%M:%SZ").to_string();
+    let next_attempt_at = chrono::Utc::now().timestamp() + delay.as_secs() as i64;
 
     sqlx::query(
-        "UPDATE delivery_queue SET attempts = ?, next_retry = ?, last_error = ? WHERE id = ?",
+        "UPDATE delivery_queue SET attempts = ?, next_attempt_at = ?, last_error = ? WHERE id = ?",
     )
     .bind(next_attempt)
-    .bind(&next_retry_str)
+    .bind(next_attempt_at)
     .bind(error)
     .bind(delivery_id)
     .execute(pool)
@@ -394,7 +430,9 @@ async fn handle_retry(
 }
 
 async fn mark_dead(pool: &SqlitePool, delivery_id: &str, error: &str) -> anyhow::Result<()> {
-    sqlx::query("UPDATE delivery_queue SET status = 'dead', last_error = ? WHERE id = ?")
+    let dead_at = chrono::Utc::now().timestamp();
+    sqlx::query("UPDATE delivery_queue SET dead_at = ?, last_error = ? WHERE id = ?")
+        .bind(dead_at)
         .bind(error)
         .bind(delivery_id)
         .execute(pool)
@@ -414,16 +452,17 @@ fn extract_domain(uri: &str) -> String {
 
 /// CLI: inspect the delivery queue.
 pub async fn inspect(pool: &SqlitePool) -> anyhow::Result<()> {
-    let pending = sqlx::query_as::<_, (String, String, i32, String)>(
-        "SELECT id, inbox_uri, attempts, next_retry \
-         FROM delivery_queue WHERE status = 'pending' ORDER BY next_retry LIMIT 50",
+    let pending = sqlx::query_as::<_, (String, String, i32, i64)>(
+        "SELECT CAST(id AS TEXT), target_inbox, attempts, next_attempt_at \
+         FROM delivery_queue WHERE delivered_at IS NULL AND dead_at IS NULL \
+         ORDER BY next_attempt_at LIMIT 50",
     )
     .fetch_all(pool)
     .await?;
 
     let dead = sqlx::query_as::<_, (String, String, Option<String>)>(
-        "SELECT id, inbox_uri, last_error \
-         FROM delivery_queue WHERE status = 'dead' ORDER BY id LIMIT 50",
+        "SELECT CAST(id AS TEXT), target_inbox, last_error \
+         FROM delivery_queue WHERE dead_at IS NOT NULL ORDER BY id LIMIT 50",
     )
     .fetch_all(pool)
     .await?;
@@ -436,7 +475,10 @@ pub async fn inspect(pool: &SqlitePool) -> anyhow::Result<()> {
     if !pending.is_empty() {
         println!("Pending ({}):", pending.len());
         for (id, inbox, attempts, next) in &pending {
-            println!("  {id}  → {inbox}  attempts={attempts}  next={next}");
+            let next_str = chrono::DateTime::from_timestamp(*next, 0)
+                .map(|dt| dt.format("%Y-%m-%dT%H:%M:%SZ").to_string())
+                .unwrap_or_else(|| format!("{next}"));
+            println!("  {id}  → {inbox}  attempts={attempts}  next={next_str}");
         }
     }
 
@@ -455,11 +497,12 @@ pub async fn inspect(pool: &SqlitePool) -> anyhow::Result<()> {
 
 /// CLI: retry all dead-lettered deliveries.
 pub async fn retry_dead(pool: &SqlitePool) -> anyhow::Result<()> {
-    let now = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
+    let now = chrono::Utc::now().timestamp();
     let result = sqlx::query(
-        "UPDATE delivery_queue SET status = 'pending', attempts = 0, next_retry = ? WHERE status = 'dead'",
+        "UPDATE delivery_queue SET dead_at = NULL, last_error = NULL, attempts = 0, next_attempt_at = ? \
+         WHERE dead_at IS NOT NULL",
     )
-    .bind(&now)
+    .bind(now)
     .execute(pool)
     .await?;
     println!(
@@ -471,12 +514,13 @@ pub async fn retry_dead(pool: &SqlitePool) -> anyhow::Result<()> {
 
 /// CLI: delivery stats.
 pub async fn stats(pool: &SqlitePool) -> anyhow::Result<()> {
-    let (pending,) =
-        sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM delivery_queue WHERE status = 'pending'")
-            .fetch_one(pool)
-            .await?;
+    let (pending,) = sqlx::query_as::<_, (i64,)>(
+        "SELECT COUNT(*) FROM delivery_queue WHERE delivered_at IS NULL AND dead_at IS NULL",
+    )
+    .fetch_one(pool)
+    .await?;
     let (dead,) =
-        sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM delivery_queue WHERE status = 'dead'")
+        sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM delivery_queue WHERE dead_at IS NOT NULL")
             .fetch_one(pool)
             .await?;
 

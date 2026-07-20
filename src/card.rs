@@ -2,8 +2,6 @@ use anyhow::Context;
 use sqlx::SqlitePool;
 use std::path::Path;
 
-use crate::id::gen_id;
-
 /// Parsed OpenGraph / Twitter Card metadata.
 #[derive(Debug, Default)]
 pub struct CardMeta {
@@ -165,7 +163,7 @@ pub async fn fetch_and_store(
     pool: &SqlitePool,
     post_id: &str,
     url: &str,
-    data_dir: &Path,
+    _data_dir: &Path,
     client: &reqwest::Client,
     domain: &str,
 ) -> anyhow::Result<()> {
@@ -200,15 +198,6 @@ pub async fn fetch_and_store(
         return Ok(());
     }
 
-    // Download and cache the preview image if present
-    let image_path = if !meta.image_url.is_empty() {
-        fetch_card_image(client, &meta.image_url, data_dir, domain)
-            .await
-            .unwrap_or_default()
-    } else {
-        String::new()
-    };
-
     // Sanitize remote-supplied metadata: strip HTML and cap field lengths
     let mut title = crate::sanitize::html_to_text(&meta.title);
     let mut description = crate::sanitize::html_to_text(&meta.description);
@@ -217,108 +206,54 @@ pub async fn fetch_and_store(
     crate::sanitize::truncate_utf8(&mut description, 2048);
     crate::sanitize::truncate_utf8(&mut site_name, 256);
 
-    let id = gen_id();
+    let now = chrono::Utc::now().timestamp();
+    // Upsert into link_cards, then link via post_cards junction
     sqlx::query(
-        "INSERT OR REPLACE INTO cards (id, post_id, url, title, description, image_url, image_path, site_name, card_type) \
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT OR REPLACE INTO link_cards (url, card_type, title, description, image_url, provider_name, fetched_at) \
+         VALUES (?, ?, ?, ?, ?, ?, ?)",
     )
-    .bind(&id)
-    .bind(post_id)
     .bind(url)
+    .bind(&meta.card_type)
     .bind(&title)
     .bind(&description)
     .bind(if meta.image_url.starts_with("https://") { &meta.image_url } else { "" })
-    .bind(&image_path)
     .bind(&site_name)
-    .bind(&meta.card_type)
+    .bind(now)
     .execute(pool)
     .await
-    .context("inserting card")?;
+    .context("inserting link_card")?;
+
+    sqlx::query(
+        "INSERT OR IGNORE INTO post_cards (post_id, card_url) VALUES (?, ?)",
+    )
+    .bind(post_id)
+    .bind(url)
+    .execute(pool)
+    .await
+    .context("linking post to card")?;
 
     tracing::debug!(post_id, url, title = %meta.title, "card fetched");
     Ok(())
-}
-
-/// Download and resize a card preview image. Returns the stored file path (relative to data_dir/media),
-/// or None on failure.
-async fn fetch_card_image(
-    client: &reqwest::Client,
-    image_url: &str,
-    data_dir: &Path,
-    domain: &str,
-) -> Option<String> {
-    if !image_url.starts_with("https://") {
-        return None;
-    }
-
-    let result = async {
-        let parsed = url::Url::parse(image_url)?;
-        if let Some(host) = parsed.host_str() {
-            if crate::server::is_private_host_resolved(host).await {
-                anyhow::bail!("card image URL resolves to private host");
-            }
-        }
-
-        let resp = client
-            .get(image_url)
-            .header("User-Agent", format!("Broadside/0.2 (+https://{domain})"))
-            .send()
-            .await?;
-
-        if !resp.status().is_success() {
-            anyhow::bail!("image fetch returned {}", resp.status());
-        }
-
-        let bytes = crate::http::read_body_limited(resp, 5 * 1024 * 1024).await?;
-
-        // Decode with limits to prevent decompression bombs (64MB cap, matches process_image)
-        let mut reader =
-            image::ImageReader::new(std::io::Cursor::new(&bytes)).with_guessed_format()?;
-        let mut limits = image::Limits::default();
-        limits.max_alloc = Some(64 * 1024 * 1024);
-        reader.limits(limits);
-        let img = reader.decode().context("decoding card image")?;
-        let resized = if img.width() > 800 || img.height() > 418 {
-            img.resize(800, 418, image::imageops::FilterType::Lanczos3)
-        } else {
-            img
-        };
-
-        let filename = format!("card-{}.jpg", gen_id());
-        let out_path = data_dir.join("media").join(&filename);
-        resized
-            .to_rgb8()
-            .save_with_format(&out_path, image::ImageFormat::Jpeg)
-            .context("saving card image")?;
-
-        Ok::<String, anyhow::Error>(filename)
-    }
-    .await;
-
-    match result {
-        Ok(path) => Some(path),
-        Err(e) => {
-            tracing::debug!(image_url, error = %e, "card image fetch failed");
-            None
-        }
-    }
 }
 
 /// Get the card for a post (if any), for inclusion in AP Note objects.
 pub async fn get_card_for_post(
     pool: &SqlitePool,
     post_id: &str,
-    domain: &str,
+    _domain: &str,
 ) -> Option<serde_json::Value> {
-    let row = sqlx::query_as::<_, (String, String, String, String, String, String)>(
-        "SELECT url, title, description, image_path, site_name, card_type FROM cards WHERE post_id = ?",
+    let row = sqlx::query_as::<_, (String, String, String, Option<String>, String, String)>(
+        "SELECT lc.url, lc.title, lc.description, lc.image_url, lc.provider_name, lc.card_type \
+         FROM link_cards lc \
+         JOIN post_cards pc ON pc.card_url = lc.url \
+         WHERE pc.post_id = ? LIMIT 1",
     )
     .bind(post_id)
     .fetch_optional(pool)
     .await
     .ok()??;
 
-    let (url, title, description, image_path, site_name, _card_type) = row;
+    let (url, title, description, image_url, site_name, _card_type) = row;
 
     let mut card = serde_json::json!({
         "type": "Link",
@@ -332,11 +267,13 @@ pub async fn get_card_for_post(
     if !site_name.is_empty() {
         card["attributedTo"] = serde_json::Value::String(site_name);
     }
-    if !image_path.is_empty() {
-        card["icon"] = serde_json::json!({
-            "type": "Image",
-            "url": format!("https://{domain}/media/{image_path}"),
-        });
+    if let Some(ref img) = image_url {
+        if !img.is_empty() {
+            card["icon"] = serde_json::json!({
+                "type": "Image",
+                "url": img,
+            });
+        }
     }
 
     Some(card)

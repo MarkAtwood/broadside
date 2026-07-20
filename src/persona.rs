@@ -6,6 +6,15 @@ use sqlx::SqlitePool;
 
 use crate::id::gen_id;
 
+/// Get the single operator user_id. Broadside is single-user; this returns the first user.
+pub async fn get_operator_user_id(pool: &SqlitePool) -> anyhow::Result<String> {
+    let (id,) = sqlx::query_as::<_, (String,)>("SELECT id FROM users LIMIT 1")
+        .fetch_one(pool)
+        .await
+        .context("no operator user found — database may not be initialized")?;
+    Ok(id)
+}
+
 /// Generate an RSA 2048 keypair, returning (private_pem, public_pem).
 // ponytail: 2048 matches Mastodon's choice; 4096 would double signing time for marginal benefit
 // in this context.
@@ -38,6 +47,8 @@ pub async fn add(
     let (private_pem, public_pem) = generate_keypair()?;
     let id = gen_id();
     let display = display_name.unwrap_or(username);
+    let now = chrono::Utc::now().timestamp();
+    let user_id = get_operator_user_id(pool).await?;
 
     // Generate Ed25519 recovery keypair for DID identity
     let (recovery_private, recovery_public) = crate::did::generate_recovery_keypair();
@@ -47,16 +58,18 @@ pub async fn add(
     // recovery_private is Zeroizing<[u8; 32]> — auto-zeroized on drop
 
     sqlx::query(
-        "INSERT INTO personas (id, username, display_name, private_key, public_key, did_key, recovery_pubkey) \
-         VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO personas (id, user_id, username, display_name, private_key_pem, public_key_pem, did_key, recovery_pubkey, created_at) \
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&id)
+    .bind(&user_id)
     .bind(username)
     .bind(display)
     .bind(&private_pem)
     .bind(&public_pem)
     .bind(&did_key)
     .bind(&recovery_pubkey_hex)
+    .bind(now)
     .execute(pool)
     .await
     .with_context(|| format!("inserting persona {username}"))?;
@@ -72,7 +85,7 @@ pub async fn add(
 /// List all personas with follower counts.
 pub async fn list(pool: &SqlitePool) -> anyhow::Result<()> {
     let rows = sqlx::query_as::<_, (String, String, String, i64)>(
-        "SELECT p.id, p.username, p.display_name, COUNT(f.id) as follower_count \
+        "SELECT p.id, p.username, p.display_name, COUNT(f.remote_account_id) as follower_count \
          FROM personas p LEFT JOIN followers f ON f.persona_id = p.id \
          GROUP BY p.id ORDER BY p.username",
     )
@@ -112,10 +125,10 @@ pub async fn update(
         fields.push(("bio = ?", v));
     }
     if let Some(v) = avatar {
-        fields.push(("avatar_path = ?", v));
+        fields.push(("avatar_media_id = ?", v));
     }
     if let Some(v) = header {
-        fields.push(("header_path = ?", v));
+        fields.push(("header_media_id = ?", v));
     }
 
     let set_clause: Vec<&str> = fields.iter().map(|(clause, _)| *clause).collect();
@@ -141,7 +154,7 @@ pub async fn update(
 /// Look up a persona's private key PEM by username.
 pub async fn get_private_key(pool: &SqlitePool, username: &str) -> anyhow::Result<String> {
     let (key,) =
-        sqlx::query_as::<_, (String,)>("SELECT private_key FROM personas WHERE username = ?")
+        sqlx::query_as::<_, (String,)>("SELECT private_key_pem FROM personas WHERE username = ?")
             .bind(username)
             .fetch_one(pool)
             .await
@@ -152,7 +165,7 @@ pub async fn get_private_key(pool: &SqlitePool, username: &str) -> anyhow::Resul
 /// Look up a persona's public key PEM by username.
 pub async fn get_public_key(pool: &SqlitePool, username: &str) -> anyhow::Result<String> {
     let (key,) =
-        sqlx::query_as::<_, (String,)>("SELECT public_key FROM personas WHERE username = ?")
+        sqlx::query_as::<_, (String,)>("SELECT public_key_pem FROM personas WHERE username = ?")
             .bind(username)
             .fetch_one(pool)
             .await

@@ -81,19 +81,47 @@ pub async fn poll_feed(
 
         let text = sanitize::html_to_text(&html);
 
-        // Use INSERT OR IGNORE for dedup — avoids fragile string matching on error messages
-        let id = crate::id::gen_id();
-        let result = sqlx::query(
-            "INSERT OR IGNORE INTO posts (id, persona_id, content_html, content_text, source_ref) \
-             VALUES (?, ?, ?, ?, ?)",
+        // Use INSERT OR IGNORE for dedup via broadside_post_meta.source_ref UNIQUE constraint
+        let id = crate::id::gen_int_id();
+        let now = chrono::Utc::now().timestamp();
+        let user_id = crate::persona::get_operator_user_id(pool).await?;
+        let ap_id = format!("urn:broadside:post:{id}");
+        let id_str = id.to_string();
+
+        // Check if source_ref already exists (dedup)
+        let exists = sqlx::query_as::<_, (i64,)>(
+            "SELECT COUNT(*) FROM broadside_post_meta WHERE source_ref = ?",
         )
-        .bind(&id)
-        .bind(&persona_id)
-        .bind(&html)
-        .bind(&text)
         .bind(&entry_id)
+        .fetch_one(pool)
+        .await?;
+
+        if exists.0 > 0 {
+            continue;
+        }
+
+        let result = sqlx::query(
+            "INSERT INTO posts (id, user_id, persona_id, ap_id, content, content_html, visibility, created_at) \
+             VALUES (?, ?, ?, ?, ?, ?, 'public', ?)",
+        )
+        .bind(id)
+        .bind(&user_id)
+        .bind(&persona_id)
+        .bind(&ap_id)
+        .bind(&text)
+        .bind(&html)
+        .bind(now)
         .execute(pool)
         .await?;
+
+        // Store source_ref for dedup
+        let _ = sqlx::query(
+            "INSERT OR IGNORE INTO broadside_post_meta (post_id, source_ref) VALUES (?, ?)",
+        )
+        .bind(id)
+        .bind(&entry_id)
+        .execute(pool)
+        .await;
 
         if result.rows_affected() > 0 {
             // Attach enclosure images as media (capped to prevent abuse)
@@ -120,7 +148,7 @@ pub async fn poll_feed(
                         {
                             // process_remote has its own SSRF guard
                             match crate::media::process_remote(
-                                pool, &id, url_str, data_dir, "", client,
+                                pool, &id_str, url_str, data_dir, "", client,
                             )
                             .await
                             {
@@ -137,15 +165,15 @@ pub async fn poll_feed(
             // Spawn background card fetch for link previews
             crate::card::spawn_fetch(
                 pool.clone(),
-                id.clone(),
+                id_str.clone(),
                 html.clone(),
                 data_dir.to_str().unwrap_or(".").to_string(),
                 client.clone(),
                 domain.to_string(),
             );
 
-            if let Err(e) = crate::delivery::fan_out(pool, &id, &persona_id).await {
-                tracing::error!(post_id = %id, error = %e, "fan_out failed for new post");
+            if let Err(e) = crate::delivery::fan_out(pool, &id_str, &persona_id).await {
+                tracing::error!(post_id = %id_str, error = %e, "fan_out failed for new post");
             }
             new_count += 1;
             newest_id = Some(entry_id);
@@ -154,7 +182,7 @@ pub async fn poll_feed(
 
     // Update feed state
     if let Some(ref nid) = newest_id {
-        let now = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
+        let now = chrono::Utc::now().timestamp();
         sqlx::query(
             "INSERT INTO feed_state (feed_url, persona_id, last_seen_id, last_poll) \
              VALUES (?, ?, ?, ?) \
@@ -163,9 +191,9 @@ pub async fn poll_feed(
         .bind(&config.url)
         .bind(&persona_id)
         .bind(nid)
-        .bind(&now)
+        .bind(now)
         .bind(nid)
-        .bind(&now)
+        .bind(now)
         .execute(pool)
         .await?;
     }

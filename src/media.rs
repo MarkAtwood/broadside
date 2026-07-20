@@ -3,7 +3,7 @@ use image::DynamicImage;
 use sqlx::SqlitePool;
 use std::path::Path;
 
-use crate::id::gen_id;
+use crate::id::gen_int_id;
 
 const MAX_FILE_SIZE: u64 = 10 * 1024 * 1024; // 10 MB
 const MAX_DIMENSION: u32 = 4096;
@@ -77,7 +77,7 @@ pub async fn process_remote(
     store_processed_image(pool, post_id, &bytes, data_dir, description).await
 }
 
-/// Common image processing and storage. Returns the post_media row ID.
+/// Common image processing and storage. Returns the media row ID.
 async fn store_processed_image(
     pool: &SqlitePool,
     post_id: &str,
@@ -93,7 +93,7 @@ async fn store_processed_image(
     img.write_to(&mut cursor, image::ImageFormat::Png)
         .context("encoding processed image")?;
 
-    let media_id = gen_id();
+    let media_id = gen_int_id();
     let dest_filename = format!("{media_id}.png");
     let media_dir = data_dir.join("media");
     tokio::fs::create_dir_all(&media_dir).await?;
@@ -102,23 +102,39 @@ async fn store_processed_image(
 
     let hash = compute_blurhash(&img, width, height);
     let rel_path = format!("media/{dest_filename}");
+    let file_size = output.len() as i64;
+    let now = chrono::Utc::now().timestamp();
+    let user_id = crate::persona::get_operator_user_id(pool).await?;
+
+    // Look up persona_id from the post
+    let (persona_id,) = sqlx::query_as::<_, (String,)>(
+        "SELECT persona_id FROM posts WHERE id = ?",
+    )
+    .bind(post_id)
+    .fetch_one(pool)
+    .await
+    .context("looking up persona for media")?;
 
     sqlx::query(
-        "INSERT INTO post_media (id, post_id, file_path, mime_type, description, blurhash, width, height) \
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO media (id, user_id, persona_id, post_id, file_path, mime_type, file_size, description, blurhash, width, height, created_at) \
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
-    .bind(&media_id)
+    .bind(media_id)
+    .bind(&user_id)
+    .bind(&persona_id)
     .bind(post_id)
     .bind(&rel_path)
     .bind("image/png") // actual stored format after re-encoding
+    .bind(file_size)
     .bind(description)
     .bind(&hash)
     .bind(width as i64)
     .bind(height as i64)
+    .bind(now)
     .execute(pool)
     .await?;
 
-    Ok(media_id)
+    Ok(media_id.to_string())
 }
 
 /// Fetch media attachments for a post (for ActivityPub serialization).
@@ -129,8 +145,8 @@ pub async fn attachments_for_post(
 ) -> Vec<serde_json::Value> {
     let rows =
         match sqlx::query_as::<_, (String, String, String, String, Option<i64>, Option<i64>)>(
-            "SELECT file_path, mime_type, description, blurhash, width, height \
-         FROM post_media WHERE post_id = ? ORDER BY id",
+            "SELECT file_path, mime_type, description, COALESCE(blurhash, ''), width, height \
+         FROM media WHERE post_id = ? ORDER BY id",
         )
         .bind(post_id)
         .fetch_all(pool)
