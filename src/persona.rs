@@ -1,5 +1,5 @@
 use anyhow::Context;
-use fieldwork::db::Pool;
+use fieldwork_db::db::Pool;
 use rsa::pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding};
 use rsa::rand_core::OsRng;
 use rsa::RsaPrivateKey;
@@ -9,7 +9,7 @@ use crate::id::gen_int_id;
 /// Get the single operator user_id. Broadside is single-user; this returns the first user.
 pub async fn get_operator_user_id(pool: &Pool) -> anyhow::Result<i64> {
 
-    let users = fieldwork::tenant_db::list_users(pool)
+    let users = fieldwork_db::tenant_db::list_users(pool)
         .await
         .context("no operator user found — database may not be initialized")?;
     users
@@ -62,7 +62,7 @@ pub async fn add(
     // recovery_private is Zeroizing<[u8; 32]> — auto-zeroized on drop
 
 
-    let row = fieldwork::persona_db::PersonaRow {
+    let row = fieldwork_db::persona_db::PersonaRow {
         id,
         user_id,
         username: username.to_string(),
@@ -81,7 +81,7 @@ pub async fn add(
         created_at: now,
         last_status_at: None,
     };
-    fieldwork::persona_db::create_persona(pool, &row)
+    fieldwork_db::persona_db::create_persona(pool, &row)
         .await
         .with_context(|| format!("inserting persona {username}"))?;
 
@@ -100,7 +100,7 @@ pub async fn add(
 /// List all personas with follower counts.
 pub async fn list(pool: &Pool) -> anyhow::Result<()> {
 
-    let rows = fieldwork::persona_db::list_personas(pool)
+    let rows = fieldwork_db::persona_db::list_personas(pool)
         .await
         .context("listing personas")?;
 
@@ -110,7 +110,7 @@ pub async fn list(pool: &Pool) -> anyhow::Result<()> {
     }
 
     for row in &rows {
-        let followers = fieldwork::followers_db::follower_count(pool, row.id)
+        let followers = fieldwork_db::followers_db::follower_count(pool, row.id)
             .await
             .unwrap_or(0);
         println!(
@@ -139,7 +139,7 @@ pub async fn update(
 
     // Use fieldwork for display_name and bio
     if display_name.is_some() || bio.is_some() {
-        fieldwork::persona_db::update_persona_profile(
+        fieldwork_db::persona_db::update_persona_profile(
             pool,
             persona_id,
             display_name,
@@ -161,7 +161,7 @@ pub async fn update(
 /// Look up a persona's private key PEM by username.
 pub async fn get_private_key(pool: &Pool, username: &str) -> anyhow::Result<String> {
 
-    let row = fieldwork::persona_db::get_persona_by_username(pool, username)
+    let row = fieldwork_db::persona_db::get_persona_by_username(pool, username)
         .await
         .with_context(|| format!("persona @{username} not found"))?
         .with_context(|| format!("persona @{username} not found"))?;
@@ -171,7 +171,7 @@ pub async fn get_private_key(pool: &Pool, username: &str) -> anyhow::Result<Stri
 /// Look up a persona's public key PEM by username.
 pub async fn get_public_key(pool: &Pool, username: &str) -> anyhow::Result<String> {
 
-    let row = fieldwork::persona_db::get_persona_by_username(pool, username)
+    let row = fieldwork_db::persona_db::get_persona_by_username(pool, username)
         .await
         .with_context(|| format!("persona @{username} not found"))?
         .with_context(|| format!("persona @{username} not found"))?;
@@ -181,7 +181,7 @@ pub async fn get_public_key(pool: &Pool, username: &str) -> anyhow::Result<Strin
 /// Look up a persona's ID by username.
 pub async fn get_id(pool: &Pool, username: &str) -> anyhow::Result<i64> {
 
-    let row = fieldwork::persona_db::get_persona_by_username(pool, username)
+    let row = fieldwork_db::persona_db::get_persona_by_username(pool, username)
         .await
         .with_context(|| format!("persona @{username} not found"))?
         .with_context(|| format!("persona @{username} not found"))?;

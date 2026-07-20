@@ -1,5 +1,5 @@
 use anyhow::Context;
-use fieldwork::db::Pool;
+use fieldwork_db::db::Pool;
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::{Path, PathBuf};
 use tokio::sync::mpsc;

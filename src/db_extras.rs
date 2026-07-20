@@ -5,8 +5,8 @@
 //! instead of using sqlx::query directly.
 
 use anyhow::Context;
-use fieldwork::db::sqlx;
-use fieldwork::db::Pool;
+use fieldwork_db::db::sqlx;
+use fieldwork_db::db::Pool;
 
 // --- broadside_post_meta ---
 

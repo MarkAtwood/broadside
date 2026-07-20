@@ -1,5 +1,5 @@
 use anyhow::Context;
-use fieldwork::db::Pool;
+use fieldwork_db::db::Pool;
 
 use crate::id::gen_int_id;
 
@@ -21,7 +21,7 @@ pub async fn create(
     let id_str = id.to_string();
 
 
-    let post = fieldwork::posts_db::PostRow {
+    let post = fieldwork_db::posts_db::PostRow {
         id,
         user_id,
         persona_id,
@@ -42,7 +42,7 @@ pub async fn create(
         deleted_at: None,
         deleted_reason: None,
     };
-    fieldwork::posts_db::create_post(pool, &post)
+    fieldwork_db::posts_db::create_post(pool, &post)
         .await
         .with_context(|| format!("inserting post for persona {persona_id}"))?;
 
@@ -90,7 +90,7 @@ pub async fn list_for_persona(
 /// Count total posts for a persona.
 pub async fn count_for_persona(pool: &Pool, persona_id: i64) -> anyhow::Result<i64> {
 
-    let count = fieldwork::posts_db::posts_count(pool, persona_id).await?;
+    let count = fieldwork_db::posts_db::posts_count(pool, persona_id).await?;
     Ok(count)
 }
 

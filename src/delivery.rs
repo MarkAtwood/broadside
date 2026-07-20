@@ -1,5 +1,5 @@
 use anyhow::Context;
-use fieldwork::db::Pool;
+use fieldwork_db::db::Pool;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -54,7 +54,7 @@ pub async fn fan_out(pool: &Pool, post_id: &str, persona_id: i64) -> anyhow::Res
     let now = chrono::Utc::now().timestamp();
 
     // Query follower inboxes (already deduplicated by shared_inbox preference)
-    let inboxes = fieldwork::followers_db::follower_inboxes(pool, persona_id)
+    let inboxes = fieldwork_db::followers_db::follower_inboxes(pool, persona_id)
         .await
         .context("querying followers for fan-out")?;
 
@@ -71,12 +71,12 @@ pub async fn fan_out(pool: &Pool, post_id: &str, persona_id: i64) -> anyhow::Res
             continue;
         }
 
-        fieldwork::delivery_db::enqueue(pool, target, persona_id, &stub, now).await?;
+        fieldwork_db::delivery_db::enqueue(pool, target, persona_id, &stub, now).await?;
         queued += 1;
     }
 
     // Also deliver to all accepted relay inboxes
-    let relays = fieldwork::relay::get_accepted(pool)
+    let relays = fieldwork_db::relay::get_accepted(pool)
         .await
         .context("querying relays for fan-out")?;
 
@@ -84,7 +84,7 @@ pub async fn fan_out(pool: &Pool, post_id: &str, persona_id: i64) -> anyhow::Res
         if !seen.insert(relay.inbox_url.clone()) {
             continue;
         }
-        fieldwork::delivery_db::enqueue(pool, &relay.inbox_url, persona_id, &stub, now).await?;
+        fieldwork_db::delivery_db::enqueue(pool, &relay.inbox_url, persona_id, &stub, now).await?;
         queued += 1;
     }
 
@@ -127,7 +127,7 @@ async fn process_batch(
 ) -> anyhow::Result<u32> {
     let now = chrono::Utc::now().timestamp();
 
-    let jobs = fieldwork::delivery_db::fetch_pending(pool, 50, now).await?;
+    let jobs = fieldwork_db::delivery_db::fetch_pending(pool, 50, now).await?;
 
     let mut processed = 0u32;
     // Cache per-post: (serialized_body, private_key, actor_uri)
@@ -143,14 +143,14 @@ async fn process_batch(
         let attempts = job.attempts;
         // Re-validate inbox URI at delivery time (defense against DNS rebinding)
         if !target_inbox.starts_with("https://") {
-            fieldwork::delivery_db::mark_dead(pool, delivery_id, "target_inbox not https", now).await?;
+            fieldwork_db::delivery_db::mark_dead(pool, delivery_id, "target_inbox not https", now).await?;
             tracing::warn!(delivery_id, error = "target_inbox not https", "delivery dead-lettered");
             processed += 1;
             continue;
         }
         let inbox_domain = extract_domain(target_inbox);
         if crate::server::is_private_host_resolved(&inbox_domain).await {
-            fieldwork::delivery_db::mark_dead(pool, delivery_id, "target_inbox resolves to private host", now).await?;
+            fieldwork_db::delivery_db::mark_dead(pool, delivery_id, "target_inbox resolves to private host", now).await?;
             tracing::warn!(delivery_id, error = "target_inbox resolves to private host", "delivery dead-lettered");
             processed += 1;
             continue;
@@ -171,7 +171,7 @@ async fn process_batch(
         {
             Some(pid) => pid,
             None => {
-                fieldwork::delivery_db::mark_dead(pool, delivery_id, "missing post_id in activity_json", now).await?;
+                fieldwork_db::delivery_db::mark_dead(pool, delivery_id, "missing post_id in activity_json", now).await?;
                 tracing::warn!(delivery_id, error = "missing post_id in activity_json", "delivery dead-lettered");
                 processed += 1;
                 continue;
@@ -181,20 +181,20 @@ async fn process_batch(
         let post_id_int: i64 = match post_id.parse() {
             Ok(v) => v,
             Err(_) => {
-                fieldwork::delivery_db::mark_dead(pool, delivery_id, "invalid post_id", now).await?;
+                fieldwork_db::delivery_db::mark_dead(pool, delivery_id, "invalid post_id", now).await?;
                 processed += 1;
                 continue;
             }
         };
-        let fw_post = fieldwork::posts_db::get_post(pool, post_id_int).await?;
+        let fw_post = fieldwork_db::posts_db::get_post(pool, post_id_int).await?;
         let (post_id, content_html, created_at_epoch, username) = match fw_post {
             Some(p) => {
-                let persona = fieldwork::persona_db::get_persona_by_id(pool, p.persona_id).await?;
+                let persona = fieldwork_db::persona_db::get_persona_by_id(pool, p.persona_id).await?;
                 let uname = persona.map(|r| r.username).unwrap_or_default();
                 (p.id.to_string(), p.content_html, p.created_at, uname)
             }
             None => {
-                fieldwork::delivery_db::mark_dead(pool, delivery_id, "post not found", now).await?;
+                fieldwork_db::delivery_db::mark_dead(pool, delivery_id, "post not found", now).await?;
                 tracing::warn!(delivery_id, error = "post not found", "delivery dead-lettered");
                 processed += 1;
                 continue;
@@ -279,7 +279,7 @@ async fn process_batch(
                 Ok(h) => h,
                 Err(e) => {
                     tracing::error!(inbox = %target_inbox, error = %e, "failed to sign request");
-                    fieldwork::delivery_db::mark_dead(pool, delivery_id, "signing failed", now).await?;
+                    fieldwork_db::delivery_db::mark_dead(pool, delivery_id, "signing failed", now).await?;
                     tracing::warn!(delivery_id, error = "signing failed", "delivery dead-lettered");
                     processed += 1;
                     continue;
@@ -297,14 +297,14 @@ async fn process_batch(
         match result {
             Ok(resp) if resp.status().is_success() => {
                 let delivered_at = chrono::Utc::now().timestamp();
-                fieldwork::delivery_db::mark_delivered(pool, delivery_id, delivered_at).await?;
+                fieldwork_db::delivery_db::mark_delivered(pool, delivery_id, delivered_at).await?;
                 breaker.lock().await.record_success(&inbox_domain);
                 tracing::debug!(inbox = %target_inbox, "delivered");
             }
             Ok(resp) if resp.status().as_u16() == 410 => {
                 // 410 Gone — mark delivered, then remove followers pointing to this inbox
                 let delivered_at = chrono::Utc::now().timestamp();
-                fieldwork::delivery_db::mark_delivered(pool, delivery_id, delivered_at).await?;
+                fieldwork_db::delivery_db::mark_delivered(pool, delivery_id, delivered_at).await?;
 
                 let removed = crate::db_extras::remove_followers_by_inbox(
                     pool, target_inbox, *sender_persona_id,
@@ -321,14 +321,14 @@ async fn process_batch(
                 let status = resp.status();
                 let err_msg = format!("HTTP {status}");
                 let retry_now = chrono::Utc::now().timestamp();
-                fieldwork::delivery_db::schedule_retry(pool, delivery_id, &err_msg, retry_now).await?;
+                fieldwork_db::delivery_db::schedule_retry(pool, delivery_id, &err_msg, retry_now).await?;
                 tracing::warn!(delivery_id, attempt = attempts + 1, error = %err_msg, "delivery failed, will retry");
                 breaker.lock().await.record_failure(&inbox_domain);
             }
             Err(e) => {
                 let err_msg = e.to_string();
                 let retry_now = chrono::Utc::now().timestamp();
-                fieldwork::delivery_db::schedule_retry(pool, delivery_id, &err_msg, retry_now).await?;
+                fieldwork_db::delivery_db::schedule_retry(pool, delivery_id, &err_msg, retry_now).await?;
                 tracing::warn!(delivery_id, attempt = attempts + 1, error = %err_msg, "delivery failed, will retry");
                 breaker.lock().await.record_failure(&inbox_domain);
             }
@@ -352,7 +352,7 @@ fn extract_domain(uri: &str) -> String {
 /// CLI: inspect the delivery queue.
 pub async fn inspect(pool: &Pool) -> anyhow::Result<()> {
     // Fetch pending jobs with a far-future timestamp to get all pending items
-    let pending_jobs = fieldwork::delivery_db::fetch_pending(pool, 50, i64::MAX).await?;
+    let pending_jobs = fieldwork_db::delivery_db::fetch_pending(pool, 50, i64::MAX).await?;
 
     let dead = crate::db_extras::delivery_list_dead(pool).await?;
 
@@ -387,15 +387,15 @@ pub async fn inspect(pool: &Pool) -> anyhow::Result<()> {
 /// CLI: retry all dead-lettered deliveries.
 pub async fn retry_dead(pool: &Pool) -> anyhow::Result<()> {
     let now = chrono::Utc::now().timestamp();
-    let count = fieldwork::delivery_db::retry_all_dead(pool, now).await?;
+    let count = fieldwork_db::delivery_db::retry_all_dead(pool, now).await?;
     println!("Retrying {count} dead-lettered deliveries.");
     Ok(())
 }
 
 /// CLI: delivery stats.
 pub async fn stats(pool: &Pool) -> anyhow::Result<()> {
-    let pending = fieldwork::delivery_db::count_pending(pool).await?;
-    let dead = fieldwork::delivery_db::count_dead(pool).await?;
+    let pending = fieldwork_db::delivery_db::count_pending(pool).await?;
+    let dead = fieldwork_db::delivery_db::count_dead(pool).await?;
 
     println!("Pending: {pending}");
     println!("Dead:    {dead}");

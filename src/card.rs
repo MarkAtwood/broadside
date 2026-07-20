@@ -1,5 +1,5 @@
 use anyhow::Context;
-use fieldwork::db::Pool;
+use fieldwork_db::db::Pool;
 use std::path::Path;
 
 /// Parsed OpenGraph / Twitter Card metadata.
@@ -213,7 +213,7 @@ pub async fn fetch_and_store(
     } else {
         None
     };
-    let card_row = fieldwork::cards_db::CardRow {
+    let card_row = fieldwork_db::cards_db::CardRow {
         id: 0, // ignored by upsert_card
         url: url.to_string(),
         card_type: meta.card_type.clone(),
@@ -230,14 +230,14 @@ pub async fn fetch_and_store(
         fetched_at: now,
         failed: false,
     };
-    fieldwork::cards_db::upsert_card(pool, &card_row)
+    fieldwork_db::cards_db::upsert_card(pool, &card_row)
         .await
         .context("inserting link_card")?;
 
     let post_id_int: i64 = post_id
         .parse()
         .context("post_id is not a valid integer")?;
-    fieldwork::cards_db::link_card_to_post(pool, post_id_int, url)
+    fieldwork_db::cards_db::link_card_to_post(pool, post_id_int, url)
         .await
         .context("linking post to card")?;
 
@@ -253,7 +253,7 @@ pub async fn get_card_for_post(
 ) -> Option<serde_json::Value> {
     let post_id_int: i64 = post_id.parse().ok()?;
 
-    let cards = fieldwork::cards_db::cards_for_post(pool, post_id_int).await.ok()?;
+    let cards = fieldwork_db::cards_db::cards_for_post(pool, post_id_int).await.ok()?;
     let row = cards.into_iter().next()?;
 
     let mut card = serde_json::json!({

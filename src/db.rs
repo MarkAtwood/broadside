@@ -1,11 +1,11 @@
 use anyhow::Context;
-use fieldwork::db::sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
+use fieldwork_db::db::sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
 use std::path::Path;
 use std::str::FromStr;
 
 /// Broadside-specific extra migrations (run after the canonical fieldwork chain).
-const BROADSIDE_EXTRAS: &[fieldwork::db::Migration] = &[
-    fieldwork::db::Migration {
+const BROADSIDE_EXTRAS: &[fieldwork_db::db::Migration] = &[
+    fieldwork_db::db::Migration {
         version: 100,
         description: "broadside: add broadside_post_meta and persona DID columns",
         sql_sqlite: r#"
@@ -21,13 +21,13 @@ CREATE TABLE IF NOT EXISTS broadside_post_meta (
 );
 "#,
     },
-    fieldwork::db::Migration {
+    fieldwork_db::db::Migration {
         version: 101,
         description: "broadside: add per-persona DID columns",
         sql_sqlite: "__ADD_COLUMN_IF_NOT_EXISTS:personas:did_key:TEXT",
         sql_postgres: "ALTER TABLE personas ADD COLUMN IF NOT EXISTS did_key TEXT;",
     },
-    fieldwork::db::Migration {
+    fieldwork_db::db::Migration {
         version: 102,
         description: "broadside: add per-persona recovery_pubkey column",
         sql_sqlite: "__ADD_COLUMN_IF_NOT_EXISTS:personas:recovery_pubkey:TEXT",
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS broadside_post_meta (
     },
 ];
 
-pub async fn connect(data_dir: &Path) -> anyhow::Result<fieldwork::db::Pool> {
+pub async fn connect(data_dir: &Path) -> anyhow::Result<fieldwork_db::db::Pool> {
     let db_path = data_dir.join("broadside.db");
     let db_str = db_path
         .to_str()
@@ -44,10 +44,10 @@ pub async fn connect(data_dir: &Path) -> anyhow::Result<fieldwork::db::Pool> {
         .journal_mode(SqliteJournalMode::Wal)
         .create_if_missing(true)
         .foreign_keys(true);
-    let sq_pool = fieldwork::db::sqlx::SqlitePool::connect_with(options).await?;
-    let pool = fieldwork::db::Pool::Sqlite(sq_pool);
+    let sq_pool = fieldwork_db::db::sqlx::SqlitePool::connect_with(options).await?;
+    let pool = fieldwork_db::db::Pool::Sqlite(sq_pool);
 
-    fieldwork::db::migrate_full(&pool, Some(&fieldwork::db::LEGACY_BROADSIDE), BROADSIDE_EXTRAS)
+    fieldwork_db::db::migrate_full(&pool, Some(&fieldwork_db::db::LEGACY_BROADSIDE), BROADSIDE_EXTRAS)
         .await
         .context("Failed to run database migrations")?;
 
@@ -63,8 +63,8 @@ pub async fn init_data_dir(data_dir: &Path) -> anyhow::Result<()> {
     // Ensure a default operator user exists (for fresh databases)
     let now = chrono::Utc::now().timestamp();
     // Only insert if no users exist yet (idempotent)
-    if fieldwork::tenant_db::list_users(&pool).await.map(|v| v.is_empty()).unwrap_or(true) {
-        let _ = fieldwork::tenant_db::create_user(
+    if fieldwork_db::tenant_db::list_users(&pool).await.map(|v| v.is_empty()).unwrap_or(true) {
+        let _ = fieldwork_db::tenant_db::create_user(
             &pool,
             1000000000000i64,
             "admin@localhost",
@@ -76,7 +76,7 @@ pub async fn init_data_dir(data_dir: &Path) -> anyhow::Result<()> {
     }
 
     match &pool {
-        fieldwork::db::Pool::Sqlite(sq) => sq.close().await,
+        fieldwork_db::db::Pool::Sqlite(sq) => sq.close().await,
     }
 
     let config_path = data_dir.join("config.toml");

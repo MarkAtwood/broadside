@@ -290,6 +290,7 @@ dependencies = [
  "ed25519-dalek",
  "feed-rs",
  "fieldwork",
+ "fieldwork-db",
  "image",
  "multibase",
  "notify",
@@ -815,11 +816,20 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
- "sqlx",
  "subtle",
  "thiserror",
  "tracing",
  "whatlang",
+]
+
+[[package]]
+name = "fieldwork-db"
+version = "0.1.0"
+dependencies = [
+ "fieldwork",
+ "sqlx",
+ "thiserror",
+ "tracing",
 ]
 
 [[package]]

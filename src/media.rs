@@ -1,5 +1,5 @@
 use anyhow::{bail, Context};
-use fieldwork::db::Pool;
+use fieldwork_db::db::Pool;
 use image::DynamicImage;
 use std::path::Path;
 
@@ -105,14 +105,14 @@ async fn store_processed_image(
     let user_id = crate::persona::get_operator_user_id(pool).await?;
 
     let post_id_int: i64 = post_id.parse().context("post_id not a valid integer")?;
-    let post_row = fieldwork::posts_db::get_post(pool, post_id_int)
+    let post_row = fieldwork_db::posts_db::get_post(pool, post_id_int)
         .await
         .context("looking up post for media")?
         .context("post not found for media")?;
     let persona_id = post_row.persona_id;
 
     let post_id_int: Option<i64> = post_id.parse().ok();
-    let media_row = fieldwork::media_db::MediaRow {
+    let media_row = fieldwork_db::media_db::MediaRow {
         id: media_id,
         user_id,
         persona_id,
@@ -127,7 +127,7 @@ async fn store_processed_image(
         description: description.to_string(),
         created_at: now,
     };
-    fieldwork::media_db::insert_media(pool, &media_row).await?;
+    fieldwork_db::media_db::insert_media(pool, &media_row).await?;
 
     Ok(media_id.to_string())
 }
@@ -143,7 +143,7 @@ pub async fn attachments_for_post(
         Err(_) => return Vec::new(),
     };
 
-    let rows = match fieldwork::media_db::attachments_for_post(pool, post_id_int).await {
+    let rows = match fieldwork_db::media_db::attachments_for_post(pool, post_id_int).await {
         Ok(r) => r,
         Err(e) => {
             tracing::warn!(post_id, error = %e, "failed to fetch media attachments");

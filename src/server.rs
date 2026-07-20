@@ -4,7 +4,7 @@ use axum::response::{IntoResponse, Json};
 use axum::routing::{get, post};
 use axum::Router;
 use serde::{Deserialize, Serialize};
-use fieldwork::db::Pool;
+use fieldwork_db::db::Pool;
 use std::fmt::Write;
 use std::sync::Arc;
 
@@ -290,7 +290,7 @@ async fn webfinger(
     }
 
 
-    let exists = fieldwork::persona_db::get_persona_by_username(&state.pool, username).await;
+    let exists = fieldwork_db::persona_db::get_persona_by_username(&state.pool, username).await;
 
     match exists {
         Ok(None) | Err(_) => (StatusCode::NOT_FOUND, "unknown user").into_response(),
@@ -332,7 +332,7 @@ async fn nodeinfo_discovery(State(state): State<Arc<AppState>>) -> impl IntoResp
 
 async fn nodeinfo(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 
-    let personas = fieldwork::persona_db::list_personas(&state.pool)
+    let personas = fieldwork_db::persona_db::list_personas(&state.pool)
         .await
         .unwrap_or_default();
     let user_count = personas.len() as i64;
@@ -342,7 +342,7 @@ async fn nodeinfo(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     // N+1 queries — acceptable at nodeinfo frequency (cached 5 min).
     let mut post_count = 0i64;
     for p in &personas {
-        post_count += fieldwork::posts_db::posts_count(&state.pool, p.id).await.unwrap_or(0);
+        post_count += fieldwork_db::posts_db::posts_count(&state.pool, p.id).await.unwrap_or(0);
     }
 
     let doc = serde_json::json!({
@@ -388,7 +388,7 @@ async fn actor(
         return serve_profile_html(&state, &username).await;
     }
 
-    let persona_row = match fieldwork::persona_db::get_persona_by_username(&state.pool, &username).await {
+    let persona_row = match fieldwork_db::persona_db::get_persona_by_username(&state.pool, &username).await {
         Ok(Some(r)) => r,
         _ => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
     };
@@ -451,7 +451,7 @@ async fn actor(
     // Resolve avatar/header media IDs to file paths
 
     if let Some(mid) = avatar_media_id {
-        if let Ok(Some(m)) = fieldwork::media_db::get_media(&state.pool, mid).await {
+        if let Ok(Some(m)) = fieldwork_db::media_db::get_media(&state.pool, mid).await {
             doc["icon"] = serde_json::json!({
                 "type": "Image",
                 "mediaType": m.mime_type,
@@ -460,7 +460,7 @@ async fn actor(
         }
     }
     if let Some(mid) = header_media_id {
-        if let Ok(Some(m)) = fieldwork::media_db::get_media(&state.pool, mid).await {
+        if let Ok(Some(m)) = fieldwork_db::media_db::get_media(&state.pool, mid).await {
             doc["image"] = serde_json::json!({
                 "type": "Image",
                 "mediaType": m.mime_type,
@@ -630,7 +630,7 @@ async fn followers_collection(
     };
 
 
-    let count = fieldwork::followers_db::follower_count(&state.pool, persona_id)
+    let count = fieldwork_db::followers_db::follower_count(&state.pool, persona_id)
         .await
         .unwrap_or(0);
 
@@ -694,7 +694,7 @@ async fn did_document(
     Path(username): Path<String>,
 ) -> impl IntoResponse {
 
-    let persona_row = match fieldwork::persona_db::get_persona_by_username(&state.pool, &username).await {
+    let persona_row = match fieldwork_db::persona_db::get_persona_by_username(&state.pool, &username).await {
         Ok(Some(r)) => r,
         _ => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
     };
@@ -1086,7 +1086,7 @@ async fn handle_inbox(
                 .unwrap_or(follower_actor)
                 .to_string();
 
-            let remote_acct = fieldwork::actor_cache::RemoteAccountRow {
+            let remote_acct = fieldwork_db::actor_cache::RemoteAccountRow {
                 id: fieldwork::id::generate_id(),
                 actor_uri: follower_actor.to_string(),
                 username: actor_doc["preferredUsername"].as_str().unwrap_or("").to_string(),
@@ -1107,7 +1107,7 @@ async fn handle_inbox(
                 fetch_fail_count: 0,
             };
 
-            let remote_account_id = match fieldwork::actor_cache::upsert_remote_account(&state.pool, &remote_acct).await {
+            let remote_account_id = match fieldwork_db::actor_cache::upsert_remote_account(&state.pool, &remote_acct).await {
                 Ok(id) => id,
                 Err(e) => {
                     tracing::error!(error = %e, follower = follower_actor, "failed to upsert remote_account");
@@ -1116,7 +1116,7 @@ async fn handle_inbox(
             };
 
             // Insert follower row
-            if let Err(e) = fieldwork::followers_db::add_follower(
+            if let Err(e) = fieldwork_db::followers_db::add_follower(
                 &state.pool, persona_id, user_id, remote_account_id, now,
             )
             .await
@@ -1226,9 +1226,9 @@ async fn handle_inbox(
 
                 if let Some(pid) = target_persona_id {
                 
-                    match fieldwork::actor_cache::get_by_actor_uri(&state.pool, &actor_uri).await {
+                    match fieldwork_db::actor_cache::get_by_actor_uri(&state.pool, &actor_uri).await {
                         Ok(Some(remote_acct)) => {
-                            match fieldwork::followers_db::remove_follower(
+                            match fieldwork_db::followers_db::remove_follower(
                                 &state.pool, pid, remote_acct.id,
                             )
                             .await
@@ -1266,12 +1266,12 @@ async fn handle_inbox(
 
 async fn health(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
 
-    let persona_count = fieldwork::persona_db::list_personas(&state.pool)
+    let persona_count = fieldwork_db::persona_db::list_personas(&state.pool)
         .await
         .map(|v| v.len() as i64)
         .unwrap_or(0);
 
-    let pending = fieldwork::delivery_db::count_pending(&state.pool)
+    let pending = fieldwork_db::delivery_db::count_pending(&state.pool)
         .await
         .unwrap_or(0);
 
@@ -1286,7 +1286,7 @@ async fn health(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
 
 async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 
-    let rows = fieldwork::persona_db::list_personas(&state.pool)
+    let rows = fieldwork_db::persona_db::list_personas(&state.pool)
         .await
         .unwrap_or_default();
 
@@ -1354,7 +1354,7 @@ async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 // COUNT() subqueries if profiling shows this as a bottleneck.
 async fn serve_profile_html(state: &AppState, username: &str) -> axum::response::Response {
 
-    let persona_row = match fieldwork::persona_db::get_persona_by_username(&state.pool, username).await {
+    let persona_row = match fieldwork_db::persona_db::get_persona_by_username(&state.pool, username).await {
         Ok(Some(r)) => r,
         _ => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
     };
@@ -1430,7 +1430,7 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
         format!("<div class=\"bio\">{}</div>", ammonia::clean(&bio))
     };
 
-    let follower_count = fieldwork::followers_db::follower_count(&state.pool, persona_id)
+    let follower_count = fieldwork_db::followers_db::follower_count(&state.pool, persona_id)
         .await
         .unwrap_or(0);
 

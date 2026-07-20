@@ -310,7 +310,7 @@ impl Cli {
             }
             Command::Status => {
                 let pool = connect_db(&self.data_dir).await?;
-                let persona_list = fieldwork::persona_db::list_personas(&pool)
+                let persona_list = fieldwork_db::persona_db::list_personas(&pool)
                     .await
                     .unwrap_or_default();
                 let personas = persona_list.len() as i64;
@@ -318,16 +318,16 @@ impl Cli {
                 let mut followers = 0i64;
                 let mut posts = 0i64;
                 for p in &persona_list {
-                    followers += fieldwork::followers_db::follower_count(&pool, p.id)
+                    followers += fieldwork_db::followers_db::follower_count(&pool, p.id)
                         .await
                         .unwrap_or(0);
-                    posts += fieldwork::posts_db::posts_count(&pool, p.id)
+                    posts += fieldwork_db::posts_db::posts_count(&pool, p.id)
                         .await
                         .unwrap_or(0);
                 }
 
-                let pending = fieldwork::delivery_db::count_pending(&pool).await?;
-                let dead = fieldwork::delivery_db::count_dead(&pool).await?;
+                let pending = fieldwork_db::delivery_db::count_pending(&pool).await?;
+                let dead = fieldwork_db::delivery_db::count_dead(&pool).await?;
 
                 println!("Personas:   {personas}");
                 println!("Followers:  {followers}");
@@ -364,9 +364,9 @@ impl Cli {
                         }
                     }
                     FollowersCommand::Count => {
-                        let personas = fieldwork::persona_db::list_personas(&pool).await?;
+                        let personas = fieldwork_db::persona_db::list_personas(&pool).await?;
                         for p in &personas {
-                            let count = fieldwork::followers_db::follower_count(&pool, p.id)
+                            let count = fieldwork_db::followers_db::follower_count(&pool, p.id)
                                 .await
                                 .unwrap_or(0);
                             println!("@{}: {count}", p.username);
@@ -536,7 +536,7 @@ impl Cli {
     }
 }
 
-async fn connect_db(data_dir: &Option<PathBuf>) -> anyhow::Result<fieldwork::db::Pool> {
+async fn connect_db(data_dir: &Option<PathBuf>) -> anyhow::Result<fieldwork_db::db::Pool> {
     let dir = data_dir
         .as_ref()
         .ok_or_else(|| anyhow::anyhow!("--data-dir or BROADSIDE_DATA_DIR required"))?;

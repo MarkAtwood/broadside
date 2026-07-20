@@ -1,5 +1,5 @@
 use anyhow::{bail, Context};
-use fieldwork::db::Pool;
+use fieldwork_db::db::Pool;
 use std::sync::Arc;
 
 use crate::server::SsrfSafeResolver;
@@ -31,7 +31,7 @@ pub async fn add(
 
     // Check if already subscribed
 
-    if let Some(existing) = fieldwork::relay::find_by_actor(pool, relay_url).await? {
+    if let Some(existing) = fieldwork_db::relay::find_by_actor(pool, relay_url).await? {
         bail!("relay already registered (state: {})", existing.state);
     }
 
@@ -85,7 +85,7 @@ pub async fn add(
     let temp_follow_id = format!("{actor_uri}/relay-follow/pending");
 
     // Store the relay subscription
-    let id = fieldwork::relay::subscribe(pool, relay_url, &inbox_url, Some(persona_id), &temp_follow_id)
+    let id = fieldwork_db::relay::subscribe(pool, relay_url, &inbox_url, Some(persona_id), &temp_follow_id)
         .await
         .context("storing relay subscription")?;
 
@@ -150,7 +150,7 @@ pub async fn remove(
     persona_override: Option<&str>,
 ) -> anyhow::Result<()> {
 
-    let relay_row = fieldwork::relay::find_by_actor(pool, relay_url)
+    let relay_row = fieldwork_db::relay::find_by_actor(pool, relay_url)
         .await?
         .context(format!("relay not found: {relay_url}"))?;
 
@@ -161,7 +161,7 @@ pub async fn remove(
     let persona_username = if let Some(p) = persona_override {
         p.to_string()
     } else if let Some(pid) = relay_row.persona_id {
-        let persona = fieldwork::persona_db::get_persona_by_id(pool, pid)
+        let persona = fieldwork_db::persona_db::get_persona_by_id(pool, pid)
             .await
             .context("looking up persona for relay")?
             .context("persona not found for relay")?;
@@ -222,7 +222,7 @@ pub async fn remove(
         .await;
 
     // Delete regardless of Undo delivery success
-    fieldwork::relay::unsubscribe(pool, relay_id).await?;
+    fieldwork_db::relay::unsubscribe(pool, relay_id).await?;
 
     println!("Removed relay: {relay_url}");
     Ok(())
@@ -258,10 +258,10 @@ pub async fn list(pool: &Pool) -> anyhow::Result<()> {
 /// Activate a relay subscription (called when we receive an Accept from the relay).
 pub async fn activate(pool: &Pool, relay_actor_uri: &str) -> anyhow::Result<bool> {
 
-    let relay = match fieldwork::relay::find_by_actor(pool, relay_actor_uri).await? {
-        Some(r) if r.state == fieldwork::relay::RelayState::Pending => r,
+    let relay = match fieldwork_db::relay::find_by_actor(pool, relay_actor_uri).await? {
+        Some(r) if r.state == fieldwork_db::relay::RelayState::Pending => r,
         _ => return Ok(false),
     };
-    fieldwork::relay::accept(pool, relay.id).await?;
+    fieldwork_db::relay::accept(pool, relay.id).await?;
     Ok(true)
 }

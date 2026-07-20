@@ -1,5 +1,5 @@
 use anyhow::Context;
-use fieldwork::db::Pool;
+use fieldwork_db::db::Pool;
 
 use crate::config::FeedConfig;
 use crate::sanitize;
@@ -92,7 +92,7 @@ pub async fn poll_feed(
             continue;
         }
 
-        let post = fieldwork::posts_db::PostRow {
+        let post = fieldwork_db::posts_db::PostRow {
             id,
             user_id,
             persona_id,
@@ -113,7 +113,7 @@ pub async fn poll_feed(
             deleted_at: None,
             deleted_reason: None,
         };
-        let post_ok = fieldwork::posts_db::create_post(pool, &post).await.is_ok();
+        let post_ok = fieldwork_db::posts_db::create_post(pool, &post).await.is_ok();
 
         crate::db_extras::insert_post_meta_ignore(pool, id, &entry_id).await;
 
