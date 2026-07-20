@@ -4,6 +4,7 @@ pub mod config;
 pub mod content;
 pub mod db;
 pub mod delivery;
+pub mod did;
 pub mod feed;
 pub mod http;
 pub mod id;
