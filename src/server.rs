@@ -721,8 +721,18 @@ async fn handle_inbox(
         Err(_) => return StatusCode::BAD_REQUEST,
     };
 
-    // Require digest and date in the signed headers to prevent body substitution and replay
+    // Require (request-target), host, digest, and date in signed headers.
+    // Without all four, signatures can be replayed across paths, hosts, or time windows.
+    // Matches Mastodon's requirements.
     let signed_header_names: Vec<&str> = sig_parts.headers.split_whitespace().collect();
+    if !signed_header_names.contains(&"(request-target)") {
+        tracing::debug!("rejecting signature that does not cover (request-target)");
+        return StatusCode::BAD_REQUEST;
+    }
+    if !signed_header_names.contains(&"host") {
+        tracing::debug!("rejecting signature that does not cover host header");
+        return StatusCode::BAD_REQUEST;
+    }
     if !signed_header_names.contains(&"digest") {
         tracing::debug!("rejecting signature that does not cover digest header");
         return StatusCode::BAD_REQUEST;
