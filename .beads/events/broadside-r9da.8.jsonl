@@ -1,0 +1,5 @@
+{"id":"019f7d37-c41a-704e-8d7b-aa437996baad","issue_id":"broadside-r9da.8","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:50:34.522020505Z"}
+{"id":"019f7d37-c41f-72cc-924d-73323d3d513e","issue_id":"broadside-r9da.8","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: crypto-security","created_at":"2026-07-20T01:50:34.527183737Z"}
+{"id":"019f7d37-c424-7004-b8db-a04c72506598","issue_id":"broadside-r9da.8","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: key-lifecycle","created_at":"2026-07-20T01:50:34.532001594Z"}
+{"id":"019f7d37-c428-7e76-a8ea-24c16beeb719","issue_id":"broadside-r9da.8","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:50:34.536948222Z"}
+{"id":"019f7d51-8cff-7863-85b1-a2a29eb019aa","issue_id":"broadside-r9da.8","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: mnemonic_to_private_key zeroizes entropy Vec and returns Zeroizing","created_at":"2026-07-20T02:18:44.35155048Z"}

@@ -1,0 +1,4 @@
+{"id":"019f7d38-8629-7e72-8d6e-f9939dd9ffb9","issue_id":"broadside-r9da.31","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:51:24.201947387Z"}
+{"id":"019f7d38-862f-768d-98a8-ddb42cc8f8e6","issue_id":"broadside-r9da.31","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: readability","created_at":"2026-07-20T01:51:24.207429727Z"}
+{"id":"019f7d38-8634-7aa2-932e-162f37507f38","issue_id":"broadside-r9da.31","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:51:24.212697701Z"}
+{"id":"019f7d51-8dd7-7a02-beaf-bef6d218eedd","issue_id":"broadside-r9da.31","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: each migration runs in its own transaction with version bump","created_at":"2026-07-20T02:18:44.567656616Z"}

@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.47",
+  "title": "census registration client bypasses SsrfSafeResolver",
+  "description": "LOCATION: src/server.rs:164-180\\n\\nFINDING: The census registration background task builds its own reqwest::Client without dns_resolver(Arc::new(SsrfSafeResolver)). The domain value used in the census URL comes from config.server.domain, which is operator-supplied. If an operator sets domain to 'metadata.internal' or another internal hostname (accidentally or during testing), the census client will make an outbound request to the resolved internal address.\\n\\nThe SSRF risk is low because the census domain is operator-controlled (not user-controlled), but consistency with the rest of the codebase (all other clients use SsrfSafeResolver or explicit pre-flight checks) would eliminate a latent footgun if this pattern is copied for other operator-facing callbacks.\\n\\nIMPACT: Low-severity SSRF risk for operator-misconfigured domains. The census URL is constructed as https://the-federation.info/register/{census_domain} — the fixed hostname the-federation.info is the destination, not the domain value. On re-reading, the domain value is only used in the path, not as the destination host. Actual SSRF risk is nil. The finding is that the census client is inconsistent with the SSRF-safe client pattern, making it harder to audit which clients bypass the resolver.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:52:07.2561577Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:08.209157045Z",
+  "closed_at": "2026-07-20T02:19:08.209157045Z",
+  "close_reason": "Fixed: census client now uses SsrfSafeResolver (same as r9da.38)",
+  "labels": [
+    "readability",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.47",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:52:07.286979795Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

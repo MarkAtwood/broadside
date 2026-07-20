@@ -1,0 +1,27 @@
+{
+  "id": "broadside-r9da.55",
+  "title": "410 Gone response removes follower from DB in delivery worker",
+  "description": "LOCATION: src/delivery.rs:303-337\\n\\nFINDING: When an inbox returns HTTP 410 Gone, the delivery worker deletes the follower record from the followers table (scoped to the specific persona when possible, or all followers sharing that inbox). This is correct ActivityPub behavior: a 410 means the resource is permanently gone, so continuing to deliver to that inbox wastes resources. Scoping the delete to persona_id prevents cross-persona data loss when multiple personas share a follower.\\n\\nThis should be preserved. A naive implementation would simply dead-letter the delivery without cleaning up the follower row, causing the same dead inbox to accumulate in the delivery queue permanently on every new post.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "decision",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:52:39.200692553Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:18.967142443Z",
+  "closed_at": "2026-07-20T02:19:18.967142443Z",
+  "close_reason": "Acknowledged: 410 follower cleanup design is correct",
+  "labels": [
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.55",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:52:39.224505731Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{"id":"019f7d37-d27e-7bf0-9173-6e1cb39e684c","issue_id":"broadside-r9da.10","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:50:38.206783212Z"}
+{"id":"019f7d37-d284-7136-84a7-a81ea7a3aa6a","issue_id":"broadside-r9da.10","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: risk","created_at":"2026-07-20T01:50:38.212080181Z"}
+{"id":"019f7d37-d289-72f8-b9a0-0bd9ee9901c4","issue_id":"broadside-r9da.10","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: maintainer-burden","created_at":"2026-07-20T01:50:38.217195295Z"}
+{"id":"019f7d37-d28e-71ea-82f0-4198659f8f26","issue_id":"broadside-r9da.10","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:50:38.222126292Z"}
+{"id":"019f7d51-1923-77aa-8a79-800e20addb10","issue_id":"broadside-r9da.10","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: bare URLs in content.rs now use escape_html_attr for href","created_at":"2026-07-20T02:18:14.691503246Z"}

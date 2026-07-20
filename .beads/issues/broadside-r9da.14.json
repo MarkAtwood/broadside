@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.14",
+  "title": "webhook bearer keys stored as plain String in AppState",
+  "description": "LOCATION: src/server.rs:35, src/config.rs:37\n\nFINDING: AppState holds webhook_keys as HashMap\u003cString, String\u003e where the value is the webhook bearer token (an authentication secret equivalent to a shared HMAC key). WebhookConfig also holds key as a plain String. Neither type implements Zeroize or ZeroizeOnDrop. These maps live for the full process lifetime in the server binary. No attempt is made to overwrite the key bytes when the map is dropped on shutdown.\n\nIMPACT: If the process produces a core dump, is attached by a debugger, or if a memory-safety bug occurs anywhere in the process, all webhook bearer tokens are exposed in plaintext. An attacker who recovers a key can forge webhook posts without further access.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:50:46.778421254Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:30.255436277Z",
+  "closed_at": "2026-07-20T02:18:30.255436277Z",
+  "close_reason": "Accepted: webhook keys must be in memory for comparison. Wrapping in Secret\u003c\u003e adds complexity with no real security gain for a single-operator server.",
+  "labels": [
+    "crypto-security",
+    "key-lifecycle",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.14",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:50:46.815664076Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

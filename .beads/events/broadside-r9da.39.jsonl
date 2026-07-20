@@ -1,0 +1,5 @@
+{"id":"019f7d38-d034-7c31-b995-45378237ece9","issue_id":"broadside-r9da.39","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:51:43.156800006Z"}
+{"id":"019f7d38-d03a-760f-9d2d-ce4b36a0cfbc","issue_id":"broadside-r9da.39","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-20T01:51:43.162398181Z"}
+{"id":"019f7d38-d03f-7ecf-918c-2f1fa5d4fa85","issue_id":"broadside-r9da.39","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: ownership","created_at":"2026-07-20T01:51:43.167971388Z"}
+{"id":"019f7d38-d043-732d-bc68-13b41cd96063","issue_id":"broadside-r9da.39","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:51:43.171208873Z"}
+{"id":"019f7d51-e95a-70cb-b15c-d0c1037a8864","issue_id":"broadside-r9da.39","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: fan_out uses HashSet\u003c\u0026str\u003e with borrows","created_at":"2026-07-20T02:19:07.994052821Z"}

@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.80",
+  "title": "server.rs: 10-element actor query tuple",
+  "description": "LOCATION: src/server.rs lines 386-408\n\nFINDING: The actor handler queries with sqlx::query_as::\u003c_, (String, String, String, String, String, Option\u003cString\u003e, Option\u003cString\u003e, String, String, Option\u003cString\u003e)\u003e — a 10-element tuple. This is harder to read and maintain than a named struct (equivalent to the 10-element tuple row finding from pass 1 in server.rs). The destructure names (_id, username, display_name, bio, public_key, avatar_path, header_path, created_at, metadata_json, did_key) immediately follow, indicating a struct with #[derive(sqlx::FromRow)] would be clearer.\n\nIMPACT: Adding or reordering any column in this query requires updating both the tuple type signature and the destructure pattern in sync — a maintenance hazard.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:57:02.719082665Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T01:57:27.312648093Z",
+  "closed_at": "2026-07-20T01:57:27.312648093Z",
+  "close_reason": "Closed",
+  "labels": [
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.80",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:57:02.749445658Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

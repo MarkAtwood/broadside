@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.15",
+  "title": "gen_id uses Relaxed atomic: IDs not monotonic under concurrent posts",
+  "description": "LOCATION: src/id.rs:16\n\nFINDING: gen_id() uses AtomicU64::fetch_add with Ordering::Relaxed. The comment acknowledges \"cross-thread IDs within the same millisecond may not be strictly monotonic.\" In practice, on x86 Relaxed is as strong as SeqCst for fetch_add, so monotonicity is incidental. However, the real issue is that the ID format is \"{millis}-{seq:06}\" where seq is global across all posts for all personas. On a busy server posting to multiple personas simultaneously from separate tokio tasks, two posts created in the same millisecond can get the same seq value if the Relaxed fetch_add is reordered by the compiler or CPU. More concretely: SQLite primary key is TEXT and uses INSERT, so duplicates would cause a UNIQUE constraint failure that propagates as an error to the caller. The fan_out loop in delivery.rs also calls gen_id() in a tight loop for each delivery row, with no gap between calls. If two tokio tasks call gen_id() concurrently at the same millisecond boundary with Relaxed ordering, they could get the same seq. On weakly-ordered architectures (ARM), this is not theoretical.\n\nIMPACT: Duplicate primary key on a concurrent post burst causes post creation to fail with a DB error. The user sees a 500 from the webhook endpoint or a CLI error.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:50:48.945834565Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:17:54.68369764Z",
+  "closed_at": "2026-07-20T02:17:54.68369764Z",
+  "close_reason": "Fixed: gen_id uses SeqCst ordering",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.15",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:50:48.97528176Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

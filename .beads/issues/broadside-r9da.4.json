@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.4",
+  "title": "Delivery worker uses non-SSRF-safe reqwest client",
+  "description": "LOCATION: src/delivery.rs:119-129\n\nFINDING: `run_worker` builds its own `reqwest::Client` with `redirect::Policy::none()` and a 30s timeout, but does NOT attach the `SsrfSafeResolver` custom DNS resolver that is used by the server's `http_client`. The SSRF-safe client is wired up in `server::serve` (line 116-120) and stored in `AppState.http_client`. The delivery worker runs as a `tokio::spawn` and builds a fresh client without the resolver. The relay `add` and `remove` functions (src/relay.rs:42-45, 212-215) do the same — they build bare clients with no custom resolver. The custom resolver is the primary SSRF defense (per the comment in server.rs:114); the preliminary `is_private_host_resolved` check at delivery time (line 175) is a TOCTOU guard that is bypassable via DNS rebinding because the actual TCP connection uses the standard system resolver.\n\nIMPACT: Delivery to a follower whose inbox domain resolves to a private IP via DNS rebinding (CNAME chained to a TTL-0 A record) bypasses the SSRF guard at the TCP connection stage. An attacker who controls a follower entry in the database (e.g., via a rogue Follow that passes the preliminary check) can trigger HTTP requests to internal services.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:50:17.202220366Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:17:54.612896717Z",
+  "closed_at": "2026-07-20T02:17:54.612896717Z",
+  "close_reason": "Fixed: delivery worker client now uses SsrfSafeResolver",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.4",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:50:17.22877759Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

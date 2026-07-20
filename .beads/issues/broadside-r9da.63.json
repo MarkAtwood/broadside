@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.63",
+  "title": "html_decode: 6 chained replace allocs per meta tag",
+  "description": "LOCATION: src/card.rs:121-127\n\nFINDING: html_decode() chains 6 .replace() calls. Each call allocates a new String even when there is no match. For HTML with no entities the work is: 6 allocations + 6 full scans of the string, discarding 5 of the resulting Strings. Called for every meta tag value parsed (title, description, image_url, site_name, og:type) — potentially 5-10 times per card fetch.\n\nA single-pass implementation (match on state machine, or using the html-escape crate, or building into a pre-allocated buffer) would reduce this to 1 allocation and 1 scan.\n\nIMPACT: Unnecessary allocations on every card fetch. Minor overhead compared to the HTTP round-trip, but the pattern is an anti-idiom that scales badly if the function is ever called in a tighter context.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:56:07.395264615Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:08.284073119Z",
+  "closed_at": "2026-07-20T02:19:08.284073119Z",
+  "close_reason": "Fixed: html_decode uses single-pass loop",
+  "labels": [
+    "efficiency",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.63",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:56:07.426030289Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

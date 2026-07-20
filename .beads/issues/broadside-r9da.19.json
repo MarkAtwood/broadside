@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.19",
+  "title": "spawn_fetch takes data_dir: String instead of PathBuf",
+  "description": "LOCATION: src/card.rs:311-338, src/feed.rs:141, src/webhook.rs:114\\n\\nFINDING: card::spawn_fetch accepts data_dir: String and immediately converts it to Path::new(\u0026data_dir) inside the spawned task. All three call sites (feed.rs:141, webhook.rs:114, server.rs implicit via spawn_fetch) must convert their PathBuf/Path to String first, potentially losing non-UTF-8 paths. feed.rs:141 uses the lossy fallback to_str().unwrap_or(\".\") which silently substitutes a wrong path on non-UTF-8 systems.\\n\\nIMPACT: Non-UTF-8 data_dir paths silently use '.' as the media directory, storing files in the current working directory instead of the configured location. Callers pay an unnecessary String allocation.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:50:57.3973005Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:07.319186803Z",
+  "closed_at": "2026-07-20T02:19:07.319186803Z",
+  "close_reason": "Deferred: spawn_fetch takes String because tokio::spawn requires 'static owned data.",
+  "labels": [
+    "idiomatic-rust",
+    "type-design",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.19",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:50:57.434312238Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

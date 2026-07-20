@@ -1,0 +1,4 @@
+{"id":"019f7d3c-faf8-7d4c-8f11-ebd273989eec","issue_id":"broadside-r9da.67","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:56:16.24887209Z"}
+{"id":"019f7d3c-fafd-7360-a85d-aa2a8113adbb","issue_id":"broadside-r9da.67","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-20T01:56:16.253221639Z"}
+{"id":"019f7d3c-fb01-719e-a1ac-742a60334282","issue_id":"broadside-r9da.67","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:56:16.257106331Z"}
+{"id":"019f7d51-1c50-7ea9-a4ba-a957a4721b5e","issue_id":"broadside-r9da.67","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: Follow actor doc fetch failure returns 500, not silent 202","created_at":"2026-07-20T02:18:15.504961494Z"}

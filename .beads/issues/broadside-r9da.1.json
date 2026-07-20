@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.1",
+  "title": "Migration step 0-\u003e1 silently skips empty MIGRATIONS[0]",
+  "description": "LOCATION: src/db.rs:103-163\n\nFINDING: The migration loop at line 158 iterates `version..CURRENT_SCHEMA_VERSION` and skips entries where `MIGRATIONS[idx].is_empty()`. MIGRATIONS[0] is `\"\"` by design, because \"version 0-\u003e1\" is handled by the base SCHEMA. However, the comment says \"Version 0 is the initial schema (SCHEMA constant above)\". On a fresh database, `ensure_migrations` inserts schema_version = 4 immediately (line 146) and returns, so the loop never runs. But on a database that was somehow stored with schema_version = 0 (e.g., a partial init), the loop would run idx=0, find MIGRATIONS[0] empty, skip it, and then apply migrations 1,2,3 on top of a database with no base schema, causing FK violations and runtime errors. There is no defensive check that MIGRATIONS.len() covers all version gaps.\n\nIMPACT: A database initialized with an old binary whose version counter was 0 (or a corrupted schema_meta row) would get migrations applied without the base schema, producing a broken database on the next startup. Silent data corruption; no error message until a query fails.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:49:55.642173981Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:17:54.45899619Z",
+  "closed_at": "2026-07-20T02:17:54.45899619Z",
+  "close_reason": "Fixed: migration None branch now starts at version 0, runs all migrations",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.1",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:49:55.671704278Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

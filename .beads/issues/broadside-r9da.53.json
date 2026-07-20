@@ -1,0 +1,27 @@
+{
+  "id": "broadside-r9da.53",
+  "title": "Signature verification with key-rotation retry on first failure",
+  "description": "LOCATION: src/server.rs:829-851\\n\\nFINDING: After a signature verification failure, the code invalidates the actor cache entry and immediately re-fetches the actor document to get a potentially-rotated key, then retries verification. This correctly handles the key rotation scenario (remote server changes keys; our cached copy is stale) without permanently rejecting valid posts.\\n\\nThe single retry is the right limit — more retries would enable a DoS where a malicious actor can force repeated fetches by using a mismatched key. One retry per request is bounded and correct. Should be preserved if someone proposes removing the retry to 'simplify' error handling.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "decision",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:52:32.952778368Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:18.890915312Z",
+  "closed_at": "2026-07-20T02:19:18.890915312Z",
+  "close_reason": "Acknowledged: key rotation retry design is correct",
+  "labels": [
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.53",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:52:32.976706274Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

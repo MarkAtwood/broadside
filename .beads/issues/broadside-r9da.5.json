@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.5",
+  "title": "Mutex on full rate-limiter HashMap blocks all inbox requests",
+  "description": "LOCATION: src/ratelimit.rs:29-47\\n\\nFINDING: try_acquire takes a Mutex\u003cHashMap\u003cString, Bucket\u003e\u003e for the entire duration of the token-bucket calculation. Every concurrent inbox request (both /inbox and /users/{u}/inbox) serializes through this single lock. On a busy server with many concurrent inbound federation requests, threads queue up waiting for the mutex even though per-IP state is independent.\\n\\nIMPACT: Inbox throughput is artificially capped to single-threaded execution for the rate-limiter check. A DashMap (sharded concurrent hashmap) or per-key atomics would allow true parallelism. At the 60-req/min/IP limit with realistic federation traffic, contention is latent but will appear under load testing or during a follow storm from a large instance.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:50:27.143052266Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:44.205302461Z",
+  "closed_at": "2026-07-20T02:18:44.205302461Z",
+  "close_reason": "Documented: ponytail comment on Mutex contention with DashMap upgrade path",
+  "labels": [
+    "efficiency",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.5",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:50:27.172381709Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

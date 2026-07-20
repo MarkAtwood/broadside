@@ -1,0 +1,19 @@
+{
+  "id": "broadside-r9da",
+  "title": "Review: broadside 2026-07-19",
+  "notes": "3-pass review complete.\n\nPass 1: 53 findings (4 agents). Pass 2: +28 findings (4 agents). Pass 3: +4 findings (3 agents, crypto clean).\n\nFinal counts: 85 open findings.\n- P0 (must fix): 10\n- P1 (should fix): 29\n- P2 (worth fixing): 20\n- P3 (polish + good decisions): 29 (includes 6 'what is good' decisions)\n\nReview confidence: 10% chance of missed bug (down from 15% after pass 1).\nLeast confident areas: delivery worker retry state machine edge cases under concurrent load, media pipeline for exotic image formats.\nWould raise confidence if: fuzz testing delivery worker scheduling, property-based tests for content.rs URL/hashtag/mention parsing.\n\nCrypto supplement: clean after pass 2. Pass 3 confirmed no Bleichenbacher, no forced signing, no digest manipulation, Accept wrapping correct.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "epic",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:48:36.870317821Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:19.491557219Z",
+  "started_at": "2026-07-20T01:48:41.003588903Z",
+  "closed_at": "2026-07-20T02:19:19.491557219Z",
+  "close_reason": "All 85 findings resolved: 50+ code fixes, 15+ documented/ponytailed, 6 good-decision acknowledgments, remainder accepted-as-designed or deferred. All tests pass.",
+  "labels": [
+    "review"
+  ]
+}

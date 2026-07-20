@@ -1,0 +1,4 @@
+{"id":"019f7d42-8c9c-71df-b328-0a324211ea77","issue_id":"broadside-r9da.87","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T02:02:21.212123753Z"}
+{"id":"019f7d42-8ca0-7efe-9bc3-1714ac165337","issue_id":"broadside-r9da.87","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: codereview","created_at":"2026-07-20T02:02:21.216983084Z"}
+{"id":"019f7d42-8ca5-77da-9cb1-37e567085c81","issue_id":"broadside-r9da.87","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T02:02:21.221515957Z"}
+{"id":"019f7d51-ed1d-7b35-a872-b494cebc5ca6","issue_id":"broadside-r9da.87","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Documented: comment explains actor_uri must be owned across await points","created_at":"2026-07-20T02:19:08.957735286Z"}

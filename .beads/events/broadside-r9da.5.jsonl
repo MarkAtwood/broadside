@@ -1,0 +1,4 @@
+{"id":"019f7d37-a74c-71b2-9b1f-3febda7b756d","issue_id":"broadside-r9da.5","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:50:27.148112208Z"}
+{"id":"019f7d37-a751-74fc-ab49-e0c105f232a4","issue_id":"broadside-r9da.5","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: efficiency","created_at":"2026-07-20T01:50:27.153327196Z"}
+{"id":"019f7d37-a756-738e-84ef-5b3a36643ad8","issue_id":"broadside-r9da.5","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:50:27.158233538Z"}
+{"id":"019f7d51-8c72-7564-9afd-9b9ce732419f","issue_id":"broadside-r9da.5","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Documented: ponytail comment on Mutex contention with DashMap upgrade path","created_at":"2026-07-20T02:18:44.210354014Z"}

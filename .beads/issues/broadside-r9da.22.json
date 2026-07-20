@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.22",
+  "title": "no upper bound on Signature header length before parsing",
+  "description": "LOCATION: src/signatures.rs:114-170, src/server.rs:770-771\n\nFINDING: parse_signature_header() and the underlying split_signature_params() allocate Vec\u003cString\u003e from the raw Signature header value without enforcing a maximum length on the input. The Signature header is attacker-controlled. A request with a multi-megabyte Signature header bypasses the 256KB body limit (which only applies to the request body, not headers) and causes the parser to allocate large Vec\u003cString\u003e entries before any validation occurs.\n\nIMPACT: An attacker sending requests with extremely large Signature headers can trigger multi-megabyte heap allocations per request, enabling memory exhaustion (OOM) against the server. The inbox rate limiter (60 req/min) limits throughput but does not bound per-request allocation size.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:51:01.652001332Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:14.841252739Z",
+  "closed_at": "2026-07-20T02:18:14.841252739Z",
+  "close_reason": "Fixed: Signature header rejected if \u003e8192 bytes before parsing",
+  "labels": [
+    "crypto-security",
+    "untrusted-input",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.22",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:51:01.691232927Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

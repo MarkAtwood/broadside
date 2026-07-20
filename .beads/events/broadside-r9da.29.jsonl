@@ -1,0 +1,5 @@
+{"id":"019f7d38-7367-713b-a2b1-a05929d0fd17","issue_id":"broadside-r9da.29","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:51:19.399081294Z"}
+{"id":"019f7d38-736c-79e3-b160-836a5931d949","issue_id":"broadside-r9da.29","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-20T01:51:19.404648684Z"}
+{"id":"019f7d38-7372-7189-b511-ed85b4156988","issue_id":"broadside-r9da.29","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: ownership","created_at":"2026-07-20T01:51:19.410101298Z"}
+{"id":"019f7d38-7377-746d-96a6-cc1fccacf604","issue_id":"broadside-r9da.29","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:51:19.415290862Z"}
+{"id":"019f7d51-e8c2-79df-aae9-b1c34bf09bb8","issue_id":"broadside-r9da.29","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Documented: comment explains HeaderMap borrow lifetime requires owned String","created_at":"2026-07-20T02:19:07.842647567Z"}

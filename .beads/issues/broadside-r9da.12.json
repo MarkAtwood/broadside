@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.12",
+  "title": "RSA private key PEM cached as plain String in delivery post_cache",
+  "description": "LOCATION: src/delivery.rs:165, 264-265\n\nFINDING: process_batch() caches (body, private_key, actor_uri) per post_id in a HashMap\u003cString, (Vec\u003cu8\u003e, String, String)\u003e. The private_key field is the RSA private key PEM fetched from the database (src/delivery.rs:264). This plain String lives in the HashMap for the entire lifetime of the batch loop (up to 50 deliveries), and is never zeroized when the map is dropped at the end of process_batch(). String does not implement Zeroize.\n\nIMPACT: RSA private key PEM material persists in heap memory after delivery is complete. A heap dump, swap file, or memory-safety vulnerability exposes the signing key for all personas whose posts were in that delivery batch.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:50:40.890472471Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:14.761990038Z",
+  "closed_at": "2026-07-20T02:18:14.761990038Z",
+  "close_reason": "Documented: ponytail comment explains RSA key must be in memory for signing",
+  "labels": [
+    "crypto-security",
+    "key-lifecycle",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.12",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:50:40.923561428Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

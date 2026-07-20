@@ -1,0 +1,5 @@
+{"id":"019f7d38-040a-7162-8901-bf9142a029a7","issue_id":"broadside-r9da.16","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:50:50.890091361Z"}
+{"id":"019f7d38-040f-7376-96ce-cf6b0340beb5","issue_id":"broadside-r9da.16","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-20T01:50:50.895227161Z"}
+{"id":"019f7d38-0413-7cc6-88f5-6b095697219f","issue_id":"broadside-r9da.16","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: type-design","created_at":"2026-07-20T01:50:50.899837772Z"}
+{"id":"019f7d38-0418-7a60-8f0f-e652b39ef3e8","issue_id":"broadside-r9da.16","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:50:50.904680734Z"}
+{"id":"019f7d51-e675-7759-9666-1671657aa1fc","issue_id":"broadside-r9da.16","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Deferred: FeedConfig poll_interval parsing. The .expect() is safe since validate() runs first.","created_at":"2026-07-20T02:19:07.253482713Z"}

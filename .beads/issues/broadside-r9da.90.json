@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.90",
+  "title": "inbox: keyId without #fragment causes actor mismatch rejection",
+  "description": "src/server.rs, handle_inbox, lines 805-923\\n\\nThe code derives actor_uri from sig_parts.key_id by splitting on '#' and taking the first segment:\\n\\n    let actor_uri = sig_parts.key_id.split('#').next().unwrap_or(\u0026sig_parts.key_id).to_string();\\n\\nThis assumes keyId is of the form https://actor-url#key-fragment (the Mastodon default). However, some ActivityPub implementations (e.g. PeerTube, some Pleroma/Akkoma configs) use a key URL that is a distinct URL path with no fragment, such as https://example.com/users/bob/keys/main.\\n\\nIn that case, split('#').next() returns the full keyId URL. The actor_uri derived is https://example.com/users/bob/keys/main, but activity[\"actor\"] is https://example.com/users/bob. The mismatch check at line 916 fires and returns 401 UNAUTHORIZED, silently dropping all follows and Undo activities from these servers.\\n\\nFix: after the split-on-# derivation, also try fetching the keyId URL and extracting its owner field as a fallback actor_uri (or accept that actor_uri could be either the actor or a separate key document, and validate against the actor_cache owner field).",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T02:03:32.656303746Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:16.009759206Z",
+  "closed_at": "2026-07-20T02:18:16.009759206Z",
+  "close_reason": "Fixed: keyId without # used as-is for actor URI",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.90",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T02:03:32.689410692Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

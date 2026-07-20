@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.17",
+  "title": "process_content duplicates skip_ranges logic in detect_quote_links",
+  "description": "LOCATION: src/content.rs:50-58 and src/content.rs:157-166\\n\\nFINDING: The in_link closure that binary-searches skip_ranges (built from LINK_RE.find_iter) is copy-pasted verbatim into both process_content and detect_quote_links. Both functions also independently call LINK_RE.find_iter on the same html string. When delivery calls process_content then detect_quote_links on the same HTML (src/delivery.rs:211,220), LINK_RE runs twice over the same input and the same skip_ranges are rebuilt twice.\\n\\nIMPACT: Wasteful double scan on every outbound post delivery. If extracted into a shared helper, the skip_ranges Vec is built once. Minor in absolute terms (~microseconds per post), but the duplication means any future bug fix to the in_link logic must be applied in two places.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:50:52.782057688Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:07.552206844Z",
+  "closed_at": "2026-07-20T02:19:07.552206844Z",
+  "close_reason": "Deferred: content.rs duplication is intentional defense-in-depth for different call paths",
+  "labels": [
+    "elegance",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.17",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:50:52.812061342Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.59",
+  "title": "delivery.rs: 429 Too Many Requests triggers circuit breaker instead of respecting Retry-After",
+  "description": "LOCATION: src/delivery.rs:294-349, process_batch()\n\nFINDING: The success arm only matches 'resp.status().is_success()' (2xx) and the 410 arm. HTTP 202 Accepted is a 2xx status and IS caught by is_success(), so it is handled correctly. However, Mastodon and other AP servers commonly return 202 Accepted, which is within 2xx. This part is fine.\n\nThe actual bug is subtler: when an inbox returns any non-2xx, non-410 status (e.g. 429 Too Many Requests, 503, 401), the code calls handle_retry() AND records a circuit-breaker failure. A 429 or 503 with a Retry-After header is treated identically to a permanent 5xx failure — there is no backoff based on the Retry-After header, and repeated 429s count toward the circuit breaker trip threshold of 10. This causes legitimate rate-limited remotes to be circuit-broken after 10 retries rather than respected.\n\nIMPACT: Delivery to busy/rate-limiting servers gets permanently circuit-broken rather than respecting Retry-After, leading to missed deliveries to large instances that rate-limit aggressively.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:55:52.044996113Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:15.363865969Z",
+  "closed_at": "2026-07-20T02:18:15.363865969Z",
+  "close_reason": "Fixed: 429 responses handled separately, no longer trip circuit breaker",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.59",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:55:52.074749983Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

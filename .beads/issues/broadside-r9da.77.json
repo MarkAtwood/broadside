@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.77",
+  "title": "watch.rs: read-then-canonicalize still reads symlink target before security check",
+  "description": "LOCATION: src/watch.rs:65-85, watch_loop()\n\nFINDING: The comment at line 65 claims 'Read first, THEN canonicalize to verify the path was legitimate. This eliminates the TOCTOU race: content is captured before the symlink check, so a swap between canonicalize and read cannot leak unintended files.'\n\nThis reasoning is backwards. Reading before the canonicalize check means the content of an out-of-directory symlink target is ALREADY read into memory before the check can reject it. An attacker who places a symlink in the watch directory pointing to /etc/passwd will have its content read at line 68 before the boundary check at line 82 rejects it. The check prevents the content from being published as a post, but the file's content has already been read from disk into 'content: String' in the application process.\n\nIMPACT: An attacker with write access to the watch directory can use a symlink to read arbitrary files from the filesystem into the server process's memory. The content won't be published as a post, but there is no second-order protection against the read itself (e.g., if content were logged on error).",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:56:42.476629074Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:15.718413548Z",
+  "closed_at": "2026-07-20T02:18:15.718413548Z",
+  "close_reason": "Fixed: watch.rs canonicalizes before reading (same fix as r9da.2)",
+  "labels": [
+    "correctness",
+    "risk",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.77",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:56:42.5135802Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

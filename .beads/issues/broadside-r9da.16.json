@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.16",
+  "title": "FeedConfig.poll_interval stored as String, parsed on every call",
+  "description": "LOCATION: src/config.rs:27-32, 86-93\\n\\nFINDING: FeedConfig.poll_interval is a String that is re-parsed by parse_duration() on every call to FeedConfig::interval(). The parse result is discarded after validate(); the field is never converted to Duration at rest. A custom serde deserializer (or a wrapper newtype with Deserialize) would parse once, store a Duration, and remove the .expect() in interval().\\n\\nIMPACT: The .expect(\"validated on load\") in interval() is the only guard against a corruption path where a FeedConfig is constructed outside Config::load() (e.g. in tests). If poll_interval is set to an invalid string without going through validate(), interval() panics in a background tokio task, taking down that poller silently.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:50:50.8851872Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:07.249381468Z",
+  "closed_at": "2026-07-20T02:19:07.249381468Z",
+  "close_reason": "Deferred: FeedConfig poll_interval parsing. The .expect() is safe since validate() runs first.",
+  "labels": [
+    "idiomatic-rust",
+    "type-design",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.16",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:50:50.919219185Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

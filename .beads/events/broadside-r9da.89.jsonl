@@ -1,0 +1,4 @@
+{"id":"019f7d43-4738-7449-850e-4ea9aed4ed12","issue_id":"broadside-r9da.89","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T02:03:08.984281537Z"}
+{"id":"019f7d43-473d-7a95-8062-57e018ff898c","issue_id":"broadside-r9da.89","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-20T02:03:08.989693991Z"}
+{"id":"019f7d43-4742-7755-b98a-ac017df4e8b1","issue_id":"broadside-r9da.89","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T02:03:08.994481068Z"}
+{"id":"019f7d51-1e07-75c6-8207-bfdafc8b0e6e","issue_id":"broadside-r9da.89","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: Follow handler validates inbox host matches follower actor host","created_at":"2026-07-20T02:18:15.943379128Z"}

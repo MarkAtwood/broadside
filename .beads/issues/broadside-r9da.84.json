@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.84",
+  "title": "server.rs: actor document metadata fields rendered without escaping name/value in HTML",
+  "description": "LOCATION: src/server.rs:1286-1308, serve_profile_html() fields_html loop\n\nFINDING: Profile metadata fields have their name and value sanitized via ammonia::clean() before insertion into the HTML table. However, the 'value_html' branch for URL values (line 1292-1298) constructs an \u003ca\u003e tag using escape_html_attr(value) for the href and ammonia::clean(value) for the display text. escape_html_attr() covers '\u0026', '\"', '\u003c', '\u003e'. This is correct for the href attribute.\n\nBut the outer write! at line 1301 passes 'ammonia::clean(name)' directly into a \u003cth\u003e cell and 'value_html' into a \u003ctd\u003e cell. ammonia::clean() strips all HTML tags and escapes remaining text, so this is safe for 'name'. However 'value_html' for URL values is constructed with format! and contains a raw \u003ca\u003e tag — it is inserted verbatim into the table cell without ammonia re-sanitization. If ammonia::clean(value) for the display text returns content with residual HTML (e.g. ammonia cleans something unexpected), it could inject markup.\n\nMore concretely: ammonia::clean() on a URL like 'https://example.com/\u003cb\u003ebold' returns 'https://example.com/bold' (strips the tag). This is fine. But there is no guarantee that the href produced by escape_html_attr and the display text are the same safe string — the href is attribute-escaped, the display is ammonia-cleaned. These two are assembled with format! into a raw HTML string that is then embedded verbatim. If ammonia's output ever contains '\"' characters (it shouldn't, but the contract is unclear), the href could be broken.\n\nThis is low severity but represents a defense-in-depth gap: value_html should be re-run through ammonia after construction, not trusted as-is.\n\nIMPACT: Low. Defense-in-depth gap in profile metadata field rendering for URL values.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:57:25.590002577Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:17:55.032608004Z",
+  "closed_at": "2026-07-20T02:17:55.032608004Z",
+  "close_reason": "Fixed: metadata field names escaped via escape_html_attr in profile HTML",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.84",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:57:25.622346539Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

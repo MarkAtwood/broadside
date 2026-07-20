@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.46",
+  "title": "persona::update: dynamic SQL construction via string formatting",
+  "description": "LOCATION: src/persona.rs:108-132\\n\\nFINDING: update() builds the SET clause by formatting field names directly into a SQL string via set_clause.join(\", \"). While the field names are all static string literals (\"display_name = ?\", etc.) sourced from within the function, the pattern of constructing SQL strings dynamically is dangerous as a template — a future contributor adding a user-supplied field name to the fields vec would introduce SQL injection. The query parameters are bound correctly, so only the column names are at risk, but the structure invites misuse.\\n\\nIMPACT: Currently safe because the clause strings are string literals defined in the same function. Risk is architectural: the pattern does not scale safely when field names come from external input.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:52:03.149636622Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T01:52:20.729531221Z",
+  "closed_at": "2026-07-20T01:52:20.729531221Z",
+  "close_reason": "Closed",
+  "labels": [
+    "idiomatic-rust",
+    "error-handling",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.46",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:52:03.186508675Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

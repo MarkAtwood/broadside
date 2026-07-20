@@ -1,0 +1,5 @@
+{"id":"019f7d38-4fcf-7e7e-ade9-8e8406f6e9b0","issue_id":"broadside-r9da.25","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:51:10.287950274Z"}
+{"id":"019f7d38-4fd4-7965-a998-4c8e478ff0fd","issue_id":"broadside-r9da.25","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: crypto-security","created_at":"2026-07-20T01:51:10.292616126Z"}
+{"id":"019f7d38-4fd9-7538-a23d-94fd8bedff90","issue_id":"broadside-r9da.25","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: logging","created_at":"2026-07-20T01:51:10.297342581Z"}
+{"id":"019f7d38-4fde-719f-9508-58a1e749a382","issue_id":"broadside-r9da.25","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:51:10.30210671Z"}
+{"id":"019f7d51-8d93-7a2b-a106-66165044b2c3","issue_id":"broadside-r9da.25","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: config.rs manual Debug impl added by config agent","created_at":"2026-07-20T02:18:44.49966707Z"}

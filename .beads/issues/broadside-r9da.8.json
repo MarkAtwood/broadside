@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.8",
+  "title": "entropy Vec not zeroized in mnemonic_to_private_key",
+  "description": "LOCATION: src/did.rs:43-49\n\nFINDING: mnemonic_to_private_key() calls mnemonic.to_entropy() which returns a Vec\u003cu8\u003e containing the raw private key bytes. That Vec is immediately read into a [u8; 32] but is never explicitly zeroized before it is dropped. The bip39 crate does not guarantee ZeroizeOnDrop on the entropy Vec returned by to_entropy(). The local [u8; 32] key variable returned to the caller also has no Zeroize contract.\n\nIMPACT: Private key material (32 bytes of Ed25519 signing key entropy) remains in heap memory until the allocator reuses or clears that region. A memory dump or use-after-free read leaks the recovery private key to any attacker with process memory access.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:50:34.516202573Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:44.347422024Z",
+  "closed_at": "2026-07-20T02:18:44.347422024Z",
+  "close_reason": "Fixed: mnemonic_to_private_key zeroizes entropy Vec and returns Zeroizing",
+  "labels": [
+    "crypto-security",
+    "key-lifecycle",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.8",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:50:34.55028685Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

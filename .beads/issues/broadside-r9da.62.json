@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.62",
+  "title": "sanitize.rs: html_to_text rebuilds Builder on every call",
+  "description": "LOCATION: src/sanitize.rs lines 47-52\n\nFINDING: html_to_text() constructs a new ammonia Builder on every invocation. sanitize_html() correctly uses a LazyLock static singleton, but html_to_text() does not. The empty-tags-set Builder is identical on every call and could be a second LazyLock static.\n\nIMPACT: Unnecessary heap allocation and Builder initialization on every call to html_to_text(). This function is called on every post delivery, feed entry, and webhook — it is on the hot path.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:56:05.262315324Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T01:57:27.46662247Z",
+  "closed_at": "2026-07-20T01:57:27.46662247Z",
+  "close_reason": "Closed",
+  "labels": [
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.62",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:56:05.292452009Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

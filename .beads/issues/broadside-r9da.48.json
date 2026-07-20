@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.48",
+  "title": "Signature parser accepts truncated header: missing closing quote silently tolerated",
+  "description": "LOCATION: src/signatures.rs:121-127\n\nFINDING: parse_signature_header calls strip_suffix on a double-quote char. If split_signature_params returns a part where the closing quote is absent (truncated Signature header), strip_suffix returns the original val via unwrap_or, silently accepting the malformed parameter. The malformed value then propagates to base64 decode where it fails with a generic error, giving no indication that the header was structurally invalid.\n\nIMPACT: Malformed Signature headers with missing closing quotes produce confusing 401 responses with no parse-level error log. Complicates debugging of federation interop issues. A stricter parser would reject at the structural level.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:52:13.982145882Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:15.06474046Z",
+  "closed_at": "2026-07-20T02:18:15.06474046Z",
+  "close_reason": "Fixed: SignatureParts parser returns error on missing closing quote",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.48",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:52:14.009572239Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

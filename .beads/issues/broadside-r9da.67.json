@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.67",
+  "title": "server.rs: handle_inbox Follow fetches follower actor doc without size check on HTTP status",
+  "description": "LOCATION: src/server.rs:961-983, handle_inbox() Follow arm\n\nFINDING: When processing a Follow activity, the server fetches the follower's actor document (line 962-983). If the fetch returns a non-success status, the code returns StatusCode::ACCEPTED (line 982), silently accepting the Follow without actually storing the follower's inbox. The follower is then inserted with an empty inbox_uri (line 985: let inbox_uri = actor_doc[\"inbox\"].as_str().unwrap_or(\"\").to_string()). \n\nHowever the code checks for empty inbox_uri at line 1003 and returns ACCEPTED without inserting. So an actor whose document is temporarily unavailable causes a silent Follow loss — the follower is never stored and the Accept is never sent, but the follower's server sees a 202 and considers the follow accepted. The follower never receives posts.\n\nIMPACT: If a remote server is temporarily slow or flaky at Follow time, the follow relationship is silently lost — neither an error nor a stored pending state. The follower sees their follow accepted but receives no posts, with no way to detect or recover without re-following.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:56:16.24446552Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:15.500840781Z",
+  "closed_at": "2026-07-20T02:18:15.500840781Z",
+  "close_reason": "Fixed: Follow actor doc fetch failure returns 500, not silent 202",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.67",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:56:16.273022311Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

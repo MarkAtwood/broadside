@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.6",
+  "title": "recovery key bytes not zeroized in generate_recovery_keypair",
+  "description": "LOCATION: src/did.rs:2-9\n\nFINDING: generate_recovery_keypair() returns the private key as a plain [u8; 32] value. The SigningKey struct inside the function zeroizes itself on drop (ed25519_dalek implements ZeroizeOnDrop), but the extracted bytes returned to the caller are a plain stack array with no Zeroize wrapper. In persona::add (src/persona.rs:43-48), the caller does manually zeroize the bytes after use, so the immediate call site is handled. However, the function contract offers no zeroization guarantee, and any future caller that holds the returned [u8; 32] through error paths or across awaits will silently retain the key material in memory.\n\nIMPACT: Future callers of generate_recovery_keypair that forget to manually zeroize will leave Ed25519 private key bytes resident in heap or stack memory for the lifetime of the process. A memory-safety bug or core dump exposes the recovery key.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:50:28.815201684Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:44.27863606Z",
+  "closed_at": "2026-07-20T02:18:44.27863606Z",
+  "close_reason": "Fixed: generate_recovery_keypair returns Zeroizing\u003c[u8; 32]\u003e",
+  "labels": [
+    "crypto-security",
+    "key-lifecycle",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.6",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:50:28.850855662Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

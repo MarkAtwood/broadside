@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.89",
+  "title": "Follow handler: follower inbox domain not validated against actor domain",
+  "description": "src/server.rs, handle_inbox Follow handler (~line 985)\\n\\nWhen a Follow is received, the actor document is fetched from follower_actor URI, and inbox_uri is extracted from actor_doc[\"inbox\"]. There is no check that inbox_uri is on the same domain as follower_actor. A malicious server could advertise inbox = https://victim.example/inbox in their actor document, causing broadside to deliver Accept activities (signed with our private key) to an arbitrary third-party server of the attacker's choosing.\\n\\nThe SSRF guard (lines 1006-1012) blocks private IPs but does not prevent delivery to unrelated public domains. This enables delivery misdirection: broadside sends signed AP messages to a server it has no relationship with, which could be used for spam amplification or AP message forgery at scale.\\n\\nFix: validate that url::Url::parse(\u0026inbox_uri).host_str() == url::Url::parse(follower_actor).host_str() and reject if they differ.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T02:03:08.979278088Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:15.939203683Z",
+  "closed_at": "2026-07-20T02:18:15.939203683Z",
+  "close_reason": "Fixed: Follow handler validates inbox host matches follower actor host",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.89",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T02:03:09.009033893Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

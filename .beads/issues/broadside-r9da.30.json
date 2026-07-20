@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.30",
+  "title": "outbox pagination: page=0 silently becomes page=1 without 400",
+  "description": "LOCATION: src/server.rs:540\n\nFINDING: The outbox handler does `let page = query.page.unwrap_or(1).max(1)`. If a client sends `?page=0`, the server silently treats it as page 1 and returns a 200 response with the first page of results. The `id` field in the returned OrderedCollectionPage document will be `.../outbox?page=0` if the client passed 0, but `page` is normalized to 1 for the DB query, so the id and the actual content are inconsistent. ActivityPub clients that use the page id for pagination state will loop forever between page 0 and page 1.\n\nAlso: `PaginationQuery.page` is `Option\u003cu32\u003e`, so values larger than u32::MAX (~4 billion) will cause a deserialization error (400), which is correct. But page=0 being silently clamped rather than rejected means the response id field does not match the normalized query.\n\nIMPACT: AP clients following the outbox collection can get stuck in an infinite loop if they follow the first page link and the server returns a document whose id does not match the request URL. Minor interop issue that generates user bug reports.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:51:21.904122423Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:14.922145844Z",
+  "closed_at": "2026-07-20T02:18:14.922145844Z",
+  "close_reason": "Fixed: page=0 returns 400 Bad Request",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.30",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:51:21.937428472Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

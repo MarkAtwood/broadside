@@ -1,0 +1,5 @@
+{"id":"019f7d38-870f-7c74-9513-2e9e0eef87d4","issue_id":"broadside-r9da.32","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:51:24.431816873Z"}
+{"id":"019f7d38-8715-7377-81d9-51aae9825e74","issue_id":"broadside-r9da.32","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: crypto-security","created_at":"2026-07-20T01:51:24.437228479Z"}
+{"id":"019f7d38-871a-786a-95c3-c7078ebb6d56","issue_id":"broadside-r9da.32","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: key-lifecycle","created_at":"2026-07-20T01:51:24.442551805Z"}
+{"id":"019f7d38-871f-7edf-a842-09739221b498","issue_id":"broadside-r9da.32","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:51:24.447974954Z"}
+{"id":"019f7d51-8e24-78f8-83bd-e37234b4c238","issue_id":"broadside-r9da.32","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: SignatureParts manual Debug redacts signature field","created_at":"2026-07-20T02:18:44.644588564Z"}

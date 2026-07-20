@@ -1,0 +1,4 @@
+{"id":"019f7d39-2e5c-7d20-8327-0ccf77ff3115","issue_id":"broadside-r9da.47","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:52:07.260863883Z"}
+{"id":"019f7d39-2e61-79b8-a834-1845f0917794","issue_id":"broadside-r9da.47","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: readability","created_at":"2026-07-20T01:52:07.265637636Z"}
+{"id":"019f7d39-2e66-7763-b944-c0d8fa389586","issue_id":"broadside-r9da.47","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:52:07.270484593Z"}
+{"id":"019f7d51-ea35-7350-9db7-7bc9799dc96f","issue_id":"broadside-r9da.47","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: census client now uses SsrfSafeResolver (same as r9da.38)","created_at":"2026-07-20T02:19:08.213217733Z"}

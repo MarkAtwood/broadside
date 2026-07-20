@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.20",
+  "title": "handle_inbox checks signed header list with Vec::contains (O(n) per check)",
+  "description": "LOCATION: src/server.rs:787-803\\n\\nFINDING: The code collects the space-separated signed_headers string into a Vec\u003c\u0026str\u003e and then calls .contains() four times in a row. Each contains() is O(n) over the vec. The vec is always short (typically 4 headers), so this is correct and the absolute cost is negligible.\\n\\nHowever, a cleaner rewrite would collect into a HashSet or check inline during the initial split — not for performance, but because repeating .contains() four times with different string literals makes the code look like it might have a complexity concern when it doesn't. The improvement is to convert to a single HashSet at construction and call .contains() naturally, making the intent (set membership) match the data structure.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:50:58.956033452Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:07.622008264Z",
+  "closed_at": "2026-07-20T02:19:07.622008264Z",
+  "close_reason": "Accepted: Vec::contains on 4 items is effectively O(1). HashSet would be slower.",
+  "labels": [
+    "elegance",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.20",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:50:58.986444688Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

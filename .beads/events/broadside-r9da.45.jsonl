@@ -1,0 +1,4 @@
+{"id":"019f7d39-0fd3-707e-93de-3e44726535f6","issue_id":"broadside-r9da.45","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:51:59.443033019Z"}
+{"id":"019f7d39-0fd8-75bf-8292-bb78fb1bad26","issue_id":"broadside-r9da.45","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-20T01:51:59.448377896Z"}
+{"id":"019f7d39-0fdc-7d63-b768-641550c3d4a5","issue_id":"broadside-r9da.45","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:51:59.452877817Z"}
+{"id":"019f7d51-1a53-7a3c-900b-c3af789376b7","issue_id":"broadside-r9da.45","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: CircuitBreaker prune removes entries \u003e2h old at batch start","created_at":"2026-07-20T02:18:14.995671354Z"}

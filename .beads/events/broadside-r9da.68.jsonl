@@ -1,0 +1,4 @@
+{"id":"019f7d3d-0970-7287-9a2f-8136467f2f79","issue_id":"broadside-r9da.68","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:56:19.952166413Z"}
+{"id":"019f7d3d-0974-78c4-b0a7-ac3c5a41939f","issue_id":"broadside-r9da.68","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: codereview","created_at":"2026-07-20T01:56:19.956574805Z"}
+{"id":"019f7d3d-0978-7e08-a40c-1ac8581a8543","issue_id":"broadside-r9da.68","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:56:19.960919921Z"}
+{"id":"019f7d51-eb11-71a3-9669-1292b39a11c9","issue_id":"broadside-r9da.68","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Documented: ponytail comment on entry API allocation with raw_entry upgrade path","created_at":"2026-07-20T02:19:08.433107935Z"}

@@ -1,0 +1,4 @@
+{"id":"019f7d3d-1320-72ec-b3f2-f68cabf6f9a6","issue_id":"broadside-r9da.69","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:56:22.432192569Z"}
+{"id":"019f7d3d-1325-71e2-a8de-f0c54ad49b83","issue_id":"broadside-r9da.69","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: efficiency","created_at":"2026-07-20T01:56:22.43712457Z"}
+{"id":"019f7d3d-1329-7c19-a040-cfabb7b59d92","issue_id":"broadside-r9da.69","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:56:22.441793825Z"}
+{"id":"019f7d51-eb61-795e-a87e-ace04ae44848","issue_id":"broadside-r9da.69","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: html_to_text uses cached LazyLock Builder","created_at":"2026-07-20T02:19:08.513614484Z"}

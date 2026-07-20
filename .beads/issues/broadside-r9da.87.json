@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.87",
+  "title": "server.rs: actor_uri needlessly owned String",
+  "description": "src/server.rs lines 805-810\\n\\nactor_uri is constructed via .split('#').next()...to_string() from sig_parts.key_id (\u0026str). It is never moved — only borrowed at all subsequent call sites (get_public_key, invalidate, SQL bind, log fields). Could be \u0026str with lifetime tied to sig_parts, eliminating one heap allocation per inbox request.\\n\\nImpact: one String allocation per authenticated inbox request (verify path). Minor but genuine idiom miss.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T02:02:21.207143573Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:08.953732121Z",
+  "closed_at": "2026-07-20T02:19:08.953732121Z",
+  "close_reason": "Documented: comment explains actor_uri must be owned across await points",
+  "labels": [
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.87",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T02:02:21.238380793Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

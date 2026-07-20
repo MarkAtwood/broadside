@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.54",
+  "title": "Private key stored as plain String after Zeroizing wrapper is dropped",
+  "description": "LOCATION: src/persona.rs:23-24\n\nFINDING: generate_keypair converts the Zeroizing\u003cString\u003e private PEM to a plain String via .to_string() before returning it. The comment acknowledges \"The Zeroizing wrapper zeros the original on drop after this conversion.\" This means the key material lives as a plain String from the return of generate_keypair() onward. It is then passed to sqlx::query().bind() and stored in SQLite. The String heap allocation holding the PEM is not zeroed after the DB insert. Rust does not guarantee that the allocator will not leave copies in memory or in swap.\n\nSimilarly, get_private_key() returns the private key PEM as a plain String (line 143-150). Every call site that receives this String is responsible for zeroing it, but none do — delivery.rs (line 264), relay.rs (lines 106, 191) all hold the key as a plain String.\n\nIMPACT: RSA private key material persists in process heap memory after use. Under memory pressure, this could be paged to swap. A swap file dump or /proc/PID/mem read by a privileged attacker exposes the private key. This is a hardening/defense-in-depth issue rather than an immediately exploitable bug.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:52:33.91269331Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:15.215038991Z",
+  "closed_at": "2026-07-20T02:18:15.215038991Z",
+  "close_reason": "Fixed: generate_keypair ponytail documents accepted Zeroizing→String tradeoff",
+  "labels": [
+    "risk",
+    "maintainer-burden",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.54",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:52:33.9469282Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

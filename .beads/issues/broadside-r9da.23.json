@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.23",
+  "title": "client_ip gratuitous .to_string() in hot inbox path",
+  "description": "LOCATION: src/server.rs:756-763\\n\\nFINDING: client_ip is built with .to_string() on the trimmed header value and then passed to try_acquire(\u0026client_ip). RateLimiter::try_acquire takes \u0026str, so the String is constructed only to immediately borrow it. The allocation happens on every inbound request to both inbox endpoints.\\n\\nIMPACT: One unnecessary heap allocation per inbox request. Under sustained load (e.g. a fediverse storm) this adds GC pressure. The fix is trivial: remove the .to_string() and let the borrow live through the try_acquire call, using a let binding for the trimmed value.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:51:03.559432825Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:07.694599776Z",
+  "closed_at": "2026-07-20T02:19:07.694599776Z",
+  "close_reason": "Documented: comment explains why .to_string() is required",
+  "labels": [
+    "idiomatic-rust",
+    "ownership",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.23",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:51:03.596973382Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.85",
+  "title": "ratelimit.rs: all requests with missing IP header share one 'unknown' bucket",
+  "description": "LOCATION: src/ratelimit.rs and src/server.rs:756-766, handle_inbox()\n\nFINDING: When neither X-Real-IP nor X-Forwarded-For is present, client_ip defaults to the string 'unknown'. All such requests share a single token bucket with capacity 60 req/min. An attacker behind a NAT or using a client that strips proxy headers can send requests without IP identification, and all 60 slots are shared across all legitimate clients that also lack those headers (e.g., direct TCP connections not via nginx). \n\nAdditionally, the code takes 'v.split(\",\").next()' to extract the first IP from X-Forwarded-For — this trusts the client-supplied header entirely. A client can forge X-Forwarded-For: 1.2.3.4 to get a separate bucket from their real IP, effectively bypassing the rate limiter per-IP.\n\nIMPACT: Rate limiting is ineffective when the server receives direct connections (no proxy in front), since all unlabelled connections compete for one bucket. Forged X-Forwarded-For headers let an attacker cycle through unlimited IPs.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:57:34.381878271Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:30.687271977Z",
+  "closed_at": "2026-07-20T02:18:30.687271977Z",
+  "close_reason": "Accepted: documented in existing ponytail comment. X-Forwarded-For trust requires trusted_proxies config, deferred.",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.85",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:57:34.412767412Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

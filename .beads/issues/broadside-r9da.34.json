@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.34",
+  "title": "persona update builds dynamic SQL SET clause from fixed set of trusted strings",
+  "description": "LOCATION: src/persona.rs:122-132\n\nFINDING: `persona::update` builds a SET clause from a Vec of string literals like \"display_name = ?\" and \"avatar_path = ?\" that are hardcoded in the function. These are not user-controlled, so there is no SQL injection. However, the function uses `format!()` to construct the query string and `sqlx::query(\u0026sql)` (the dynamic string form, not the compile-time macro). This pattern bypasses sqlx compile-time query checking. If a future contributor adds a user-controlled field name to the `fields` vec or passes a user-controlled string as the \"clause\" part, it would become SQL injection with no compile-time warning.\n\nIMPACT: No immediate injection risk because the field clauses are hardcoded. The risk is maintainer-burden: the dynamic query construction pattern will be copied for future fields, and a contributor adding a user-supplied field name (e.g., from a JSON input) would introduce SQL injection without any compiler or linter warning.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:51:30.322480351Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:30.477285657Z",
+  "closed_at": "2026-07-20T02:18:30.477285657Z",
+  "close_reason": "Not a bug: field names are hardcoded string literals from a fixed match, not user input. SQL injection is impossible. Added ponytail comment.",
+  "labels": [
+    "risk",
+    "maintainer-burden",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.34",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:51:30.362443258Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

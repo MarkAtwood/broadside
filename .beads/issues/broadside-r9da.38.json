@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.38",
+  "title": "census task in server.rs uses unrestricted reqwest client (no SSRF guard)",
+  "description": "LOCATION: src/server.rs:164-181\n\nFINDING: The periodic census registration task (spawned inside serve()) builds a fresh reqwest::Client with only a timeout — no SSRF-safe resolver, no redirect policy. It then constructs a URL from the operator-configured domain string: `format!(\"https://the-federation.info/register/{census_domain}\")`. If the operator sets domain to a value containing path traversal characters (e.g. \"../../etc/passwd\" or \"internal-host.local\") the URL sent to the-federation.info would be malformed. More relevantly, the client itself has no SSRF guard; if this code path is ever extended to fetch a response body or follow the domain value to another URL, it bypasses all SSRF protections.\n\nSeparately: the census domain is embedded directly into the URL path without URL-encoding. A domain containing \"/\" would inject path segments into the census URL.\n\nIMPACT: Operator-controlled configuration issue (domain is operator-set, not user-controlled), so direct exploitation requires a misconfigured or compromised config file. The issue is that the client architecture is inconsistent: three different clients with three different security properties exist in the binary, making the security model hard to reason about and audit.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:51:40.819880539Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:16.077843865Z",
+  "closed_at": "2026-07-20T02:18:16.077843865Z",
+  "close_reason": "Fixed: census client uses SsrfSafeResolver",
+  "labels": [
+    "risk",
+    "maintainer-burden",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.38",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:51:40.859935718Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

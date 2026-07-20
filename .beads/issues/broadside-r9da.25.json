@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.25",
+  "title": "Config derives Debug, exposing webhook key via tracing/panic",
+  "description": "LOCATION: src/config.rs:7-14 (Config derives Debug), src/config.rs:27-38 (WebhookConfig does NOT derive Debug, has custom impl)\n\nFINDING: Config derives Debug. WebhookConfig correctly provides a custom Debug impl that redacts the key field. However, Config itself derives Debug, so any code that formats the entire Config struct (e.g., a tracing::debug!(config = ?config, ...) statement added in the future, or a panic message) will call Debug on Config, which will in turn call WebhookConfig's custom impl (safe). This is currently safe BUT relies on the chain of Debug impls remaining correct. The FeedConfig and WatchConfig also derive Debug and contain no secrets, so the immediate risk is the custom Debug chain for WebhookConfig. The fragility is: if WebhookConfig ever has a field added that is a secret, or if the Debug derive on Config is ever changed to use auto-derive on WebhookConfig, keys leak.\n\nIMPACT: Low immediate risk due to the custom Debug impl. Medium risk that future maintainers add a secret field without updating the custom Debug impl, causing key exposure in logs or panic output. This is a latent risk rather than a current bug.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:51:10.282884231Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:44.495221019Z",
+  "closed_at": "2026-07-20T02:18:44.495221019Z",
+  "close_reason": "Fixed: config.rs manual Debug impl added by config agent",
+  "labels": [
+    "crypto-security",
+    "logging",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.25",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:51:10.318144209Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

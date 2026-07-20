@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.24",
+  "title": "card.rs: image_url stored unsanitized; fetch_card_image only guards https scheme",
+  "description": "LOCATION: src/card.rs:196, 217\n\nFINDING: In fetch_and_store, meta.image_url (extracted from remote OG meta tags via parse_og_meta) is stored directly to the database at line 196 without any URL scheme validation. The fetch_card_image function checks starts_with(\"https://\") before fetching, so the fetch itself is safe. However, the raw image_url value (which could be \"javascript:...\", \"data:...\", or a relative path) is persisted to the cards table and later included in AP Note objects served from get_card_for_post (line 298 of card.rs). A remotely-controlled site can set og:image to \"javascript:alert(1)\" and it will be stored and returned in the ActivityPub preview Link object. AP clients that render card previews may process this value.\n\nIMPACT: Stored malicious URL in the cards.image_url column, propagated to AP Note objects delivered to followers. Clients that render link card images by treating the image_url as a clickable link could expose users to javascript: URI clicks.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:51:10.07464668Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:17:54.822764608Z",
+  "closed_at": "2026-07-20T02:17:54.822764608Z",
+  "close_reason": "Fixed: image_url validated as https:// before DB storage",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.24",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:51:10.108593453Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

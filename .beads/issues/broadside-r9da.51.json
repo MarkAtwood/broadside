@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.51",
+  "title": "feed poller client has no SSRF resolver; operator-configured feed URLs not SSRF-safe",
+  "description": "LOCATION: src/feed.rs:186-196\n\nFINDING: run_poller builds its own reqwest::Client with redirect::Policy::none() and a 30s timeout but no SsrfSafeResolver. The feed URL comes from operator config (config.toml), so this is not directly user-controlled input. However, the feed response body can contain media URLs (entry.media content URLs at line 106) that are passed to media::process_remote, which does call is_private_host_resolved. But the initial feed HTTP request itself uses the unsafe client. If the operator misconfigures a feed URL pointing to an internal host (e.g., a typo or a compromised config), the request will succeed.\n\nMore importantly, this is the third distinct non-SSRF-safe client in the codebase. The delivery worker (issue broadside-r9da.4) and relay CLI (relay.rs) also build bare clients. The inconsistency means the SSRF model is not uniformly enforced and contributors adding new outbound HTTP calls have no clear example to follow.\n\nIMPACT: Operator-misconfigured feed URLs can reach internal hosts. The main risk is the pattern being copied to future user-controlled outbound fetch points.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:52:23.983891176Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:15.140153749Z",
+  "closed_at": "2026-07-20T02:18:15.140153749Z",
+  "close_reason": "Fixed: feed poller client uses SsrfSafeResolver",
+  "labels": [
+    "risk",
+    "maintainer-burden",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.51",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:52:24.02196811Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

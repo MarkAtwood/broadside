@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.32",
+  "title": "SignatureParts derives Debug, key_id logged on parse error path",
+  "description": "LOCATION: src/signatures.rs:104-109\n\nFINDING: SignatureParts derives Debug and is a public struct. While key_id and headers are not secret (they are from the Signature header the peer sent), the struct's Debug impl means any future use of {:?} on a SignatureParts will dump all three fields including the raw base64 signature value. The signature itself is not secret (it is in the request), but more critically: the Debug derive creates a pattern where future structs holding actual secret bytes might follow the same pattern incorrectly. More concretely, if the signature field were ever extended or confused with a MAC secret, it would log via {:?} automatically.\n\nIMPACT: Current immediate impact is low — no secret data in SignatureParts. The risk is the Debug derive establishes a pattern that is unsafe to extend. If key material is added to this struct (e.g., a decoded signature or precomputed HMAC), it will automatically appear in logs.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:51:24.426212952Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:44.639806159Z",
+  "closed_at": "2026-07-20T02:18:44.639806159Z",
+  "close_reason": "Fixed: SignatureParts manual Debug redacts signature field",
+  "labels": [
+    "crypto-security",
+    "key-lifecycle",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.32",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:51:24.464015609Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

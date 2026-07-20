@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.70",
+  "title": "card.rs: fetch_card_image no MIME/magic check before decode",
+  "description": "LOCATION: src/card.rs:239-254, fetch_card_image()\n\nFINDING: fetch_card_image() downloads up to 5MB and passes the bytes directly to image::load_from_memory() without any MIME sniff or magic byte check. The image crate's load_from_memory will attempt to guess the format and decode it. A remote page can set og:image to a non-image URL (e.g. a large PDF, a ZIP, or a crafted binary), which the image crate will attempt to decode. While image crate errors are caught and logged, there is no size or format pre-filter before the potentially expensive decode attempt.\n\nAdditionally, process_image() in media.rs calls with_guessed_format() which sets decode limits, but fetch_card_image() calls image::load_from_memory() directly which does NOT apply the 64MB alloc limit used in media.rs process_image(). A crafted PNG decompression bomb at the og:image URL will not be limited.\n\nIMPACT: A malicious remote page with og:image pointing to a crafted PNG decompression bomb can cause OOM in the background card-fetch task.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:56:24.771967846Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:15.575146064Z",
+  "closed_at": "2026-07-20T02:18:15.575146064Z",
+  "close_reason": "Fixed: fetch_card_image uses ImageReader with 64MB alloc limit",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.70",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:56:24.804317662Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

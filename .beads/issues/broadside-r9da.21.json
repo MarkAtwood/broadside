@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.21",
+  "title": "actor_cache: SSRF check bypassed by stale cache hit",
+  "description": "LOCATION: src/actor_cache.rs:31-39\n\nFINDING: get_public_key checks the cache first (line 33-39). If a cache hit exists and is within CACHE_TTL (24 hours), it returns the cached PEM without any SSRF re-validation. The SSRF check (lines 43-52) only runs on a cache miss. This means: if an actor was fetched when its host was a public IP, and the operator later adds that host to an internal DNS zone, all requests using the cached key bypass the SSRF check for up to 24 hours. More practically, the 24-hour TTL means a key fetched at startup will be served from cache for a day with no re-validation of whether the host is still public.\n\nThis is a second-order issue compounded by the delivery worker not using the SSRF-safe resolver (broadside-r9da.4). Together they create a window where an attacker can get a key cached, change DNS, and trigger deliveries to internal hosts for up to 24 hours.\n\nIMPACT: Moderate standalone; critical when combined with the delivery worker SSRF gap. An actor key cached from a legitimate public host continues to be used even after that host resolves to an internal IP, bypassing the SSRF guards on the fetch path.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:51:01.241728631Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:17:54.751274709Z",
+  "closed_at": "2026-07-20T02:17:54.751274709Z",
+  "close_reason": "Fixed: actor_cache removed is_private_host_resolved pre-check, relies on SsrfSafeResolver",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.21",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:51:01.271121076Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

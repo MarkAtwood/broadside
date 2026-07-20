@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.27",
+  "title": "serve_profile_html makes 3 sequential DB round-trips for one page",
+  "description": "LOCATION: src/server.rs:1261-1344\\n\\nFINDING: Rendering the HTML profile page makes three separate database queries in sequence: (1) SELECT display_name, bio, created_at, metadata WHERE username=?, (2) SELECT id WHERE username=? (get_id), (3) SELECT posts WHERE persona_id=? + (4) COUNT(*) FROM followers + (5) COUNT(*) FROM posts. Queries 4 and 5 are both await'ed sequentially. All five values are available in one or two queries with a JOIN or CTE.\\n\\nIMPACT: Each SQLite round-trip across the async task boundary adds scheduler overhead. With WAL mode and an in-process SQLite this is fast, but consolidating into 2 queries (one for persona+counts, one for posts) reduces latency and is easier to read.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:51:15.190958231Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:07.763057175Z",
+  "closed_at": "2026-07-20T02:19:07.763057175Z",
+  "close_reason": "Documented: ponytail comment on 3 DB queries with upgrade path",
+  "labels": [
+    "efficiency",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.27",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:51:15.225971454Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

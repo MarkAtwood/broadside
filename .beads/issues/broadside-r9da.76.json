@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.76",
+  "title": "delivery.rs/relay.rs: url::Url path/host extracted with unnecessary to_string()",
+  "description": "LOCATION: src/delivery.rs line 271; src/relay.rs lines 112-117, 194-203; src/server.rs lines 1075-1080\n\nFINDING: Multiple sites follow this pattern:\n  let parsed = url::Url::parse(\u0026uri);\n  let path = parsed.as_ref().map(|u| u.path().to_string()).unwrap_or_else(|_| \"/inbox\".to_string());\n  let host = parsed.as_ref().ok().and_then(|u| u.host_str().map(|h| h.to_string())).unwrap_or_default();\n\nurl::Url::path() and host_str() return \u0026str borrows from the Url. Calling .to_string() on them is only needed because the Url is not kept alive. The idiomatic fix is to bind the Url to a named variable and extract \u0026str references before it goes out of scope — no allocation needed for path or host in the success case.\n\nIMPACT: Two String allocations per outbound delivery (path + host). These are dwarfed by the HTTP roundtrip, but the pattern is repeated 4+ times and is an ownership/borrowing idiom issue.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:56:40.681298208Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:08.881406034Z",
+  "closed_at": "2026-07-20T02:19:08.881406034Z",
+  "close_reason": "Fixed: Url kept alive, path/host borrowed",
+  "labels": [
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.76",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:56:40.710965101Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

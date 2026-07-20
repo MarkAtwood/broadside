@@ -1,0 +1,5 @@
+{"id":"019f7d38-696e-762c-987c-33d8c91b3b73","issue_id":"broadside-r9da.28","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:51:16.846405064Z"}
+{"id":"019f7d38-6974-73db-b0d5-2df2230e532c","issue_id":"broadside-r9da.28","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: crypto-security","created_at":"2026-07-20T01:51:16.852253537Z"}
+{"id":"019f7d38-6979-7e20-a27e-4bd1553b7343","issue_id":"broadside-r9da.28","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: logging","created_at":"2026-07-20T01:51:16.857926551Z"}
+{"id":"019f7d38-697f-7266-a073-d07e666a8125","issue_id":"broadside-r9da.28","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:51:16.86315792Z"}
+{"id":"019f7d51-5689-7afe-a165-94fe1e30932e","issue_id":"broadside-r9da.28","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Accepted: recovery mnemonic output to stderr is intentional — CLI tools output secrets to stderr by convention. Redirected stderr is operator's responsibility.","created_at":"2026-07-20T02:18:30.40972128Z"}

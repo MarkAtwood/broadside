@@ -1,0 +1,4 @@
+{"id":"019f7d39-0995-76c0-9744-6fb0ed1049e2","issue_id":"broadside-r9da.44","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:51:57.84544327Z"}
+{"id":"019f7d39-099a-7199-a331-060d828004a7","issue_id":"broadside-r9da.44","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: readability","created_at":"2026-07-20T01:51:57.850105465Z"}
+{"id":"019f7d39-099f-7172-acf2-15a63ce11f6f","issue_id":"broadside-r9da.44","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:51:57.855095611Z"}
+{"id":"019f7d51-e9ed-7238-8078-0c33667897af","issue_id":"broadside-r9da.44","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: comment documents storage-time sanitization","created_at":"2026-07-20T02:19:08.141146268Z"}

@@ -1,0 +1,4 @@
+{"id":"019f7d3d-7fcc-76eb-8b9b-a0f68bd8a860","issue_id":"broadside-r9da.78","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:56:50.252454351Z"}
+{"id":"019f7d3d-7fd1-7d9a-9975-7d6fdd771e83","issue_id":"broadside-r9da.78","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: codereview","created_at":"2026-07-20T01:56:50.257892361Z"}
+{"id":"019f7d3d-7fd6-7a62-9239-b1b7d06db024","issue_id":"broadside-r9da.78","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:56:50.262681557Z"}
+{"id":"019f7d51-8fd1-76e6-b0d8-a003a2e183d9","issue_id":"broadside-r9da.78","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Documented: ponytail comment explaining owned Strings needed for return value lifetime","created_at":"2026-07-20T02:18:45.073452856Z"}

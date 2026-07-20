@@ -1,0 +1,5 @@
+{"id":"019f7d38-358c-73b9-a198-2142d36ee2ed","issue_id":"broadside-r9da.23","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:51:03.564244483Z"}
+{"id":"019f7d38-3591-79b2-853a-1e4a6f96453e","issue_id":"broadside-r9da.23","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-20T01:51:03.569636351Z"}
+{"id":"019f7d38-3596-7a1d-9a9c-b7aa195fcf97","issue_id":"broadside-r9da.23","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: ownership","created_at":"2026-07-20T01:51:03.574663404Z"}
+{"id":"019f7d38-359b-7cce-9aaf-c4f5dc4270d0","issue_id":"broadside-r9da.23","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:51:03.579840127Z"}
+{"id":"019f7d51-e832-7977-be4e-a67a30228a8b","issue_id":"broadside-r9da.23","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Documented: comment explains why .to_string() is required","created_at":"2026-07-20T02:19:07.698621Z"}

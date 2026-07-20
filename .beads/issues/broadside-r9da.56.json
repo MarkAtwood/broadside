@@ -1,0 +1,27 @@
+{
+  "id": "broadside-r9da.56",
+  "title": "Digest header checked with constant-time comparison",
+  "description": "LOCATION: src/server.rs:863-878\\n\\nFINDING: The SHA-256 body digest comparison uses subtle::ConstantTimeEq rather than a plain == comparison. While a timing attack on a hash comparison is extremely difficult to exploit (attacker would need sub-nanosecond timing resolution over millions of requests), using ct_eq here is the principled choice and signals to future readers that security properties of this comparison have been considered. It also future-proofs the code against environments with less stable timing.\\n\\nShould be preserved; a reviewer might propose replacing with == 'since it's a hash not the secret itself', but constant-time comparison of authentication-adjacent values is a good hygiene habit worth maintaining.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "decision",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:52:46.155750964Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:19.037503938Z",
+  "closed_at": "2026-07-20T02:19:19.037503938Z",
+  "close_reason": "Acknowledged: digest ct_eq design is correct",
+  "labels": [
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.56",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:52:46.183239743Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

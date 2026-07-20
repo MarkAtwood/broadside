@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.9",
+  "title": "ActorKeyCache half-clear is O(n) scan while holding the write lock",
+  "description": "LOCATION: src/actor_cache.rs:92-99\\n\\nFINDING: When the cache exceeds MAX_ENTRIES (10000), eviction calls entries.retain() (O(n) scan) and then, if still full, collects .keys().take(n/2).cloned().collect() into a HashSet and calls retain again — two O(n) passes while holding the Mutex. During eviction every concurrent inbox request that needs the cache also waits on this lock.\\n\\nIMPACT: With 10000 entries, eviction scans ~80KB of key data twice while blocking all cache users. In practice, 10000 actors is a realistic ceiling for a well-followed instance. A more incremental eviction (LRU via a linked list or indexed-slab, or an async eviction task) would avoid the synchronous O(n) pause.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:50:34.708662853Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:44.421001831Z",
+  "closed_at": "2026-07-20T02:18:44.421001831Z",
+  "close_reason": "Documented: ponytail comment on O(n) scan bounded by MAX_ENTRIES=10000",
+  "labels": [
+    "efficiency",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.9",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:50:34.738502477Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

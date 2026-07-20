@@ -1,0 +1,4 @@
+{"id":"019f7d38-0b72-7dbf-9d2d-e1c3fe0d1e3b","issue_id":"broadside-r9da.17","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:50:52.786901633Z"}
+{"id":"019f7d38-0b77-7aeb-ba64-6ae6d1330c97","issue_id":"broadside-r9da.17","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: elegance","created_at":"2026-07-20T01:50:52.79171602Z"}
+{"id":"019f7d38-0b7c-79a1-817f-7ad55e985828","issue_id":"broadside-r9da.17","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:50:52.796631902Z"}
+{"id":"019f7d51-e7a4-7b79-bb38-416c0af62a9f","issue_id":"broadside-r9da.17","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Deferred: content.rs duplication is intentional defense-in-depth for different call paths","created_at":"2026-07-20T02:19:07.556752791Z"}

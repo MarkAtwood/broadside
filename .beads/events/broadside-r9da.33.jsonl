@@ -1,0 +1,5 @@
+{"id":"019f7d38-908e-76c7-8894-9074fe8a3e9e","issue_id":"broadside-r9da.33","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:51:26.862445125Z"}
+{"id":"019f7d38-9094-7412-8f06-ac67d17c9036","issue_id":"broadside-r9da.33","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-20T01:51:26.868267902Z"}
+{"id":"019f7d38-909a-70ff-b0a3-c6d2933e4c2b","issue_id":"broadside-r9da.33","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: type-design","created_at":"2026-07-20T01:51:26.874066267Z"}
+{"id":"019f7d38-909f-78c3-8237-ea08f386150a","issue_id":"broadside-r9da.33","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:51:26.879574972Z"}
+{"id":"019f7d51-8e69-7146-886b-4acad02e344e","issue_id":"broadside-r9da.33","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Documented: comment above query documents column order dependency","created_at":"2026-07-20T02:18:44.713084066Z"}

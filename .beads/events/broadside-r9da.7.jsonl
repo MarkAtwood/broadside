@@ -1,0 +1,5 @@
+{"id":"019f7d37-b9ce-79fe-bcf3-3997f857542a","issue_id":"broadside-r9da.7","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:50:31.886655737Z"}
+{"id":"019f7d37-b9d3-78d7-a4b4-3eefbc5d8bae","issue_id":"broadside-r9da.7","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-20T01:50:31.891580165Z"}
+{"id":"019f7d37-b9d8-7909-b994-164f4ce9f980","issue_id":"broadside-r9da.7","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: type-design","created_at":"2026-07-20T01:50:31.89659293Z"}
+{"id":"019f7d37-b9dd-7a03-b4f3-d1c8304c0c38","issue_id":"broadside-r9da.7","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:50:31.901656971Z"}
+{"id":"019f7d51-e5e6-7560-a630-76dc30ad46cb","issue_id":"broadside-r9da.7","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Deferred: config type design refactor. Ponytail comment added. Ceiling: newtype wrappers for bind addr, domain, path.","created_at":"2026-07-20T02:19:07.110353295Z"}

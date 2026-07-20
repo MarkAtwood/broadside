@@ -1,0 +1,4 @@
+{"id":"019f7d3d-1c48-7934-b1f0-cd2858c622d7","issue_id":"broadside-r9da.70","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:56:24.776603832Z"}
+{"id":"019f7d3d-1c4d-7530-8671-eb7e2a511064","issue_id":"broadside-r9da.70","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-20T01:56:24.781340516Z"}
+{"id":"019f7d3d-1c51-7d77-94bb-32dd53b49205","issue_id":"broadside-r9da.70","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:56:24.785884131Z"}
+{"id":"019f7d51-1c9b-7b99-ad55-4ef9955b0928","issue_id":"broadside-r9da.70","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: fetch_card_image uses ImageReader with 64MB alloc limit","created_at":"2026-07-20T02:18:15.579761108Z"}

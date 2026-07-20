@@ -1,0 +1,4 @@
+{"id":"019f7d3d-9035-75e7-90d7-546a8bd2f2df","issue_id":"broadside-r9da.79","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:56:54.453387423Z"}
+{"id":"019f7d3d-903a-706b-9525-948a4ce2420a","issue_id":"broadside-r9da.79","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-20T01:56:54.458027844Z"}
+{"id":"019f7d3d-903e-7c58-aa98-3ac569aedad7","issue_id":"broadside-r9da.79","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:56:54.462809346Z"}
+{"id":"019f7d51-1d70-7911-addd-1322b22978c7","issue_id":"broadside-r9da.79","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: migration starts at version 0, applies all intermediate SQL (same fix as r9da.1)","created_at":"2026-07-20T02:18:15.792595154Z"}

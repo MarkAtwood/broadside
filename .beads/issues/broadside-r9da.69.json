@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.69",
+  "title": "html_to_text: constructs new ammonia Builder on every call",
+  "description": "LOCATION: src/sanitize.rs:49-53\n\nFINDING: html_to_text() creates a fresh Builder::new(), configures it with an empty HashSet, calls .clean(), and discards the builder — on every call. Compare sanitize_html() which correctly caches its builder in a LazyLock\u003cBuilder\u003e.\n\nhtml_to_text is called on every post for language detection (content.rs:detect_language path in delivery.rs:212), on every card field in fetch_and_store (card.rs:180-182), and potentially on bio rendering. The Builder construction is not free: ammonia 4.x initialises internal hashmaps for tag and attribute allowlists.\n\nIMPACT: Unnecessary Builder allocation per call. Fix: add a second LazyLock\u003cBuilder\u003e configured with empty tags, matching the pattern already used by SANITIZE_BUILDER.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:56:22.427017368Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:08.509009242Z",
+  "closed_at": "2026-07-20T02:19:08.509009242Z",
+  "close_reason": "Fixed: html_to_text uses cached LazyLock Builder",
+  "labels": [
+    "efficiency",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.69",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:56:22.458538669Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.57",
+  "title": "media.rs: no GIF decompression bomb limit",
+  "description": "LOCATION: src/media.rs:194-214, process_image()\n\nFINDING: The image decode limits only cap max_alloc at 64MB, but GIF is not subject to the same pixel-count arithmetic as JPEG/PNG. An animated GIF with many frames can allocate far more than 64MB when the image crate expands all frames. The 'image' crate's Limits struct only applies to single-frame decoded size; an attacker can send a multi-frame GIF near the 10MB wire limit that expands to hundreds of MB during decode.\n\nIMPACT: OOM or process kill on the server when processing a crafted animated GIF uploaded via the CLI local-file path or a webhook media URL, since both call process_local/process_remote -\u003e store_processed_image -\u003e process_image.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:55:33.310841226Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:17:55.102718521Z",
+  "closed_at": "2026-07-20T02:17:55.102718521Z",
+  "close_reason": "Fixed: image::Limits max_image_width/height set in process_image",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.57",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:55:33.33677638Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

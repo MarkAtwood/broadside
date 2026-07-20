@@ -1,0 +1,4 @@
+{"id":"019f7d3c-f375-7da2-9f98-8a42f0981675","issue_id":"broadside-r9da.65","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:56:14.325894068Z"}
+{"id":"019f7d3c-f37a-73f4-a755-ac59c98a51cd","issue_id":"broadside-r9da.65","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: codereview","created_at":"2026-07-20T01:56:14.330259638Z"}
+{"id":"019f7d3c-f37e-7e29-85a6-3bd15c21e5a3","issue_id":"broadside-r9da.65","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:56:14.334928605Z"}
+{"id":"019f7d51-8f8d-7454-83a6-c9fe125305f9","issue_id":"broadside-r9da.65","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: RFC3339 format via chrono to_rfc3339_opts","created_at":"2026-07-20T02:18:45.005284461Z"}

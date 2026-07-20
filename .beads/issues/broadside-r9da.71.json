@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.71",
+  "title": "content.rs: format! allocation inside dedup any() check",
+  "description": "LOCATION: src/content.rs lines 90 and 118\n\nFINDING: The dedup checks use format!(\"#{lower}\") and format!(\"@{user}@{host}\") inside a .any() closure that runs on every element of tags. This allocates a new String per iteration of the inner loop, for each new hashtag/mention found.\n\nThe idiomatic fix: store the candidate name before the any() call (it is already available as a local), and compare directly. E.g., for hashtags: the candidate name is format!(\"#{lower}\") — assign it to a let before the any() and reuse it for both the check and the push.\n\nIMPACT: O(n^2) allocations where n is the number of tags in a post. Rare in practice (posts rarely have dozens of tags), but the pattern is still non-idiomatic.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:56:28.21112266Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:08.587813616Z",
+  "closed_at": "2026-07-20T02:19:08.587813616Z",
+  "close_reason": "Fixed: tag_name computed once before any() check",
+  "labels": [
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.71",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:56:28.245424689Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

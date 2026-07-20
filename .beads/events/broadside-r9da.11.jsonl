@@ -1,0 +1,5 @@
+{"id":"019f7d37-d30b-7172-9d2c-53a07a9dbf61","issue_id":"broadside-r9da.11","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:50:38.347095667Z"}
+{"id":"019f7d37-d30f-733e-9486-2fdeb0a70453","issue_id":"broadside-r9da.11","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: idiomatic-rust","created_at":"2026-07-20T01:50:38.351213657Z"}
+{"id":"019f7d37-d313-75fd-98ac-d40feca4bf3d","issue_id":"broadside-r9da.11","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: type-design","created_at":"2026-07-20T01:50:38.355393324Z"}
+{"id":"019f7d37-d317-7925-b50f-03cc0784e483","issue_id":"broadside-r9da.11","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:50:38.359599885Z"}
+{"id":"019f7d51-e630-7b2b-946f-93f4f15ec0da","issue_id":"broadside-r9da.11","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Deferred: WatchConfig String→PathBuf. Low impact, works as-is.","created_at":"2026-07-20T02:19:07.184732622Z"}

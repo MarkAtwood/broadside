@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.88",
+  "title": "feed.rs: essence().to_string() for starts_with check",
+  "description": "src/feed.rs line 110-112\\n\\ncontent.content_type.as_ref().map(|m| m.essence().to_string()).unwrap_or_default() allocates a String that is only used for a starts_with(\"image/\") check and then discarded. essence() returns \u0026str; keeping it as \u0026str (or using .unwrap_or(\"\")) eliminates the allocation without changing semantics.\\n\\nImpact: one transient String allocation per feed media item processed. Minor allocation idiom issue.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T02:02:26.334314717Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:09.029374316Z",
+  "closed_at": "2026-07-20T02:19:09.029374316Z",
+  "close_reason": "Fixed: essence check uses as_str() without allocation",
+  "labels": [
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.88",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T02:02:26.363155331Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{"id":"019f7d37-7b00-78df-ab70-575402d223ee","issue_id":"broadside-r9da.3","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:50:15.808582828Z"}
+{"id":"019f7d37-7b05-7665-82ec-7e5facf7f093","issue_id":"broadside-r9da.3","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: efficiency","created_at":"2026-07-20T01:50:15.813419642Z"}
+{"id":"019f7d37-7b0a-7115-ad27-a00d18cffe6f","issue_id":"broadside-r9da.3","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:50:15.818071292Z"}
+{"id":"019f7d51-8c26-708e-8791-9cf9f872b3d5","issue_id":"broadside-r9da.3","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: delivery worker no longer calls is_private_host_resolved pre-check; SsrfSafeResolver handles it","created_at":"2026-07-20T02:18:44.134037571Z"}

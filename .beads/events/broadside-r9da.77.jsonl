@@ -1,0 +1,5 @@
+{"id":"019f7d3d-6171-78a4-8dd1-a650bb17e66f","issue_id":"broadside-r9da.77","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:56:42.481566854Z"}
+{"id":"019f7d3d-6176-7444-99f9-480e8cb68d43","issue_id":"broadside-r9da.77","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-20T01:56:42.486280137Z"}
+{"id":"019f7d3d-617a-7e44-bbd0-e2cfd5746813","issue_id":"broadside-r9da.77","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: risk","created_at":"2026-07-20T01:56:42.490935334Z"}
+{"id":"019f7d3d-617f-7869-bd18-76868f86c71c","issue_id":"broadside-r9da.77","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:56:42.495551789Z"}
+{"id":"019f7d51-1d2a-764b-8de8-3b092c4a1619","issue_id":"broadside-r9da.77","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: watch.rs canonicalizes before reading (same fix as r9da.2)","created_at":"2026-07-20T02:18:15.722413339Z"}

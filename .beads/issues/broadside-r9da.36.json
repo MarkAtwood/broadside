@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.36",
+  "title": "process_content: in_link closure duplicated between two functions",
+  "description": "LOCATION: src/content.rs:55-59 (process_content) and src/content.rs:163-166 (detect_quote_links)\\n\\nFINDING: The in_link closure and the skip_ranges building block are copy-pasted identically into both process_content and detect_quote_links. Any fix to the binary-search logic (e.g. handling overlapping \u003ca\u003e tags) must be applied in both places.\\n\\nIMPACT: Duplication means a bug fix in one copy does not fix the other. The correct fix is to extract a helper fn in_link(skip_ranges: \u0026[(usize, usize)], pos: usize) -\u003e bool.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:51:32.676864188Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T01:52:20.6606081Z",
+  "closed_at": "2026-07-20T01:52:20.6606081Z",
+  "close_reason": "Closed",
+  "labels": [
+    "idiomatic-rust",
+    "type-design",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.36",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:51:32.715791368Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

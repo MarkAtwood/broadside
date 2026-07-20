@@ -1,0 +1,27 @@
+{
+  "id": "broadside-r9da.49",
+  "title": "SsrfSafeResolver on reqwest client — correct defense against DNS rebinding",
+  "description": "LOCATION: src/server.rs:1458-1480\\n\\nFINDING: SsrfSafeResolver implements reqwest::dns::Resolve and is used as the DNS resolver for the shared http_client. This closes the DNS rebinding TOCTOU gap that exists when doing a pre-flight DNS check and then making the request separately — because the resolver used for the actual TCP connection is the same one performing the private-IP check, there is no window for a DNS rebinding attack to slip between check and connect.\\n\\nThe dual-layer defense (SsrfSafeResolver on the client + is_private_host_resolved pre-flight checks on actor/follower URIs) is deliberately redundant: the pre-flight checks provide early rejection with actionable error messages, while SsrfSafeResolver is the actual security guarantee. This is the correct architecture for defense-in-depth SSRF protection and should be preserved if someone proposes removing 'one of the two DNS checks'.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "decision",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:52:14.821295764Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:18.661904803Z",
+  "closed_at": "2026-07-20T02:19:18.661904803Z",
+  "close_reason": "Acknowledged: SsrfSafeResolver design is correct",
+  "labels": [
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.49",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:52:14.84855937Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

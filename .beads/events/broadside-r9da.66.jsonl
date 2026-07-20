@@ -1,0 +1,4 @@
+{"id":"019f7d3c-f73c-719a-9937-2191cd635d43","issue_id":"broadside-r9da.66","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:56:15.29210575Z"}
+{"id":"019f7d3c-f741-789b-9ef0-8e56abe7ff27","issue_id":"broadside-r9da.66","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: efficiency","created_at":"2026-07-20T01:56:15.29756469Z"}
+{"id":"019f7d3c-f746-73cf-abb2-0970018cfcb7","issue_id":"broadside-r9da.66","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:56:15.302250448Z"}
+{"id":"019f7d51-eac8-7048-bba5-8336132001dd","issue_id":"broadside-r9da.66","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Accepted: process_content per post is the correct design; caching would add complexity.","created_at":"2026-07-20T02:19:08.360019231Z"}

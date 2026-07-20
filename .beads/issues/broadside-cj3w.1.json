@@ -1,0 +1,22 @@
+{
+  "id": "broadside-cj3w.1",
+  "title": "Split media handling into pure logic and persistence",
+  "description": "Refactor media processing to separate pure logic (MIME sniffing, image resizing, blurhash generation) from persistence (DB storage). Broadside's media architecture is already different from gaja/smallhold so this may require less work. The pure logic becomes a thin wrapper around fieldwork::media once that module exists.",
+  "status": "open",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@wolfssl.com",
+  "created_at": "2026-07-20T02:10:12.198354598Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:10:12.198354598Z",
+  "dependencies": [
+    {
+      "issue_id": "broadside-cj3w.1",
+      "depends_on_id": "broadside-cj3w",
+      "type": "parent-child",
+      "created_at": "2026-07-20T02:10:12.22248927Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

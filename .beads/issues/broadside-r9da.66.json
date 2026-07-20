@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.66",
+  "title": "outbox handler: process_content runs 3 regexes per post, 20x per page",
+  "description": "LOCATION: src/server.rs:553-561 (outbox handler loop)\n\nFINDING: The outbox handler loops over up to 20 posts and calls crate::content::process_content() for each one. Each process_content call: runs LINK_RE.find_iter to build skip_ranges, runs URL_RE.find_iter, runs HASHTAG_RE.captures_iter, runs MENTION_RE.captures_iter — 4 regex passes. For a full page of 20 posts, that is 80 regex passes plus 20 Vec allocations for skip_ranges and replacements. The post HTML is not cached after processing.\n\nThis is distinct from broadside-r9da.17 (which covers detect_quote_links duplicating skip_ranges within a single call). This is repetition across all posts in a page response.\n\nIMPACT: Outbox page requests are O(posts_per_page * post_length) in regex work rather than O(total_content_length). For 20 posts at ~1KB each, that is ~80 regex passes. The content could be stored pre-processed in the DB, or process_content results could be cached keyed by post_id+domain.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:56:15.287429077Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:08.356053378Z",
+  "closed_at": "2026-07-20T02:19:08.356053378Z",
+  "close_reason": "Accepted: process_content per post is the correct design; caching would add complexity.",
+  "labels": [
+    "efficiency",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.66",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:56:15.31776235Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

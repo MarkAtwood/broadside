@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.40",
+  "title": "TOCTOU in watch.rs: content is read before canonicalize, comment inverts the explanation",
+  "description": "LOCATION: src/watch.rs:65-81\\n\\nFINDING: The comment on line 65-67 says 'Read first, THEN canonicalize... so a swap between canonicalize and read cannot leak unintended files.' This reasoning is backwards: reading before canonicalize means the file is already consumed before the path safety check. If an attacker creates a symlink at the watched path after the notify event fires but before the read, the content of the symlink target is read and published. Reading first does NOT prevent symlink attacks; it makes them worse because the path check happens after the damage.\\n\\nThe actual protection is that notify only fires EventKind::Create events, not symlink creation events that race with file creation. But the comment actively misleads a reader into thinking the read-first ordering is a security property when it is the opposite.\\n\\nIMPACT: A future developer reading this comment may rely on the 'security reasoning' to justify similar patterns elsewhere. The comment should either be corrected or removed.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:51:48.877352994Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:44.855086923Z",
+  "closed_at": "2026-07-20T02:18:44.855086923Z",
+  "close_reason": "Fixed: watch.rs canonicalizes before reading (same fix as r9da.2)",
+  "labels": [
+    "readability",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.40",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:51:48.901239646Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

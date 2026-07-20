@@ -1,0 +1,27 @@
+{
+  "id": "broadside-r9da.50",
+  "title": "Constant-time key comparison in webhook handler",
+  "description": "LOCATION: src/webhook.rs:55-59\\n\\nFINDING: The webhook key comparison hashes both the expected and provided keys with SHA-256 before calling ct_eq, rather than directly comparing the key strings. This correctly prevents timing side-channels that could leak the key length or byte values through branch timing. Hashing before comparison also means the comparison time is constant (32 bytes) regardless of input length, preventing a length-oracle attack via the ct_eq result.\\n\\nThis is precisely the right pattern for secret-bearing HTTP authentication tokens and should be preserved if someone proposes 'simplifying' to a direct == comparison or even a naive hmac check.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "decision",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:52:20.389174466Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:18.735108217Z",
+  "closed_at": "2026-07-20T02:19:18.735108217Z",
+  "close_reason": "Acknowledged: webhook ct_eq design is correct",
+  "labels": [
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.50",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:52:20.415658873Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

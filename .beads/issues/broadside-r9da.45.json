@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.45",
+  "title": "CircuitBreaker HashMap grows unbounded; no eviction of healthy domains",
+  "description": "LOCATION: src/delivery.rs:27-57\n\nFINDING: The CircuitBreaker struct holds a HashMap\u003cString, (u32, Instant)\u003e that only grows. record_success removes the entry (line 41), but domains that trip the breaker and then have the 1-hour cooldown expire are pruned lazily only when is_tripped is called for that specific domain (line 53). Domains that fail exactly 9 times (below the trip threshold of 10) accumulate in the map indefinitely — record_success is only called on success, so a domain that consistently fails at 9 attempts per window never gets cleared. On a server with many followers across many domains, the map grows proportional to the number of distinct failing domains, with no eviction for sub-threshold failure domains.\n\nAlso: the CircuitBreaker is in-memory inside the delivery worker and not shared with the rate limiter prune task. There is no periodic prune of the CircuitBreaker map.\n\nIMPACT: Memory growth proportional to the number of domains that have had any delivery failure. On a server that has accumulated followers across thousands of domains (common for fediverse servers), the map grows to megabytes with no release mechanism. Not immediately catastrophic, but a silent memory leak for long-running instances.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:51:59.438397207Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:14.991612698Z",
+  "closed_at": "2026-07-20T02:18:14.991612698Z",
+  "close_reason": "Fixed: CircuitBreaker prune removes entries \u003e2h old at batch start",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.45",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:51:59.469985836Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.82",
+  "title": "card.rs: extract_first_url returns Option\u003cString\u003e instead of Option\u003c\u0026str\u003e",
+  "description": "LOCATION: src/card.rs lines 19-24\n\nFINDING: extract_first_url(html: \u0026str) -\u003e Option\u003cString\u003e returns an owned String via .map(|m| m.as_str().to_string()). The match result m.as_str() is a \u0026str slice of the input html. The function signature could return Option\u003c\u0026str\u003e borrowing from html, eliminating the allocation.\n\nAll call sites either immediately use the URL as \u0026str or pass it to an async closure that needs ownership — but the caller can call .to_owned() only when needed rather than always allocating.\n\nThis is the same class as the extract_first_url returns String finding from pass 1 (which the instructions say was already filed for a different function). Verify it was not already filed for THIS function in card.rs specifically.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:57:09.031817922Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T01:57:27.392422243Z",
+  "closed_at": "2026-07-20T01:57:27.392422243Z",
+  "close_reason": "Closed",
+  "labels": [
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.82",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:57:09.06135938Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

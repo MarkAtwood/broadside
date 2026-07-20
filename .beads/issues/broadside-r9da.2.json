@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.2",
+  "title": "watch.rs: file content read before symlink escape check",
+  "description": "LOCATION: src/watch.rs:68-85\n\nFINDING: The code reads the file content first (line 68) and then calls canonicalize to verify the path stays inside the watch directory (line 75). The comment says this is intentional (\"Read first, THEN canonicalize\"). However, this is TOCTOU in the wrong direction: a symlink can exist at the time of the `read_to_string` call, pointing outside the watch directory, and that content is already captured before the escape check runs. The comment claims \"content is captured before the symlink check, so a swap between canonicalize and read cannot leak unintended files\" — but that is backwards. Reading before checking means the read already happened on whatever target the symlink points to. The escape check on line 82 comes too late to prevent the read; it only prevents publishing. The content was already in memory. The real defense needed is: canonicalize first, reject if it escapes, then read.\n\nIMPACT: An attacker with local filesystem access who can create symlinks in the watch directory can cause broadside to read any file readable by its process user. While the content would not be published (the escape check prevents that), the file content is loaded into process memory, and if any logging or error path exposes it, information leakage occurs. This is also a model contributors will copy incorrectly when adding new features.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:50:06.795449178Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:17:54.537708785Z",
+  "closed_at": "2026-07-20T02:17:54.537708785Z",
+  "close_reason": "Fixed: watch.rs now canonicalizes before reading file content",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.2",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:50:06.825220053Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

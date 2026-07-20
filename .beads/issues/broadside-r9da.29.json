@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.29",
+  "title": "handle_inbox: sig_header and digest_header as owned String when \u0026str suffices",
+  "description": "LOCATION: src/server.rs:770-773, 856-862, 884-888\\n\\nFINDING: sig_header, digest_header, and date_str are each allocated as String via .to_string() from header values that remain valid for the duration of handle_inbox. All three are passed only to functions taking \u0026str (parse_signature_header, strip_prefix, parse_from_rfc2822). The header map lives for the full function lifetime, so \u0026str borrows would work without any owned allocation.\\n\\nIMPACT: Three unnecessary String allocations on every inbox request that has a valid Signature header. Under load this is measurable heap churn.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:51:19.393603167Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:07.837989285Z",
+  "closed_at": "2026-07-20T02:19:07.837989285Z",
+  "close_reason": "Documented: comment explains HeaderMap borrow lifetime requires owned String",
+  "labels": [
+    "idiomatic-rust",
+    "ownership",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.29",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:51:19.433371438Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

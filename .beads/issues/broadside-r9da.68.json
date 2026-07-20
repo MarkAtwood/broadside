@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.68",
+  "title": "ratelimit.rs: HashMap key allocates String on every acquire",
+  "description": "LOCATION: src/ratelimit.rs line 32\n\nFINDING: try_acquire calls buckets.entry(key.to_string()) which allocates a new String on every call, including on the common cache-hit path. The entry API on HashMap\u003cString, _\u003e always takes an owned key. The idiomatic fix is to first check with buckets.get(key) and only allocate when inserting: if the bucket exists, update it without allocation. Alternatively, use the raw_entry unstable API or restructure as get + insert.\n\nIMPACT: One String allocation per incoming HTTP request on the inbox hot path. Minor throughput cost, but avoidable with a two-step get/insert pattern.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:56:19.947321115Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:08.428965307Z",
+  "closed_at": "2026-07-20T02:19:08.428965307Z",
+  "close_reason": "Documented: ponytail comment on entry API allocation with raw_entry upgrade path",
+  "labels": [
+    "codereview",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.68",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:56:19.979221979Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.33",
+  "title": "actor handler: tuple destructure of 10-element query row is fragile",
+  "description": "LOCATION: src/server.rs:386-408\\n\\nFINDING: The actor endpoint fetches a 10-column row as a bare tuple (String, String, String, String, String, Option\u003cString\u003e, Option\u003cString\u003e, String, String, Option\u003cString\u003e) and destructures it positionally. There is no compile-time or runtime check that the column order in the SQL matches the tuple position. Reordering columns in the SELECT or adding a column breaks silently by assigning values to wrong fields.\\n\\nIMPACT: A future SELECT refactor (reordering, adding/dropping a column) silently serves wrong data (e.g. bio as display_name) with no compile error. The pattern in post.rs (using sqlx::FromRow on PostRow) is the correct approach and should be applied here.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:51:26.85642759Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:44.708941105Z",
+  "closed_at": "2026-07-20T02:18:44.708941105Z",
+  "close_reason": "Documented: comment above query documents column order dependency",
+  "labels": [
+    "idiomatic-rust",
+    "type-design",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.33",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:51:26.896561704Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

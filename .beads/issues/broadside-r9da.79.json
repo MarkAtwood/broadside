@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.79",
+  "title": "db.rs: migration jumps version without applying intermediate SQL",
+  "description": "LOCATION: src/db.rs:125-171, ensure_migrations()\n\nFINDING: The migration loop is 'for v in version..CURRENT_SCHEMA_VERSION'. MIGRATIONS[0] is an empty string (version 0→1 is 'no migration needed'). The loop skips empty entries (line 160: '!MIGRATIONS[idx].is_empty()'). \n\nThe bug: if a database was created at version 0 (before schema_meta existed) and then upgraded past version 1 to the current version, the loop correctly skips index 0. However, if a fresh database is created (schema_meta does not exist), the code at line 145-149 inserts schema_version = CURRENT_SCHEMA_VERSION (4) and returns Ok(()) immediately — skipping all migrations. This is intentional (the SCHEMA constant already includes all tables). \n\nThe actual gap: MIGRATIONS[2] is 'ALTER TABLE relays ADD COLUMN persona TEXT NOT NULL DEFAULT \\'\\''. If a DB was created at schema version 1 (before schema_meta existed, so 'version' is read as... wait — schema_meta itself is created by ensure_migrations, so a DB that predates schema_meta would have no schema_meta row and would hit the None arm at line 143, setting version to CURRENT_SCHEMA_VERSION and returning — never running migrations). That means an existing DB from before schema_meta was introduced will permanently skip all migrations, leaving the relays.persona column and personas.did_key/recovery_pubkey columns absent.\n\nIMPACT: Operators who upgrade from a version before schema_meta was introduced will silently get a broken DB where relay subscriptions and DID features don't work, with no error at startup.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:56:54.448799883Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:15.788615987Z",
+  "closed_at": "2026-07-20T02:18:15.788615987Z",
+  "close_reason": "Fixed: migration starts at version 0, applies all intermediate SQL (same fix as r9da.1)",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.79",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:56:54.478008325Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

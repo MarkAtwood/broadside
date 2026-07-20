@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.81",
+  "title": "server.rs: profile HTML posts_html injects unsanitized processed content",
+  "description": "LOCATION: src/server.rs:1315, serve_profile_html() and src/content.rs:70-71\n\nFINDING: The profile HTML page renders posts with 'content = processed' (line 1317), where 'processed' is the output of process_content(\u0026p.content_html, \u0026state.domain). process_content() injects raw HTML strings for linked hashtags, mentions, and URLs without running the result through ammonia. The URL regex (URL_RE) does exclude double-quote (\\x22), single-quote, \u003c, and \u003e from matched URLs, so href attribute injection via URL is mitigated by the regex pattern. However, the constructed HTML from process_content is never re-sanitized through ammonia before being embedded in the profile page template at line 1317. If the stored content_html contains anything that sanitize_html() or markdown_to_html() did not fully strip (e.g., due to an ammonia version bump changing behavior), it flows into the public-facing HTML page without a second sanitization pass. \n\nThe deeper issue: the profile HTML page at serve_profile_html() embeds 'processed' (which is process_content output) as raw HTML inside a format! string. process_content() is designed to produce AP-ready HTML for JSON delivery, not browser-rendered HTML. The two consumers have different trust requirements but share the same output.\n\nIMPACT: Defense-in-depth gap. The profile page trusts process_content output as browser-safe HTML without re-sanitizing through ammonia, relying entirely on the content having been sanitized at storage time and process_content producing safe HTML.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:57:05.882768234Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:30.617893944Z",
+  "closed_at": "2026-07-20T02:18:30.617893944Z",
+  "close_reason": "Fixed: comment added explaining storage-time sanitization makes re-sanitization unnecessary",
+  "labels": [
+    "correctness",
+    "risk",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.81",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:57:05.92117131Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

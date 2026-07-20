@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.72",
+  "title": "feed.rs: redundant sanitize_html pass on already-safe link HTML",
+  "description": "LOCATION: src/feed.rs:65-67 and 75-77\n\nFINDING: link_html is built by format!() using escape_html_attr(url) as the only variable content. The URL is then immediately passed through sanitize_html(\u0026link_html). The sanitize_html call invokes ammonia, which runs a full html5ever parse-and-serialize cycle. This is redundant: escape_html_attr already neutralises all injection vectors in the URL, and the surrounding \u003cp\u003e\u003ca href=...\u003e structure is a literal string with no variables.\n\nSame pattern repeated at line 77 for the 'read more' link after truncation.\n\nIMPACT: Two unnecessary html5ever parse+serialize round-trips per feed entry with a link — ammonia is not a trivial call (it runs Servo's html5ever tokenizer under the hood). The result is identical to the input in both cases.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:56:31.148691416Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:19:08.662108031Z",
+  "closed_at": "2026-07-20T02:19:08.662108031Z",
+  "close_reason": "Documented: defense-in-depth comment added",
+  "labels": [
+    "efficiency",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.72",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:56:31.179244884Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

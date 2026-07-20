@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.64",
+  "title": "config.rs: feed URL not validated as http/https on load",
+  "description": "LOCATION: src/config.rs:67-83, Config::validate()\n\nFINDING: validate() only checks feed poll_interval format and watch path absoluteness. It does not validate that feed[i].url is an http:// or https:// URL. An operator typo like 'ftp://...' or a relative path will pass config validation and only fail at first poll time with an opaque reqwest error.\n\nIMPACT: Operator configuration error gives no early diagnostic at server startup. Minor operational burden — not a security issue since the feed poller uses a separate client without the SsrfSafeResolver, but the early-fail principle means startup should catch this.",
+  "status": "closed",
+  "priority": 0,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:56:07.73393325Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:17:54.890985779Z",
+  "closed_at": "2026-07-20T02:17:54.890985779Z",
+  "close_reason": "Fixed: config.rs validates feed URLs start with http/https",
+  "labels": [
+    "maintainer-burden",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.64",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:56:07.76283139Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

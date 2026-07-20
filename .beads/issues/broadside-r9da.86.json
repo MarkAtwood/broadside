@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.86",
+  "title": "CSS \u003c/style\u003e regex misses whitespace variants",
+  "description": "LOCATION: src/server.rs:140\\n\\nFINDING: The regex used to strip \u003c/style\u003e from operator-supplied CSS is 'regex::RegexBuilder::new(\"\u003c/style\u003e\")' with case_insensitive(true). This matches only the exact sequence \u003c/style\u003e (no whitespace between 'style' and '\u003e'). HTML parsers accept \u003c/style \u003e (trailing space or any whitespace before the closing \u003e) as a valid closing tag. An operator-supplied CSS file containing that pattern would close the \u003cstyle\u003e block early, allowing injection of arbitrary HTML nodes into the page body.\\n\\nIMPACT: If operator-supplied CSS (from theme_tokens_path or custom_css_path) contains \u003c/style \u003e — for example, sourced from a third-party CSS library with that text in a comment — an attacker who can influence the CSS file content can escape the \u003cstyle\u003e block and inject arbitrary HTML. The CSP (default-src 'none') limits JavaScript execution but does not prevent HTML injection (e.g., hidden forms, CSS-based data exfiltration). Fix: change regex to '\u003c/style\\s*\u003e'.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:58:24.27606388Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:15.86693278Z",
+  "closed_at": "2026-07-20T02:18:15.86693278Z",
+  "close_reason": "Fixed: CSS regex changed to r\"\u003c/style\\s*\u003e\" matching whitespace variants",
+  "labels": [
+    "crypto-security",
+    "xss",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.86",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:58:24.310640888Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

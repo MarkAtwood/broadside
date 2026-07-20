@@ -1,0 +1,5 @@
+{"id":"019f7d39-6fb4-7b87-9922-18dd17525da2","issue_id":"broadside-r9da.51","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:52:23.988757469Z"}
+{"id":"019f7d39-6fb9-77e8-bce8-0ebc79336275","issue_id":"broadside-r9da.51","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: risk","created_at":"2026-07-20T01:52:23.993519336Z"}
+{"id":"019f7d39-6fbd-7ed8-af9d-5bf0228193ff","issue_id":"broadside-r9da.51","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: maintainer-burden","created_at":"2026-07-20T01:52:23.997973709Z"}
+{"id":"019f7d39-6fc2-793e-8b07-883c48c7c37e","issue_id":"broadside-r9da.51","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:52:24.00260662Z"}
+{"id":"019f7d51-1ae8-7d47-b501-a6010c64223f","issue_id":"broadside-r9da.51","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: feed poller client uses SsrfSafeResolver","created_at":"2026-07-20T02:18:15.144871159Z"}

@@ -1,0 +1,4 @@
+{"id":"019f7d37-57d0-7951-90e9-e51090479055","issue_id":"broadside-r9da.2","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:50:06.800611213Z"}
+{"id":"019f7d37-57d5-7aeb-baf5-316bc309e775","issue_id":"broadside-r9da.2","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: correctness","created_at":"2026-07-20T01:50:06.805716058Z"}
+{"id":"019f7d37-57da-78fd-9d20-531ddd591b52","issue_id":"broadside-r9da.2","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:50:06.810589617Z"}
+{"id":"019f7d50-ca6e-7caf-be7c-7d5ce1aa0775","issue_id":"broadside-r9da.2","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: watch.rs now canonicalizes before reading file content","created_at":"2026-07-20T02:17:54.542831826Z"}

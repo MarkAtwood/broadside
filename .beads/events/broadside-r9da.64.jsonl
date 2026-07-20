@@ -1,0 +1,4 @@
+{"id":"019f7d3c-d9ba-7b1e-bf23-1035e5dac526","issue_id":"broadside-r9da.64","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:56:07.738729089Z"}
+{"id":"019f7d3c-d9bf-744f-b27c-1e784bb9f843","issue_id":"broadside-r9da.64","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: maintainer-burden","created_at":"2026-07-20T01:56:07.743288186Z"}
+{"id":"019f7d3c-d9c3-7c52-8faf-41a21c87e6b9","issue_id":"broadside-r9da.64","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:56:07.747808076Z"}
+{"id":"019f7d50-cbce-7efd-83c5-307541c94304","issue_id":"broadside-r9da.64","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Fixed: config.rs validates feed URLs start with http/https","created_at":"2026-07-20T02:17:54.894982981Z"}

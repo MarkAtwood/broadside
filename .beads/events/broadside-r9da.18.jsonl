@@ -1,0 +1,5 @@
+{"id":"019f7d38-139d-7b68-a57c-c9c0c9dcda95","issue_id":"broadside-r9da.18","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:50:54.877748508Z"}
+{"id":"019f7d38-13a2-7b9e-b91f-e87868f43765","issue_id":"broadside-r9da.18","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: crypto-security","created_at":"2026-07-20T01:50:54.882762879Z"}
+{"id":"019f7d38-13a8-70cd-940f-3bc2883d0de4","issue_id":"broadside-r9da.18","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: storage","created_at":"2026-07-20T01:50:54.888053599Z"}
+{"id":"019f7d38-13ad-7061-a7a5-c71517e33aa5","issue_id":"broadside-r9da.18","event_type":"label_added","actor":"Mark Atwood","comment":"Added label: review","created_at":"2026-07-20T01:50:54.893026288Z"}
+{"id":"019f7d51-5642-7ed3-9895-9a0fde8c1c80","issue_id":"broadside-r9da.18","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Accepted: RSA private key must be readable for signing. Encryption at rest requires a key management system. ponytail: upgrade to HSM/KMS when available.","created_at":"2026-07-20T02:18:30.338972369Z"}

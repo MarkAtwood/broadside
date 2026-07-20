@@ -1,0 +1,29 @@
+{
+  "id": "broadside-r9da.10",
+  "title": "content.rs: bare URL inserted into HTML without entity-encoding",
+  "description": "LOCATION: src/content.rs:70-73\n\nFINDING: process_content inserts regex-matched URL text directly into an href attribute and as display text via format!() without calling escape_html_attr or ammonia::clean. The URL regex excludes double-quote and angle brackets, but does not exclude ampersand. A URL containing \u0026 (common in query strings) is inserted as literal \u0026 into both the href value and the display text. In attribute context, HTML parsers treat \u0026foo; as an entity reference. This corrupts the URL when round-tripped through an HTML parser. More fundamentally, the code pattern of inserting untrusted URL text into raw HTML format strings without escaping is a dangerous invariant that contributors will copy for future features.\n\nIMPACT: URLs with \u0026 in query strings are double-encoded inconsistently. If the regex is ever relaxed, or a new format-string call site is added following this pattern, XSS results. Current risk is low due to the regex, but the unsafe pattern will be copied.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:50:38.201088723Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:14.685015011Z",
+  "closed_at": "2026-07-20T02:18:14.685015011Z",
+  "close_reason": "Fixed: bare URLs in content.rs now use escape_html_attr for href",
+  "labels": [
+    "risk",
+    "maintainer-burden",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.10",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:50:38.236545527Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

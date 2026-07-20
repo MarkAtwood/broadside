@@ -1,0 +1,28 @@
+{
+  "id": "broadside-r9da.61",
+  "title": "delivery.rs: 410 Gone deletes followers across all personas when post not found",
+  "description": "LOCATION: src/delivery.rs:303-338, process_batch() 410 arm\n\nFINDING: When a delivery returns HTTP 410 Gone, the code removes the delivery queue entry and deletes matching followers, but does NOT call breaker.record_success(). It also does NOT call breaker.record_failure(). The result is neutral — the breaker is not updated. However, the 'processed += 1' at line 351 runs after the match block, so the 410 arm correctly counts the item. This is not a bug in the circuit breaker.\n\nThe real bug in the 410 arm: the DELETE of followers matches on 'inbox_uri = ? OR shared_inbox_uri = ?' (line 319). After a 410, the follower record should be deleted, but if the 410 came from a shared inbox (i.e., the follower's individual inbox_uri is different from the shared_inbox_uri that was used for delivery), the DELETE condition 'inbox_uri = inbox_uri_of_delivery OR shared_inbox_uri = inbox_uri_of_delivery' will not match the follower whose shared_inbox_uri differs from what we stored. It will match all followers who happened to share that inbox URI, even from other personas not related to this delivery.\n\nIMPACT: A 410 Gone from a shared inbox can remove followers for ALL personas served by that shared inbox, not just the persona whose post triggered the delivery.",
+  "status": "closed",
+  "priority": 1,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:56:00.783002829Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:18:15.432997014Z",
+  "closed_at": "2026-07-20T02:18:15.432997014Z",
+  "close_reason": "Fixed: 410 with missing post skips follower delete instead of unscoped delete",
+  "labels": [
+    "correctness",
+    "review"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-r9da.61",
+      "depends_on_id": "broadside-r9da",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:56:00.815180638Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}
