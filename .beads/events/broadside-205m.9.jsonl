@@ -1,1 +1,2 @@
 {"id":"019f7d29-41a3-78be-b230-373d42472b9d","issue_id":"broadside-205m.9","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:34:43.619573502Z"}
+{"id":"019f7d30-d7cb-7a2f-bf49-055c653ee15f","issue_id":"broadside-205m.9","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Added did_key and recovery_pubkey columns to personas table (schema v4 migration). Base schema also updated for new databases.","created_at":"2026-07-20T01:43:00.811668027Z"}

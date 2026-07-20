@@ -2,13 +2,15 @@
   "id": "broadside-205m.2",
   "title": "Derive did:web from actor URL",
   "description": "Compute did:web from actor URL. did:web is resolvable via HTTPS, serves as \"current home\" pointer.\n\n## Derivation\nActor URL: https://example.com/users/alice\ndid:web: did:web:example.com:users:alice\n\nRules (did:web spec):\n- https:// → did:web:\n- Path / → :\n- Port if non-443: did:web:example.com%3A8080:users:alice\n\n## Implementation\n```python\nfrom urllib.parse import urlparse, quote\n\ndef actor_url_to_did_web(actor_url: str) -\u003e str:\n    parsed = urlparse(actor_url)\n    host = parsed.netloc\n    # Encode port if present\n    if : in host:\n        host = host.replace(:, %3A)\n    # Path without leading slash, colons for slashes\n    path = parsed.path.lstrip(/).replace(/, :)\n    return f\"did:web:{host}:{path}\"\n```\n\n## Notes\n- did:web is computed, not stored (derivable from actor URL)\n- If actor URL changes (migration), did:web changes (that is expected)\n- did:key stays constant across migrations (that is the point)\n\n## Acceptance\n- [ ] did_web property on actor computes correctly\n- [ ] Handles ports, paths, edge cases\n- [ ] Round-trips: did:web resolves back to actor",
-  "status": "open",
+  "status": "closed",
   "priority": 2,
   "issue_type": "task",
   "owner": "mark@reviewcommit.com",
   "created_at": "2026-07-19T03:55:12.015565182Z",
   "created_by": "Mark Atwood",
-  "updated_at": "2026-07-19T03:55:12.015565182Z",
+  "updated_at": "2026-07-20T01:39:03.407160423Z",
+  "closed_at": "2026-07-20T01:39:03.407160423Z",
+  "close_reason": "Implemented did_web(domain, username) in did.rs. Format: did:web:{domain}:users:{username}. Dots preserved per spec (matches smallhold, not gaja which incorrectly replaces dots with colons).",
   "dependencies": [
     {
       "issue_id": "broadside-205m.2",

@@ -2,13 +2,15 @@
   "id": "broadside-205m.3",
   "title": "Extend actor JSON with DID fields",
   "description": "Add DID fields to actor JSON-LD output. Non-DID-aware peers ignore unknown fields.\n\n## Fields to add\n\n1. Add DID context to @context array\n2. Add \"did\" field with did:key (stable identity)\n3. Add both DIDs to alsoKnownAs array\n\n## Example output\n```json\n{\n  \"@context\": [\n    \"https://www.w3.org/ns/activitystreams\",\n    \"https://w3id.org/security/v1\",\n    {\"did\": \"https://w3id.org/did#did\"}\n  ],\n  \"id\": \"https://example.com/users/alice\",\n  \"type\": \"Person\",\n  \"preferredUsername\": \"alice\",\n  \"publicKey\": { ... },\n  \n  \"did\": \"did:key:z6MkPZ...\",\n  \"alsoKnownAs\": [\n    \"did:key:z6MkPZ...\",\n    \"did:web:example.com:users:alice\"\n  ]\n}\n```\n\n## Implementation\n- Modify actor serialization to include did field\n- Append to existing alsoKnownAs (preserve any existing entries)\n- Context extension for \"did\" term\n\n## Acceptance\n- [ ] GET /users/{username} includes did field\n- [ ] alsoKnownAs contains both did:key and did:web\n- [ ] JSON-LD validates\n- [ ] Federation with Mastodon still works",
-  "status": "open",
+  "status": "closed",
   "priority": 2,
   "issue_type": "task",
   "owner": "mark@reviewcommit.com",
   "created_at": "2026-07-19T03:55:29.578221515Z",
   "created_by": "Mark Atwood",
-  "updated_at": "2026-07-19T03:55:29.578221515Z",
+  "updated_at": "2026-07-20T01:43:01.004687272Z",
+  "closed_at": "2026-07-20T01:43:01.004687272Z",
+  "close_reason": "Actor documents now include alsoKnownAs array with did:web (always) and did:key (when stored). Non-DID-aware peers ignore the field.",
   "dependencies": [
     {
       "issue_id": "broadside-205m.3",

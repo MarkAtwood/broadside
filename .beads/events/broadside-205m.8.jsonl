@@ -1,1 +1,2 @@
 {"id":"019f7891-9bbc-7f06-9c57-51c94e0c5eaf","issue_id":"broadside-205m.8","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T04:10:36.348985192Z"}
+{"id":"019f7d30-d91b-7766-ad82-250a655ee162","issue_id":"broadside-205m.8","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"broadside did recover accepts BIP-39 mnemonic via stdin, derives did:key, looks up persona.","created_at":"2026-07-20T01:43:01.147485748Z"}

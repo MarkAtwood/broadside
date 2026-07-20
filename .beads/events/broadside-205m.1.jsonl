@@ -1,1 +1,2 @@
 {"id":"019f7883-4cb4-7b44-b5ba-1ba3b3c0b11c","issue_id":"broadside-205m.1","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T03:54:58.612739299Z"}
+{"id":"019f7d2d-3832-72b0-9d9e-8eb09e515841","issue_id":"broadside-205m.1","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"Implemented did.rs with generate_recovery_keypair, ed25519_to_did_key, hex_encode/hex_decode. 9 unit tests passing. Compatible with smallhold did.rs.","created_at":"2026-07-20T01:39:03.346176734Z"}

@@ -1,1 +1,2 @@
 {"id":"019f7d29-4ae8-7928-8fbc-4c6deac631b9","issue_id":"broadside-205m.10","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-20T01:34:45.992600799Z"}
+{"id":"019f7d30-d8dc-7f0f-84bd-39892607e1d2","issue_id":"broadside-205m.10","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"broadside did backfill generates DID keys for all personas lacking them, outputs recovery phrases.","created_at":"2026-07-20T01:43:01.084987739Z"}
