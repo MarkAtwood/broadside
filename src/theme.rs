@@ -11,6 +11,17 @@ fn token_to_var(name: &str) -> Option<&'static str> {
     }
 }
 
+/// Reject CSS values that could inject rules or exfiltrate data.
+fn is_safe_css_value(s: &str) -> bool {
+    s.len() <= 100
+        && !s.contains('}')
+        && !s.contains(';')
+        && !s.contains("url(")
+        && !s.contains("expression(")
+        && !s.contains("@import")
+        && !s.contains("javascript:")
+}
+
 /// Extract CSS variable declarations from a design tokens color group.
 fn vars_from_group(group: &serde_json::Map<String, serde_json::Value>) -> String {
     let mut vars = String::new();
@@ -19,7 +30,11 @@ fn vars_from_group(group: &serde_json::Map<String, serde_json::Value>) -> String
             token_to_var(name),
             token.get("$value").and_then(|v| v.as_str()),
         ) {
-            vars.push_str(&format!("{var}:{value};"));
+            if is_safe_css_value(value) {
+                vars.push_str(&format!("{var}:{value};"));
+            } else {
+                tracing::warn!(token = name, "rejecting unsafe CSS token value");
+            }
         }
     }
     vars
