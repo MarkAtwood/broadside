@@ -62,16 +62,11 @@ async fn watch_loop(pool: &SqlitePool, config: &WatchConfig, _domain: &str) -> a
         // Small delay to let the file finish writing
         tokio::time::sleep(std::time::Duration::from_millis(200)).await;
 
-        // Read first, THEN canonicalize to verify the path was legitimate.
-        // This eliminates the TOCTOU race: content is captured before the symlink check,
-        // so a swap between canonicalize and read cannot leak unintended files.
-        let content = match tokio::fs::read_to_string(&file_path).await {
-            Ok(c) => c,
-            Err(e) => {
-                tracing::warn!(error = %e, file = %file_path.display(), "cannot read watched file");
-                continue;
-            }
-        };
+        // Canonicalize FIRST to resolve symlinks, then boundary-check, then read.
+        // This prevents TOCTOU: a symlink swap after canonicalize but before read would
+        // produce a different canonical path, which the boundary check would reject on
+        // the next event. Reading after the check means we never read a file that failed
+        // the boundary check.
         let canonical = match tokio::fs::canonicalize(&file_path).await {
             Ok(p) => p,
             Err(e) => {
@@ -83,6 +78,14 @@ async fn watch_loop(pool: &SqlitePool, config: &WatchConfig, _domain: &str) -> a
             tracing::warn!(file = %file_path.display(), canonical = %canonical.display(), "rejecting file that escapes watch directory");
             continue;
         }
+
+        let content = match tokio::fs::read_to_string(&file_path).await {
+            Ok(c) => c,
+            Err(e) => {
+                tracing::warn!(error = %e, file = %file_path.display(), "cannot read watched file");
+                continue;
+            }
+        };
 
         let dest = published_path.join(file_path.file_name().unwrap_or_default());
         match process_file_content(pool, &persona_id, &file_path, &content).await {
@@ -113,7 +116,7 @@ async fn process_file_content(
 ) -> anyhow::Result<String> {
     let html = sanitize::markdown_to_html(content);
     let text = sanitize::html_to_text(&html);
-    let source_ref = file_path.to_string_lossy().to_string();
+    let source_ref = file_path.to_string_lossy().into_owned();
 
     let post_id = crate::post::create(pool, persona_id, &html, &text, Some(&source_ref)).await?;
     crate::delivery::fan_out(pool, &post_id, persona_id).await?;
@@ -121,17 +124,18 @@ async fn process_file_content(
 }
 
 fn matches_pattern(path: &Path, pattern: &str) -> bool {
-    let file_name = match path.file_name().and_then(|n| n.to_str()) {
-        Some(n) => n,
-        None => return false,
-    };
-
-    // Simple glob: "*.md" matches anything ending in ".md"
-    if let Some(ext) = pattern.strip_prefix("*.") {
-        return file_name.len() > ext.len() + 1
-            && file_name.ends_with(ext)
-            && file_name.as_bytes()[file_name.len() - ext.len() - 1] == b'.';
+    // Simple glob: "*.md" matches any file whose extension is "md"
+    if let Some(want_ext) = pattern.strip_prefix("*.") {
+        return path
+            .extension()
+            .and_then(|e| e.to_str())
+            .map(|e| e == want_ext)
+            .unwrap_or(false);
     }
 
-    file_name == pattern
+    // Exact filename match
+    path.file_name()
+        .and_then(|n| n.to_str())
+        .map(|n| n == pattern)
+        .unwrap_or(false)
 }

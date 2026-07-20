@@ -13,8 +13,6 @@ CREATE TABLE IF NOT EXISTS personas (
     metadata    TEXT NOT NULL DEFAULT '[]',
     private_key TEXT NOT NULL,
     public_key  TEXT NOT NULL,
-    did_key     TEXT,
-    recovery_pubkey TEXT,
     created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
@@ -141,12 +139,16 @@ async fn ensure_migrations(pool: &SqlitePool) -> anyhow::Result<()> {
             .parse()
             .map_err(|e| anyhow::anyhow!("corrupt schema_version '{}': {}", v, e))?,
         None => {
-            // First run — base schema already applied, set version
+            // No version record found. Two cases:
+            // 1. Brand-new database: SCHEMA was just applied, start at 0 so migrations run.
+            // 2. Pre-migration existing database: also start at 0 so all migrations run.
+            //    Both cases are safe because every migration uses CREATE TABLE IF NOT EXISTS
+            //    or ALTER TABLE ADD COLUMN (idempotent for new DBs, correct for old ones).
             sqlx::query("INSERT INTO schema_meta (key, value) VALUES ('schema_version', ?)")
-                .bind(CURRENT_SCHEMA_VERSION.to_string())
+                .bind(0_i64)
                 .execute(pool)
                 .await?;
-            return Ok(());
+            0_i64
         }
     };
 
@@ -154,19 +156,25 @@ async fn ensure_migrations(pool: &SqlitePool) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    // Apply migrations sequentially
+    // Apply migrations sequentially, each in its own transaction
     for v in version..CURRENT_SCHEMA_VERSION {
         let idx = v as usize;
         if idx < MIGRATIONS.len() && !MIGRATIONS[idx].is_empty() {
-            sqlx::raw_sql(MIGRATIONS[idx]).execute(pool).await?;
+            let mut tx = pool.begin().await?;
+            sqlx::raw_sql(MIGRATIONS[idx]).execute(&mut *tx).await?;
+            sqlx::query("UPDATE schema_meta SET value = ? WHERE key = 'schema_version'")
+                .bind(v + 1)
+                .execute(&mut *tx)
+                .await?;
+            tx.commit().await?;
+        } else {
+            // Empty migration slot: just bump the stored version
+            sqlx::query("UPDATE schema_meta SET value = ? WHERE key = 'schema_version'")
+                .bind(v + 1)
+                .execute(pool)
+                .await?;
         }
     }
-
-    // Update stored version
-    sqlx::query("UPDATE schema_meta SET value = ? WHERE key = 'schema_version'")
-        .bind(CURRENT_SCHEMA_VERSION.to_string())
-        .execute(pool)
-        .await?;
 
     Ok(())
 }
