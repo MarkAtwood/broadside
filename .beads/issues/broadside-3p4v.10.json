@@ -1,0 +1,29 @@
+{
+  "id": "broadside-3p4v.10",
+  "title": "LOW: feed.rs link URL not attribute-escaped in format string",
+  "description": "**Category: XSS (2) / HTML Sanitization (3)**\n\nIn `feed.rs:77`, feed entry link URLs are placed into an `\u003ca\u003e` tag via format string before sanitization:\n\n```rust\nlet link_html = format!(r#\"\u003cp\u003e\u003ca href=\"{url}\"\u003e{url}\u003c/a\u003e\u003c/p\u003e\"#);\nhtml.push_str(\u0026sanitize::sanitize_html(\u0026link_html));\n```\n\nThe URL is validated to start with `https://` or `http://` (line 62), which prevents `javascript:` injection. The result is then passed through `sanitize_html()`, and ammonia's sanitizer validates href values on `\u003ca\u003e` tags.\n\nHowever, if the URL contains a `\"` character, the format string would produce malformed HTML before ammonia sees it. For example, a URL like `https://evil.com/\"\u003e\u003cscript\u003ealert(1)\u003c/script\u003e` would produce broken HTML that ammonia then has to parse. ammonia handles this correctly in practice (its HTML parser is robust to malformed input), but the pattern is fragile — it relies on ammonia's parser being correct rather than preventing the issue at the source.\n\n**Impact:** Low. ammonia's parser (html5ever-based) handles this correctly. The issue is a defense-in-depth gap, not a current vulnerability.\n\n**Fix:** Entity-encode the URL before interpolation into the format string, or construct the anchor using ammonia's builder API which handles attribute escaping natively.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "bug",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:09:59.196545061Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T01:24:45.333289042Z",
+  "started_at": "2026-07-20T01:21:20.878387504Z",
+  "closed_at": "2026-07-20T01:24:45.333289042Z",
+  "close_reason": "Feed URLs now escaped via escape_html_attr before format string interpolation in both link_html locations (line 66 and line 75). Prevents malformed HTML from reaching ammonia parser.",
+  "labels": [
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3p4v.10",
+      "depends_on_id": "broadside-3p4v",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:09:59.222441688Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

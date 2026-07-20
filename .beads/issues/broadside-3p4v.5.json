@@ -1,0 +1,27 @@
+{
+  "id": "broadside-3p4v.5",
+  "title": "LOW: No Permissions-Policy header",
+  "description": "## Location\nsrc/server.rs, security_headers middleware (lines 62-82)\n\n## Finding\nThe security_headers middleware does not set a Permissions-Policy (formerly Feature-Policy) header. This header restricts browser features like camera, microphone, geolocation, etc.\n\n## Impact\nVery low. Broadside serves minimal HTML (index and profile pages) with no JavaScript. The CSP already blocks scripts via `default-src 'none'`. This is defense-in-depth only.\n\n## Recommendation\nAdd `Permissions-Policy: camera=(), microphone=(), geolocation=()` or similar restrictive policy. This is a best-practice hardening measure, not a functional vulnerability.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:08:15.613436898Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T01:16:26.271939161Z",
+  "closed_at": "2026-07-20T01:16:26.271939161Z",
+  "close_reason": "Delegated to reverse proxy. Browser feature restrictions are infrastructure-level headers best set once at the proxy. Both Caddy and nginx examples in README now include Permissions-Policy: camera=(), microphone=(), geolocation=(). The finding itself rated impact as 'very low' given CSP already blocks scripts.",
+  "labels": [
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3p4v.5",
+      "depends_on_id": "broadside-3p4v",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:08:15.635153482Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

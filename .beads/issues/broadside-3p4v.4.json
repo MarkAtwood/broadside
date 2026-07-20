@@ -1,0 +1,27 @@
+{
+  "id": "broadside-3p4v.4",
+  "title": "LOW: No HSTS header (Strict-Transport-Security)",
+  "description": "## Location\nsrc/server.rs, security_headers middleware (lines 62-82)\n\n## Finding\nThe security_headers middleware sets X-Content-Type-Options, X-Frame-Options, Referrer-Policy, and CSP, but does not set Strict-Transport-Security (HSTS). Broadside generates all actor URIs with https:// and expects to run behind TLS, but does not instruct browsers to enforce HTTPS-only connections.\n\n## Impact\nWithout HSTS, a browser that first visits via HTTP (before redirect) is vulnerable to SSL-stripping MITM attacks. This is low severity because:\n1. Broadside is typically behind a reverse proxy (nginx/caddy) that may set HSTS itself\n2. The primary consumers are ActivityPub servers, not browsers\n3. Browser traffic is limited to the index and profile pages\n\n## Recommendation\nAdd Strict-Transport-Security header in the middleware, or document that the reverse proxy should set it. A reasonable value: `max-age=31536000; includeSubDomains`. Consider making this configurable since the server may run behind a proxy that already sets HSTS.",
+  "status": "closed",
+  "priority": 3,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:08:12.145159155Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T01:16:24.443960468Z",
+  "closed_at": "2026-07-20T01:16:24.443960468Z",
+  "close_reason": "Delegated to reverse proxy. The proxy owns TLS termination, so it sets HSTS. Caddy does this automatically; nginx example in README includes Strict-Transport-Security header. The finding itself noted broadside is typically behind a proxy that may set HSTS.",
+  "labels": [
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3p4v.4",
+      "depends_on_id": "broadside-3p4v",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:08:12.169213369Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

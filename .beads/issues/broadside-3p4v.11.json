@@ -1,0 +1,29 @@
+{
+  "id": "broadside-3p4v.11",
+  "title": "Document reverse proxy delegation for security audit findings",
+  "description": "Smallhold delegates rate limiting, HSTS, and Permissions-Policy to the reverse proxy layer. Broadside should do the same: add a Reverse Proxy Requirement section to README, expand Caddy/nginx examples, and close audit findings 3p4v.2, 3p4v.4, 3p4v.5 as delegated.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "task",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:15:30.256888877Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T01:16:30.668794476Z",
+  "started_at": "2026-07-20T01:15:33.215780491Z",
+  "closed_at": "2026-07-20T01:16:30.668794476Z",
+  "close_reason": "README updated with Reverse Proxy Requirement section, expanded Caddy example with rate_limit, added nginx example with limit_req_zone/HSTS/Permissions-Policy. DESIGN.md cross-references. Closed 3p4v.2, 3p4v.4, 3p4v.5 as delegated.",
+  "labels": [
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3p4v.11",
+      "depends_on_id": "broadside-3p4v",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:15:30.278988993Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

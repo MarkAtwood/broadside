@@ -1,0 +1,27 @@
+{
+  "id": "broadside-3p4v.2",
+  "title": "MEDIUM: Webhook endpoint lacks rate limiting (brute-force key guessing)",
+  "description": "## Location\nsrc/server.rs (router), src/webhook.rs (handle_webhook)\n\n## Finding\nThe webhook endpoint (/hook/{persona}) has no rate limiting. The inbox_limiter (60 req/min per IP) is only applied inside handle_inbox(), not to webhook requests.\n\nAn attacker who knows a persona name can attempt unlimited key guesses against /hook/{persona}. The constant-time comparison prevents timing-based attacks, but the lack of rate limiting allows high-throughput online brute force.\n\n## Impact\nIf webhook keys are short or low-entropy, an attacker can enumerate them. Even with strong keys, the lack of rate limiting means the server absorbs arbitrary POST traffic to this endpoint with no backpressure.\n\n## Recommendation\nApply rate limiting to the webhook endpoint — either reuse inbox_limiter or add a dedicated, tighter limiter (e.g., 10 req/min per IP). Consider returning 429 after repeated auth failures for the same persona.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:08:02.66125435Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T01:16:22.010305536Z",
+  "closed_at": "2026-07-20T01:16:22.010305536Z",
+  "close_reason": "Delegated to reverse proxy. In-memory rate limiting doesn't survive restarts and is trivially bypassed by rotating IPs. README now documents Caddy rate_limit / nginx limit_req_zone configuration for webhook endpoints (10 req/min per IP). Matches smallhold's approach (commit 8f46fae).",
+  "labels": [
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3p4v.2",
+      "depends_on_id": "broadside-3p4v",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:08:02.686665625Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

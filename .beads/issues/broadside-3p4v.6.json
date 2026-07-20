@@ -1,0 +1,29 @@
+{
+  "id": "broadside-3p4v.6",
+  "title": "MEDIUM: No string length caps on remote fields before DB insert",
+  "description": "**Category: Input Validation (6)**\n\nRemote-controlled string fields are inserted into SQLite TEXT columns with no length cap:\n\n1. **follower actor_uri** (server.rs:953) — attacker sends a Follow with a multi-megabyte actor URI. The 256KB body limit caps the total JSON, but individual fields can be nearly that large.\n2. **follower inbox_uri** (server.rs:954) — same issue.\n3. **Card title, description, site_name** (card.rs:180-195) — fetched from remote OG meta tags. The 100KB scan limit and 1MB body limit provide loose caps, but a single `og:title` could be 100KB.\n\n**Impact:** Resource abuse / DB bloat. An attacker sending many Follow requests with near-max-length URIs can grow the database disproportionately. Card metadata from malicious pages can similarly bloat storage.\n\n**Fix:** Add explicit per-field length caps before INSERT:\n- actor_uri, inbox_uri: 2048 bytes (practical URI limit)\n- Card title: 512 bytes\n- Card description: 2048 bytes  \n- Card site_name: 256 bytes\n\nTruncate at UTF-8 boundary (the `truncate_utf8` helper in feed.rs already exists).",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:09:15.968036013Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T01:24:37.657721282Z",
+  "started_at": "2026-07-20T01:21:20.674381229Z",
+  "closed_at": "2026-07-20T01:24:37.657721282Z",
+  "close_reason": "Added length caps: follower actor_uri/inbox_uri reject \u003e2048 bytes (server.rs). Card title capped at 512, description at 2048, site_name at 256 via truncate_utf8 (card.rs).",
+  "labels": [
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3p4v.6",
+      "depends_on_id": "broadside-3p4v",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:09:15.990549933Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

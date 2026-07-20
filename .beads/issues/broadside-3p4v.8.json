@@ -1,0 +1,29 @@
+{
+  "id": "broadside-3p4v.8",
+  "title": "MEDIUM: Card metadata not sanitized before DB storage",
+  "description": "**Category: HTML Sanitization (3)**\n\nIn `card.rs:180-195`, OG metadata fields (`title`, `description`, `site_name`) parsed from remote web pages are stored in the database without HTML sanitization. The `parse_og_meta` function extracts raw content attribute values and runs them through `html_decode` (which converts entities back to literal characters), but does not sanitize.\n\nCurrently, card data is only serialized as JSON in ActivityPub Note responses (`get_card_for_post`), where it goes through serde_json's string encoding. However:\n\n1. If card data is ever rendered in an HTML context (e.g., link preview cards on the profile page), it would be an XSS vector.\n2. The `html_decode` function (card.rs:120-127) actively reverses entity encoding (`\u0026lt;` → `\u003c`, `\u0026amp;` → `\u0026`), converting safe encoded values back to potentially dangerous literal characters.\n\n**Fix:** Run card metadata through `sanitize::html_to_text()` (strips all HTML) before storage, or at minimum apply length caps:\n- title: 512 chars\n- description: 2048 chars\n- site_name: 256 chars",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "bug",
+  "assignee": "Mark Atwood",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:09:34.85743579Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T01:24:41.864937406Z",
+  "started_at": "2026-07-20T01:21:20.771555834Z",
+  "closed_at": "2026-07-20T01:24:41.864937406Z",
+  "close_reason": "Card metadata (title, description, site_name) now stripped of HTML via html_to_text() before DB storage, plus length caps (512/2048/256). html_decode output is sanitized before insert.",
+  "labels": [
+    "security"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "broadside-3p4v.8",
+      "depends_on_id": "broadside-3p4v",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:09:34.885822761Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "broadside-ucr9",
+  "title": "Strip login rate limiting from api.rs, delegate to reverse proxy",
+  "description": "Strip check_login_rate_limit() and LOGIN_ATTEMPTS HashMap from api.rs if present. Replace with ponytail comment pointing at Caddy rate_limit directive on /oauth/authorize and /oauth/token paths. Reference: gaja commit 3cf3634.",
+  "status": "open",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T22:39:28.037811169Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T22:39:28.037811169Z",
+  "labels": [
+    "ponytail",
+    "infra-delegation"
+  ]
+}

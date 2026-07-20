@@ -1,0 +1,16 @@
+{
+  "id": "broadside-ad38",
+  "title": "Strip connection limits if present, delegate to reverse proxy",
+  "description": "If streaming has per-user connection counting or subscription limits, strip them. Caddy max_conns / nginx limit_conn_zone handles this at the infrastructure layer. Reference: gaja commit 3cf3634.",
+  "status": "open",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T22:39:35.815555405Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T22:39:35.815555405Z",
+  "labels": [
+    "ponytail",
+    "infra-delegation"
+  ]
+}

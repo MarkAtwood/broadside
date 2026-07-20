@@ -1,0 +1,12 @@
+{
+  "id": "broadside-w5pp",
+  "title": "theme.rs missing \u003c/style\u003e injection defense",
+  "description": "Smallhold's theme.rs filters out \u003c/style\u003e from design token values to prevent CSS injection. Broadside's theme.rs lacks this check. A malicious design token value containing \u003c/style\u003e could break out of the style block.",
+  "status": "open",
+  "priority": 2,
+  "issue_type": "bug",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-19T22:28:20.504296643Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-19T22:28:20.504296643Z"
+}
