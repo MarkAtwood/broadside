@@ -4,6 +4,7 @@ use axum::response::{IntoResponse, Json};
 use axum::routing::{get, post};
 use axum::Router;
 use serde::{Deserialize, Serialize};
+use fieldwork::collections::{build_collection, build_collection_page, paginate_offset};
 use fieldwork_db::db::Pool;
 use std::fmt::Write;
 use std::sync::Arc;
@@ -526,13 +527,8 @@ async fn outbox(
     let outbox_uri = format!("https://{}/users/{}/outbox", state.domain, username);
 
     if query.page.is_none() {
-        let doc = serde_json::json!({
-            "@context": "https://www.w3.org/ns/activitystreams",
-            "id": outbox_uri,
-            "type": "OrderedCollection",
-            "totalItems": total,
-            "first": format!("{}?page=1", outbox_uri)
-        });
+        let col = build_collection(&outbox_uri, total as u64);
+        let doc = serde_json::to_value(&col).expect("OrderedCollection serialization is infallible");
         return (
             [
                 (
@@ -552,13 +548,10 @@ async fn outbox(
     }
 
     let page = query.page.unwrap_or(1).max(1);
-    let per_page: i64 = 20;
-    let offset = (page as u64)
-        .saturating_sub(1)
-        .saturating_mul(per_page as u64)
-        .min(i64::MAX as u64) as i64;
+    let per_page: u32 = 20;
+    let offset = paginate_offset(page, per_page).min(i64::MAX as u64) as i64;
 
-    let posts = crate::post::list_for_persona(&state.pool, persona_id, per_page, offset)
+    let posts = crate::post::list_for_persona(&state.pool, persona_id, i64::from(per_page), offset)
         .await
         .unwrap_or_default();
 
@@ -597,13 +590,8 @@ async fn outbox(
         }));
     }
 
-    let doc = serde_json::json!({
-        "@context": "https://www.w3.org/ns/activitystreams",
-        "id": format!("{}?page={}", outbox_uri, page),
-        "type": "OrderedCollectionPage",
-        "partOf": outbox_uri,
-        "orderedItems": items
-    });
+    let page_doc = build_collection_page(&outbox_uri, page, items, total as u64, per_page);
+    let doc = serde_json::to_value(&page_doc).expect("OrderedCollectionPage serialization is infallible");
 
     (
         [
@@ -634,12 +622,9 @@ async fn followers_collection(
         .await
         .unwrap_or(0);
 
-    let doc = serde_json::json!({
-        "@context": "https://www.w3.org/ns/activitystreams",
-        "id": format!("https://{}/users/{}/followers", state.domain, username),
-        "type": "OrderedCollection",
-        "totalItems": count
-    });
+    let followers_uri = format!("https://{}/users/{}/followers", state.domain, username);
+    let col = build_collection(&followers_uri, count as u64);
+    let doc = serde_json::to_value(&col).expect("OrderedCollection serialization is infallible");
 
     (
         [
@@ -667,12 +652,9 @@ async fn following_collection(
         return (StatusCode::NOT_FOUND, "unknown user").into_response();
     }
 
-    let doc = serde_json::json!({
-        "@context": "https://www.w3.org/ns/activitystreams",
-        "id": format!("https://{}/users/{}/following", state.domain, username),
-        "type": "OrderedCollection",
-        "totalItems": 0
-    });
+    let following_uri = format!("https://{}/users/{}/following", state.domain, username);
+    let col = build_collection(&following_uri, 0);
+    let doc = serde_json::to_value(&col).expect("OrderedCollection serialization is infallible");
 
     (
         [
