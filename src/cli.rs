@@ -310,8 +310,7 @@ impl Cli {
             }
             Command::Status => {
                 let pool = connect_db(&self.data_dir).await?;
-                let fwp = fieldwork::db::Pool::Sqlite(pool.clone());
-                let persona_list = fieldwork::persona_db::list_personas(&fwp)
+                let persona_list = fieldwork::persona_db::list_personas(&pool)
                     .await
                     .unwrap_or_default();
                 let personas = persona_list.len() as i64;
@@ -319,10 +318,10 @@ impl Cli {
                 let mut followers = 0i64;
                 let mut posts = 0i64;
                 for p in &persona_list {
-                    followers += fieldwork::followers_db::follower_count(&fwp, p.id)
+                    followers += fieldwork::followers_db::follower_count(&pool, p.id)
                         .await
                         .unwrap_or(0);
-                    posts += fieldwork::posts_db::posts_count(&fwp, p.id)
+                    posts += fieldwork::posts_db::posts_count(&pool, p.id)
                         .await
                         .unwrap_or(0);
                 }
@@ -365,10 +364,9 @@ impl Cli {
                         }
                     }
                     FollowersCommand::Count => {
-                        let fwp = fieldwork::db::Pool::Sqlite(pool.clone());
-                        let personas = fieldwork::persona_db::list_personas(&fwp).await?;
+                        let personas = fieldwork::persona_db::list_personas(&pool).await?;
                         for p in &personas {
-                            let count = fieldwork::followers_db::follower_count(&fwp, p.id)
+                            let count = fieldwork::followers_db::follower_count(&pool, p.id)
                                 .await
                                 .unwrap_or(0);
                             println!("@{}: {count}", p.username);
@@ -538,7 +536,7 @@ impl Cli {
     }
 }
 
-async fn connect_db(data_dir: &Option<PathBuf>) -> anyhow::Result<fieldwork::db::sqlx::SqlitePool> {
+async fn connect_db(data_dir: &Option<PathBuf>) -> anyhow::Result<fieldwork::db::Pool> {
     let dir = data_dir
         .as_ref()
         .ok_or_else(|| anyhow::anyhow!("--data-dir or BROADSIDE_DATA_DIR required"))?;

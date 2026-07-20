@@ -4,7 +4,7 @@ use axum::response::{IntoResponse, Json};
 use axum::routing::{get, post};
 use axum::Router;
 use serde::{Deserialize, Serialize};
-use fieldwork::db::sqlx::SqlitePool;
+use fieldwork::db::Pool;
 use std::fmt::Write;
 use std::sync::Arc;
 
@@ -26,7 +26,7 @@ body { background: var(--bg); color: var(--text); } }";
 
 /// Shared application state passed to all route handlers.
 pub struct AppState {
-    pub pool: SqlitePool,
+    pub pool: Pool,
     pub domain: String,
     // ponytail: data_dir should be PathBuf, but it's only used as a string for path joins
     // that immediately convert back. Not worth the churn across all call sites. Ceiling:
@@ -289,8 +289,8 @@ async fn webfinger(
         return (StatusCode::NOT_FOUND, "unknown domain").into_response();
     }
 
-    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
-    let exists = fieldwork::persona_db::get_persona_by_username(&fwp, username).await;
+
+    let exists = fieldwork::persona_db::get_persona_by_username(&state.pool, username).await;
 
     match exists {
         Ok(None) | Err(_) => (StatusCode::NOT_FOUND, "unknown user").into_response(),
@@ -331,8 +331,8 @@ async fn nodeinfo_discovery(State(state): State<Arc<AppState>>) -> impl IntoResp
 }
 
 async fn nodeinfo(State(state): State<Arc<AppState>>) -> impl IntoResponse {
-    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
-    let personas = fieldwork::persona_db::list_personas(&fwp)
+
+    let personas = fieldwork::persona_db::list_personas(&state.pool)
         .await
         .unwrap_or_default();
     let user_count = personas.len() as i64;
@@ -342,7 +342,7 @@ async fn nodeinfo(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     // N+1 queries — acceptable at nodeinfo frequency (cached 5 min).
     let mut post_count = 0i64;
     for p in &personas {
-        post_count += fieldwork::posts_db::posts_count(&fwp, p.id).await.unwrap_or(0);
+        post_count += fieldwork::posts_db::posts_count(&state.pool, p.id).await.unwrap_or(0);
     }
 
     let doc = serde_json::json!({
@@ -387,8 +387,8 @@ async fn actor(
     if wants_html {
         return serve_profile_html(&state, &username).await;
     }
-    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
-    let persona_row = match fieldwork::persona_db::get_persona_by_username(&fwp, &username).await {
+
+    let persona_row = match fieldwork::persona_db::get_persona_by_username(&state.pool, &username).await {
         Ok(Some(r)) => r,
         _ => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
     };
@@ -449,9 +449,9 @@ async fn actor(
     doc["alsoKnownAs"] = serde_json::Value::Array(aka);
 
     // Resolve avatar/header media IDs to file paths
-    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
+
     if let Some(mid) = avatar_media_id {
-        if let Ok(Some(m)) = fieldwork::media_db::get_media(&fwp, mid).await {
+        if let Ok(Some(m)) = fieldwork::media_db::get_media(&state.pool, mid).await {
             doc["icon"] = serde_json::json!({
                 "type": "Image",
                 "mediaType": m.mime_type,
@@ -460,7 +460,7 @@ async fn actor(
         }
     }
     if let Some(mid) = header_media_id {
-        if let Ok(Some(m)) = fieldwork::media_db::get_media(&fwp, mid).await {
+        if let Ok(Some(m)) = fieldwork::media_db::get_media(&state.pool, mid).await {
             doc["image"] = serde_json::json!({
                 "type": "Image",
                 "mediaType": m.mime_type,
@@ -629,8 +629,8 @@ async fn followers_collection(
         Err(_) => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
     };
 
-    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
-    let count = fieldwork::followers_db::follower_count(&fwp, persona_id)
+
+    let count = fieldwork::followers_db::follower_count(&state.pool, persona_id)
         .await
         .unwrap_or(0);
 
@@ -693,8 +693,8 @@ async fn did_document(
     State(state): State<Arc<AppState>>,
     Path(username): Path<String>,
 ) -> impl IntoResponse {
-    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
-    let persona_row = match fieldwork::persona_db::get_persona_by_username(&fwp, &username).await {
+
+    let persona_row = match fieldwork::persona_db::get_persona_by_username(&state.pool, &username).await {
         Ok(Some(r)) => r,
         _ => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
     };
@@ -1064,7 +1064,7 @@ async fn handle_inbox(
 
             // Upsert into remote_accounts, then insert follower
             let now = chrono::Utc::now().timestamp();
-            let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
+        
             let user_id = match crate::persona::get_operator_user_id(&state.pool).await {
                 Ok(uid) => uid,
                 Err(_) => return StatusCode::INTERNAL_SERVER_ERROR,
@@ -1107,7 +1107,7 @@ async fn handle_inbox(
                 fetch_fail_count: 0,
             };
 
-            let remote_account_id = match fieldwork::actor_cache::upsert_remote_account(&fwp, &remote_acct).await {
+            let remote_account_id = match fieldwork::actor_cache::upsert_remote_account(&state.pool, &remote_acct).await {
                 Ok(id) => id,
                 Err(e) => {
                     tracing::error!(error = %e, follower = follower_actor, "failed to upsert remote_account");
@@ -1117,7 +1117,7 @@ async fn handle_inbox(
 
             // Insert follower row
             if let Err(e) = fieldwork::followers_db::add_follower(
-                &fwp, persona_id, user_id, remote_account_id, now,
+                &state.pool, persona_id, user_id, remote_account_id, now,
             )
             .await
             {
@@ -1225,11 +1225,11 @@ async fn handle_inbox(
                 };
 
                 if let Some(pid) = target_persona_id {
-                    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
-                    match fieldwork::actor_cache::get_by_actor_uri(&fwp, &actor_uri).await {
+                
+                    match fieldwork::actor_cache::get_by_actor_uri(&state.pool, &actor_uri).await {
                         Ok(Some(remote_acct)) => {
                             match fieldwork::followers_db::remove_follower(
-                                &fwp, pid, remote_acct.id,
+                                &state.pool, pid, remote_acct.id,
                             )
                             .await
                             {
@@ -1265,8 +1265,8 @@ async fn handle_inbox(
 // --- Health ---
 
 async fn health(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
-    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
-    let persona_count = fieldwork::persona_db::list_personas(&fwp)
+
+    let persona_count = fieldwork::persona_db::list_personas(&state.pool)
         .await
         .map(|v| v.len() as i64)
         .unwrap_or(0);
@@ -1285,8 +1285,8 @@ async fn health(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
 // --- Index ---
 
 async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
-    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
-    let rows = fieldwork::persona_db::list_personas(&fwp)
+
+    let rows = fieldwork::persona_db::list_personas(&state.pool)
         .await
         .unwrap_or_default();
 
@@ -1353,8 +1353,8 @@ async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 // Acceptable for a low-traffic profile page. Ceiling: combine into a single query with
 // COUNT() subqueries if profiling shows this as a bottleneck.
 async fn serve_profile_html(state: &AppState, username: &str) -> axum::response::Response {
-    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
-    let persona_row = match fieldwork::persona_db::get_persona_by_username(&fwp, username).await {
+
+    let persona_row = match fieldwork::persona_db::get_persona_by_username(&state.pool, username).await {
         Ok(Some(r)) => r,
         _ => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
     };
@@ -1430,7 +1430,7 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
         format!("<div class=\"bio\">{}</div>", ammonia::clean(&bio))
     };
 
-    let follower_count = fieldwork::followers_db::follower_count(&fwp, persona_id)
+    let follower_count = fieldwork::followers_db::follower_count(&state.pool, persona_id)
         .await
         .unwrap_or(0);
 

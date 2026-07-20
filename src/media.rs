@@ -1,12 +1,7 @@
 use anyhow::{bail, Context};
+use fieldwork::db::Pool;
 use image::DynamicImage;
-use fieldwork::db::sqlx::SqlitePool;
 use std::path::Path;
-
-/// Wrap a raw SqlitePool in fieldwork's Pool enum for shared module calls.
-fn fw_pool(pool: &SqlitePool) -> fieldwork::db::Pool {
-    fieldwork::db::Pool::Sqlite(pool.clone())
-}
 
 const MAX_FILE_SIZE: u64 = 10 * 1024 * 1024; // 10 MB
 const MAX_DIMENSION: u32 = 4096;
@@ -14,7 +9,7 @@ const MAX_MEDIA_PER_POST: usize = 8;
 
 /// Process a local image file: validate, resize if needed, strip EXIF, compute blurhash, store.
 pub async fn process_local(
-    pool: &SqlitePool,
+    pool: &Pool,
     post_id: &str,
     file_path: &Path,
     data_dir: &Path,
@@ -42,7 +37,7 @@ pub async fn process_local(
 
 /// Fetch a remote image URL, validate, and store. Streams with size limit.
 pub async fn process_remote(
-    pool: &SqlitePool,
+    pool: &Pool,
     post_id: &str,
     url: &str,
     data_dir: &Path,
@@ -82,7 +77,7 @@ pub async fn process_remote(
 
 /// Common image processing and storage. Returns the media row ID.
 async fn store_processed_image(
-    pool: &SqlitePool,
+    pool: &Pool,
     post_id: &str,
     raw_bytes: &[u8],
     data_dir: &Path,
@@ -110,8 +105,7 @@ async fn store_processed_image(
     let user_id = crate::persona::get_operator_user_id(pool).await?;
 
     let post_id_int: i64 = post_id.parse().context("post_id not a valid integer")?;
-    let fwp = fw_pool(pool);
-    let post_row = fieldwork::posts_db::get_post(&fwp, post_id_int)
+    let post_row = fieldwork::posts_db::get_post(pool, post_id_int)
         .await
         .context("looking up post for media")?
         .context("post not found for media")?;
@@ -133,14 +127,14 @@ async fn store_processed_image(
         description: description.to_string(),
         created_at: now,
     };
-    fieldwork::media_db::insert_media(&fw_pool(pool), &media_row).await?;
+    fieldwork::media_db::insert_media(pool, &media_row).await?;
 
     Ok(media_id.to_string())
 }
 
 /// Fetch media attachments for a post (for ActivityPub serialization).
 pub async fn attachments_for_post(
-    pool: &SqlitePool,
+    pool: &Pool,
     post_id: &str,
     domain: &str,
 ) -> Vec<serde_json::Value> {
@@ -149,7 +143,7 @@ pub async fn attachments_for_post(
         Err(_) => return Vec::new(),
     };
 
-    let rows = match fieldwork::media_db::attachments_for_post(&fw_pool(pool), post_id_int).await {
+    let rows = match fieldwork::media_db::attachments_for_post(pool, post_id_int).await {
         Ok(r) => r,
         Err(e) => {
             tracing::warn!(post_id, error = %e, "failed to fetch media attachments");

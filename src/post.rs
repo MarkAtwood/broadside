@@ -1,16 +1,11 @@
 use anyhow::Context;
-use fieldwork::db::sqlx::SqlitePool;
+use fieldwork::db::Pool;
 
 use crate::id::gen_int_id;
 
-/// Wrap a raw SqlitePool in fieldwork's Pool enum for shared module calls.
-fn fw_pool(pool: &SqlitePool) -> fieldwork::db::Pool {
-    fieldwork::db::Pool::Sqlite(pool.clone())
-}
-
 /// Create a post from plain text or HTML content.
 pub async fn create(
-    pool: &SqlitePool,
+    pool: &Pool,
     persona_id: i64,
     content_html: &str,
     content_text: &str,
@@ -25,7 +20,7 @@ pub async fn create(
     let ap_id = format!("urn:broadside:post:{id}");
     let id_str = id.to_string();
 
-    let fwp = fw_pool(pool);
+
     let post = fieldwork::posts_db::PostRow {
         id,
         user_id,
@@ -47,7 +42,7 @@ pub async fn create(
         deleted_at: None,
         deleted_reason: None,
     };
-    fieldwork::posts_db::create_post(&fwp, &post)
+    fieldwork::posts_db::create_post(pool, &post)
         .await
         .with_context(|| format!("inserting post for persona {persona_id}"))?;
 
@@ -73,7 +68,7 @@ pub fn text_to_html(text: &str) -> String {
 
 /// Fetch recent posts for a persona, newest first.
 pub async fn list_for_persona(
-    pool: &SqlitePool,
+    pool: &Pool,
     persona_id: i64,
     limit: i64,
     offset: i64,
@@ -93,9 +88,9 @@ pub async fn list_for_persona(
 }
 
 /// Count total posts for a persona.
-pub async fn count_for_persona(pool: &SqlitePool, persona_id: i64) -> anyhow::Result<i64> {
-    let fwp = fw_pool(pool);
-    let count = fieldwork::posts_db::posts_count(&fwp, persona_id).await?;
+pub async fn count_for_persona(pool: &Pool, persona_id: i64) -> anyhow::Result<i64> {
+
+    let count = fieldwork::posts_db::posts_count(pool, persona_id).await?;
     Ok(count)
 }
 

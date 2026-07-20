@@ -1,11 +1,6 @@
 use anyhow::Context;
-use fieldwork::db::sqlx::SqlitePool;
+use fieldwork::db::Pool;
 use std::path::Path;
-
-/// Wrap a raw SqlitePool in fieldwork's Pool enum for shared module calls.
-fn fw_pool(pool: &SqlitePool) -> fieldwork::db::Pool {
-    fieldwork::db::Pool::Sqlite(pool.clone())
-}
 
 /// Parsed OpenGraph / Twitter Card metadata.
 #[derive(Debug, Default)]
@@ -165,7 +160,7 @@ fn html_decode(s: &str) -> String {
 /// Fetch OG metadata for a URL and store the card in the database.
 /// Designed to be called from a spawned background task.
 pub async fn fetch_and_store(
-    pool: &SqlitePool,
+    pool: &Pool,
     post_id: &str,
     url: &str,
     _data_dir: &Path,
@@ -212,7 +207,7 @@ pub async fn fetch_and_store(
     crate::sanitize::truncate_utf8(&mut site_name, 256);
 
     let now = chrono::Utc::now().timestamp();
-    let fwp = fw_pool(pool);
+
     let image = if meta.image_url.starts_with("https://") {
         Some(meta.image_url.clone())
     } else {
@@ -235,14 +230,14 @@ pub async fn fetch_and_store(
         fetched_at: now,
         failed: false,
     };
-    fieldwork::cards_db::upsert_card(&fwp, &card_row)
+    fieldwork::cards_db::upsert_card(pool, &card_row)
         .await
         .context("inserting link_card")?;
 
     let post_id_int: i64 = post_id
         .parse()
         .context("post_id is not a valid integer")?;
-    fieldwork::cards_db::link_card_to_post(&fwp, post_id_int, url)
+    fieldwork::cards_db::link_card_to_post(pool, post_id_int, url)
         .await
         .context("linking post to card")?;
 
@@ -252,13 +247,13 @@ pub async fn fetch_and_store(
 
 /// Get the card for a post (if any), for inclusion in AP Note objects.
 pub async fn get_card_for_post(
-    pool: &SqlitePool,
+    pool: &Pool,
     post_id: &str,
     _domain: &str,
 ) -> Option<serde_json::Value> {
     let post_id_int: i64 = post_id.parse().ok()?;
-    let fwp = fw_pool(pool);
-    let cards = fieldwork::cards_db::cards_for_post(&fwp, post_id_int).await.ok()?;
+
+    let cards = fieldwork::cards_db::cards_for_post(pool, post_id_int).await.ok()?;
     let row = cards.into_iter().next()?;
 
     let mut card = serde_json::json!({
@@ -290,7 +285,7 @@ pub async fn get_card_for_post(
 // ponytail: owned Strings are required here — spawned tasks need 'static ownership,
 // so callers must clone into these parameters. No way around it with tokio::spawn.
 pub fn spawn_fetch(
-    pool: SqlitePool,
+    pool: Pool,
     post_id: String,
     content_html: String,
     data_dir: String,

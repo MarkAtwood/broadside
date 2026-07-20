@@ -1,6 +1,6 @@
 use anyhow::Context;
+use fieldwork::db::Pool;
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
-use fieldwork::db::sqlx::SqlitePool;
 use std::path::{Path, PathBuf};
 use tokio::sync::mpsc;
 
@@ -8,13 +8,13 @@ use crate::config::WatchConfig;
 use crate::sanitize;
 
 /// Background directory watcher. Runs as a tokio task.
-pub async fn run_watcher(pool: SqlitePool, config: WatchConfig, domain: String) {
+pub async fn run_watcher(pool: Pool, config: WatchConfig, domain: String) {
     if let Err(e) = watch_loop(&pool, &config, &domain).await {
         tracing::error!(error = %e, "directory watcher exited");
     }
 }
 
-async fn watch_loop(pool: &SqlitePool, config: &WatchConfig, _domain: &str) -> anyhow::Result<()> {
+async fn watch_loop(pool: &Pool, config: &WatchConfig, _domain: &str) -> anyhow::Result<()> {
     let watch_path = PathBuf::from(&config.path);
     let published_path = PathBuf::from(&config.published);
     let pattern = config.pattern.clone();
@@ -109,7 +109,7 @@ async fn watch_loop(pool: &SqlitePool, config: &WatchConfig, _domain: &str) -> a
 }
 
 async fn process_file_content(
-    pool: &SqlitePool,
+    pool: &Pool,
     persona_id: i64,
     file_path: &Path,
     content: &str,

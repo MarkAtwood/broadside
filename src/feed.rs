@@ -1,19 +1,14 @@
 use anyhow::Context;
-use fieldwork::db::sqlx::SqlitePool;
+use fieldwork::db::Pool;
 
 use crate::config::FeedConfig;
 use crate::sanitize;
-
-/// Wrap a raw SqlitePool in fieldwork's Pool enum for shared module calls.
-fn fw_pool(pool: &SqlitePool) -> fieldwork::db::Pool {
-    fieldwork::db::Pool::Sqlite(pool.clone())
-}
 
 const MAX_CONTENT_LEN: usize = 5000;
 
 /// Poll a single feed and create posts for new entries.
 pub async fn poll_feed(
-    pool: &SqlitePool,
+    pool: &Pool,
     config: &FeedConfig,
     domain: &str,
     client: &reqwest::Client,
@@ -97,7 +92,6 @@ pub async fn poll_feed(
             continue;
         }
 
-        let fwp = fw_pool(pool);
         let post = fieldwork::posts_db::PostRow {
             id,
             user_id,
@@ -119,7 +113,7 @@ pub async fn poll_feed(
             deleted_at: None,
             deleted_reason: None,
         };
-        let post_ok = fieldwork::posts_db::create_post(&fwp, &post).await.is_ok();
+        let post_ok = fieldwork::posts_db::create_post(pool, &post).await.is_ok();
 
         crate::db_extras::insert_post_meta_ignore(pool, id, &entry_id).await;
 
@@ -193,7 +187,7 @@ pub async fn poll_feed(
 
 /// Background feed poller. Runs as a tokio task for each configured feed.
 pub async fn run_poller(
-    pool: SqlitePool,
+    pool: Pool,
     config: FeedConfig,
     domain: String,
     data_dir: std::path::PathBuf,
@@ -225,7 +219,7 @@ pub async fn run_poller(
 
 /// One-shot poll of all configured feeds.
 pub async fn poll_all(
-    pool: &SqlitePool,
+    pool: &Pool,
     feeds: &[FeedConfig],
     domain: &str,
     data_dir: &std::path::Path,

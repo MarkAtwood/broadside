@@ -1,20 +1,15 @@
 use anyhow::Context;
+use fieldwork::db::Pool;
 use rsa::pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding};
 use rsa::rand_core::OsRng;
 use rsa::RsaPrivateKey;
-use fieldwork::db::sqlx::SqlitePool;
 
 use crate::id::gen_int_id;
 
-/// Wrap a raw SqlitePool in fieldwork's Pool enum for shared module calls.
-fn fw_pool(pool: &SqlitePool) -> fieldwork::db::Pool {
-    fieldwork::db::Pool::Sqlite(pool.clone())
-}
-
 /// Get the single operator user_id. Broadside is single-user; this returns the first user.
-pub async fn get_operator_user_id(pool: &SqlitePool) -> anyhow::Result<i64> {
-    let fwp = fw_pool(pool);
-    let users = fieldwork::tenant_db::list_users(&fwp)
+pub async fn get_operator_user_id(pool: &Pool) -> anyhow::Result<i64> {
+
+    let users = fieldwork::tenant_db::list_users(pool)
         .await
         .context("no operator user found — database may not be initialized")?;
     users
@@ -37,14 +32,14 @@ fn generate_keypair() -> anyhow::Result<(String, String)> {
         .to_public_key()
         .to_public_key_pem(LineEnding::LF)
         .context("encoding public key to PEM")?;
-    // private_pem is Zeroizing<String> — we must convert to String for SQLite storage.
+    // private_pem is Zeroizing<String> — we must convert to String for DB storage.
     // The Zeroizing wrapper zeros the original on drop after this conversion.
     Ok((private_pem.to_string(), public_pem))
 }
 
 /// Create a new persona with a fresh RSA keypair and Ed25519 recovery keypair.
 pub async fn add(
-    pool: &SqlitePool,
+    pool: &Pool,
     username: &str,
     display_name: Option<&str>,
 ) -> anyhow::Result<()> {
@@ -66,7 +61,7 @@ pub async fn add(
     let recovery_phrase = crate::did::private_key_to_mnemonic(&recovery_private);
     // recovery_private is Zeroizing<[u8; 32]> — auto-zeroized on drop
 
-    let fwp = fw_pool(pool);
+
     let row = fieldwork::persona_db::PersonaRow {
         id,
         user_id,
@@ -86,7 +81,7 @@ pub async fn add(
         created_at: now,
         last_status_at: None,
     };
-    fieldwork::persona_db::create_persona(&fwp, &row)
+    fieldwork::persona_db::create_persona(pool, &row)
         .await
         .with_context(|| format!("inserting persona {username}"))?;
 
@@ -103,9 +98,9 @@ pub async fn add(
 }
 
 /// List all personas with follower counts.
-pub async fn list(pool: &SqlitePool) -> anyhow::Result<()> {
-    let fwp = fw_pool(pool);
-    let rows = fieldwork::persona_db::list_personas(&fwp)
+pub async fn list(pool: &Pool) -> anyhow::Result<()> {
+
+    let rows = fieldwork::persona_db::list_personas(pool)
         .await
         .context("listing personas")?;
 
@@ -115,7 +110,7 @@ pub async fn list(pool: &SqlitePool) -> anyhow::Result<()> {
     }
 
     for row in &rows {
-        let followers = fieldwork::followers_db::follower_count(&fwp, row.id)
+        let followers = fieldwork::followers_db::follower_count(pool, row.id)
             .await
             .unwrap_or(0);
         println!(
@@ -128,7 +123,7 @@ pub async fn list(pool: &SqlitePool) -> anyhow::Result<()> {
 
 /// Update a persona's display name, bio, avatar, or header.
 pub async fn update(
-    pool: &SqlitePool,
+    pool: &Pool,
     username: &str,
     display_name: Option<&str>,
     bio: Option<&str>,
@@ -139,13 +134,13 @@ pub async fn update(
         anyhow::bail!("nothing to update — specify --display-name, --bio, --avatar, or --header");
     }
 
-    let fwp = fw_pool(pool);
+
     let persona_id = get_id(pool, username).await?;
 
     // Use fieldwork for display_name and bio
     if display_name.is_some() || bio.is_some() {
         fieldwork::persona_db::update_persona_profile(
-            &fwp,
+            pool,
             persona_id,
             display_name,
             bio,
@@ -164,9 +159,9 @@ pub async fn update(
 }
 
 /// Look up a persona's private key PEM by username.
-pub async fn get_private_key(pool: &SqlitePool, username: &str) -> anyhow::Result<String> {
-    let fwp = fieldwork::db::Pool::Sqlite(pool.clone());
-    let row = fieldwork::persona_db::get_persona_by_username(&fwp, username)
+pub async fn get_private_key(pool: &Pool, username: &str) -> anyhow::Result<String> {
+
+    let row = fieldwork::persona_db::get_persona_by_username(pool, username)
         .await
         .with_context(|| format!("persona @{username} not found"))?
         .with_context(|| format!("persona @{username} not found"))?;
@@ -174,9 +169,9 @@ pub async fn get_private_key(pool: &SqlitePool, username: &str) -> anyhow::Resul
 }
 
 /// Look up a persona's public key PEM by username.
-pub async fn get_public_key(pool: &SqlitePool, username: &str) -> anyhow::Result<String> {
-    let fwp = fieldwork::db::Pool::Sqlite(pool.clone());
-    let row = fieldwork::persona_db::get_persona_by_username(&fwp, username)
+pub async fn get_public_key(pool: &Pool, username: &str) -> anyhow::Result<String> {
+
+    let row = fieldwork::persona_db::get_persona_by_username(pool, username)
         .await
         .with_context(|| format!("persona @{username} not found"))?
         .with_context(|| format!("persona @{username} not found"))?;
@@ -184,9 +179,9 @@ pub async fn get_public_key(pool: &SqlitePool, username: &str) -> anyhow::Result
 }
 
 /// Look up a persona's ID by username.
-pub async fn get_id(pool: &SqlitePool, username: &str) -> anyhow::Result<i64> {
-    let fwp = fieldwork::db::Pool::Sqlite(pool.clone());
-    let row = fieldwork::persona_db::get_persona_by_username(&fwp, username)
+pub async fn get_id(pool: &Pool, username: &str) -> anyhow::Result<i64> {
+
+    let row = fieldwork::persona_db::get_persona_by_username(pool, username)
         .await
         .with_context(|| format!("persona @{username} not found"))?
         .with_context(|| format!("persona @{username} not found"))?;

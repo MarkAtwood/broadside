@@ -1,5 +1,5 @@
 use anyhow::Context;
-use fieldwork::db::sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePool};
+use fieldwork::db::sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
 use std::path::Path;
 use std::str::FromStr;
 
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS broadside_post_meta (
     },
 ];
 
-pub async fn connect(data_dir: &Path) -> anyhow::Result<SqlitePool> {
+pub async fn connect(data_dir: &Path) -> anyhow::Result<fieldwork::db::Pool> {
     let db_path = data_dir.join("broadside.db");
     let db_str = db_path
         .to_str()
@@ -44,10 +44,10 @@ pub async fn connect(data_dir: &Path) -> anyhow::Result<SqlitePool> {
         .journal_mode(SqliteJournalMode::Wal)
         .create_if_missing(true)
         .foreign_keys(true);
-    let pool = SqlitePool::connect_with(options).await?;
+    let sq_pool = fieldwork::db::sqlx::SqlitePool::connect_with(options).await?;
+    let pool = fieldwork::db::Pool::Sqlite(sq_pool);
 
-    let fw_pool = fieldwork::db::Pool::Sqlite(pool.clone());
-    fieldwork::db::migrate_full(&fw_pool, Some(&fieldwork::db::LEGACY_BROADSIDE), BROADSIDE_EXTRAS)
+    fieldwork::db::migrate_full(&pool, Some(&fieldwork::db::LEGACY_BROADSIDE), BROADSIDE_EXTRAS)
         .await
         .context("Failed to run database migrations")?;
 
@@ -62,11 +62,10 @@ pub async fn init_data_dir(data_dir: &Path) -> anyhow::Result<()> {
 
     // Ensure a default operator user exists (for fresh databases)
     let now = chrono::Utc::now().timestamp();
-    let fw_pool = fieldwork::db::Pool::Sqlite(pool.clone());
     // Only insert if no users exist yet (idempotent)
-    if fieldwork::tenant_db::list_users(&fw_pool).await.map(|v| v.is_empty()).unwrap_or(true) {
+    if fieldwork::tenant_db::list_users(&pool).await.map(|v| v.is_empty()).unwrap_or(true) {
         let _ = fieldwork::tenant_db::create_user(
-            &fw_pool,
+            &pool,
             1000000000000i64,
             "admin@localhost",
             None,
@@ -76,7 +75,9 @@ pub async fn init_data_dir(data_dir: &Path) -> anyhow::Result<()> {
         .await;
     }
 
-    pool.close().await;
+    match &pool {
+        fieldwork::db::Pool::Sqlite(sq) => sq.close().await,
+    }
 
     let config_path = data_dir.join("config.toml");
     if !config_path.exists() {

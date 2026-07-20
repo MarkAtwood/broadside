@@ -1,19 +1,14 @@
 use anyhow::{bail, Context};
-use fieldwork::db::sqlx::SqlitePool;
+use fieldwork::db::Pool;
 use std::sync::Arc;
 
 use crate::server::SsrfSafeResolver;
 use crate::signatures;
 
-/// Wrap a raw SqlitePool in fieldwork's Pool enum for shared module calls.
-fn fw_pool(pool: &SqlitePool) -> fieldwork::db::Pool {
-    fieldwork::db::Pool::Sqlite(pool.clone())
-}
-
 /// Add a relay subscription. Fetches the relay actor to discover its inbox,
 /// then sends a Follow activity and stores the subscription as pending.
 pub async fn add(
-    pool: &SqlitePool,
+    pool: &Pool,
     relay_url: &str,
     domain: &str,
     persona: &str,
@@ -35,8 +30,8 @@ pub async fn add(
     }
 
     // Check if already subscribed
-    let fwp = fw_pool(pool);
-    if let Some(existing) = fieldwork::relay::find_by_actor(&fwp, relay_url).await? {
+
+    if let Some(existing) = fieldwork::relay::find_by_actor(pool, relay_url).await? {
         bail!("relay already registered (state: {})", existing.state);
     }
 
@@ -90,7 +85,7 @@ pub async fn add(
     let temp_follow_id = format!("{actor_uri}/relay-follow/pending");
 
     // Store the relay subscription
-    let id = fieldwork::relay::subscribe(&fwp, relay_url, &inbox_url, Some(persona_id), &temp_follow_id)
+    let id = fieldwork::relay::subscribe(pool, relay_url, &inbox_url, Some(persona_id), &temp_follow_id)
         .await
         .context("storing relay subscription")?;
 
@@ -149,13 +144,13 @@ pub async fn add(
 
 /// Remove a relay subscription. Sends Undo{Follow} and deletes the record.
 pub async fn remove(
-    pool: &SqlitePool,
+    pool: &Pool,
     relay_url: &str,
     domain: &str,
     persona_override: Option<&str>,
 ) -> anyhow::Result<()> {
-    let fwp = fw_pool(pool);
-    let relay_row = fieldwork::relay::find_by_actor(&fwp, relay_url)
+
+    let relay_row = fieldwork::relay::find_by_actor(pool, relay_url)
         .await?
         .context(format!("relay not found: {relay_url}"))?;
 
@@ -166,7 +161,7 @@ pub async fn remove(
     let persona_username = if let Some(p) = persona_override {
         p.to_string()
     } else if let Some(pid) = relay_row.persona_id {
-        let persona = fieldwork::persona_db::get_persona_by_id(&fwp, pid)
+        let persona = fieldwork::persona_db::get_persona_by_id(pool, pid)
             .await
             .context("looking up persona for relay")?
             .context("persona not found for relay")?;
@@ -227,14 +222,14 @@ pub async fn remove(
         .await;
 
     // Delete regardless of Undo delivery success
-    fieldwork::relay::unsubscribe(&fwp, relay_id).await?;
+    fieldwork::relay::unsubscribe(pool, relay_id).await?;
 
     println!("Removed relay: {relay_url}");
     Ok(())
 }
 
 /// List all relay subscriptions.
-pub async fn list(pool: &SqlitePool) -> anyhow::Result<()> {
+pub async fn list(pool: &Pool) -> anyhow::Result<()> {
     let rows = crate::db_extras::relay_list_all(pool).await?;
 
     if rows.is_empty() {
@@ -261,12 +256,12 @@ pub async fn list(pool: &SqlitePool) -> anyhow::Result<()> {
 }
 
 /// Activate a relay subscription (called when we receive an Accept from the relay).
-pub async fn activate(pool: &SqlitePool, relay_actor_uri: &str) -> anyhow::Result<bool> {
-    let fwp = fw_pool(pool);
-    let relay = match fieldwork::relay::find_by_actor(&fwp, relay_actor_uri).await? {
+pub async fn activate(pool: &Pool, relay_actor_uri: &str) -> anyhow::Result<bool> {
+
+    let relay = match fieldwork::relay::find_by_actor(pool, relay_actor_uri).await? {
         Some(r) if r.state == fieldwork::relay::RelayState::Pending => r,
         _ => return Ok(false),
     };
-    fieldwork::relay::accept(&fwp, relay.id).await?;
+    fieldwork::relay::accept(pool, relay.id).await?;
     Ok(true)
 }
