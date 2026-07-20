@@ -423,7 +423,7 @@ impl Cli {
                     Err(e) => println!("  the-federation.info: FAILED ({e})"),
                 }
 
-                let url = format!("https://fedidb.org/software/broadside");
+                let url = "https://fedidb.org/software/broadside".to_string();
                 match client.get(&url).send().await {
                     Ok(resp) => println!(
                         "  fedidb.org: {} (crawler will pick up NodeInfo)",
