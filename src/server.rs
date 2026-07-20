@@ -136,8 +136,9 @@ pub async fn serve(config: &Config) -> anyhow::Result<()> {
             }
         }
     };
-    // Strip </style> (case-insensitive) to prevent style tag breakout from operator-supplied CSS
-    let extra_css = regex::RegexBuilder::new("</style>")
+    // Strip </style> (case-insensitive, optional whitespace before >) to prevent style tag
+    // breakout from operator-supplied CSS. Pattern matches all HTML-valid variants.
+    let extra_css = regex::RegexBuilder::new(r"</style\s*>")
         .case_insensitive(true)
         .build()
         .unwrap()
@@ -162,8 +163,11 @@ pub async fn serve(config: &Config) -> anyhow::Result<()> {
     {
         let census_domain = domain.clone();
         tokio::spawn(async move {
+            // r9da.38: SsrfSafeResolver blocks private IPs even for the census endpoint,
+            // preventing SSRF if the-federation.info is ever compromised or DNS-hijacked.
             let client = reqwest::Client::builder()
                 .timeout(std::time::Duration::from_secs(30))
+                .dns_resolver(std::sync::Arc::new(SsrfSafeResolver))
                 .build()
                 .unwrap();
             loop {
@@ -383,6 +387,8 @@ async fn actor(
     if wants_html {
         return serve_profile_html(&state, &username).await;
     }
+    // r9da.33: column order must match the 10-element tuple exactly:
+    // id, username, display_name, bio, public_key, avatar_path, header_path, created_at, metadata, did_key
     let row = sqlx::query_as::<_, (String, String, String, String, String, Option<String>, Option<String>, String, String, Option<String>)>(
         "SELECT id, username, display_name, bio, public_key, avatar_path, header_path, created_at, metadata, did_key \
          FROM personas WHERE username = ?",
@@ -535,6 +541,11 @@ async fn outbox(
             Json(doc),
         )
             .into_response();
+    }
+
+    // page=0 is invalid — reject rather than silently clamping to 1 (would mislead clients)
+    if query.page == Some(0) {
+        return (StatusCode::BAD_REQUEST, "page must be >= 1").into_response();
     }
 
     let page = query.page.unwrap_or(1).max(1);
@@ -753,22 +764,30 @@ async fn handle_inbox(
     // and fall back to peer socket addr when headers are absent or untrusted.
     // Falls back to "unknown" when no header is present (all unknown-source requests
     // share one bucket, which is conservative).
+    // r9da.23: .to_string() is required because RateLimiter takes &str and the fallback
+    // "unknown" literal has a different lifetime than the header-borrowed &str path.
     let client_ip = headers
         .get("x-real-ip")
         .or_else(|| headers.get("x-forwarded-for"))
         .and_then(|v| v.to_str().ok())
         .and_then(|v| v.split(',').next())
-        .unwrap_or("unknown")
-        .trim()
-        .to_string();
+        .map(|v| v.trim().to_string())
+        .unwrap_or_else(|| "unknown".to_string());
 
     if !state.inbox_limiter.try_acquire(&client_ip).await {
         return StatusCode::TOO_MANY_REQUESTS;
     }
 
     // REQUIRE Signature header — reject unsigned requests.
+    // r9da.29: .to_string() is required — HeaderMap values are borrowed from the request,
+    // and sig_header must outlive the borrow across subsequent await points.
+    // r9da.22: Reject oversized Signature headers before parsing to bound allocations.
     let sig_header = match headers.get("signature").and_then(|v| v.to_str().ok()) {
-        Some(h) => h.to_string(),
+        Some(h) if h.len() <= 8192 => h.to_string(),
+        Some(_) => {
+            tracing::debug!("rejecting oversized Signature header");
+            return StatusCode::BAD_REQUEST;
+        }
         None => {
             tracing::debug!("rejecting unsigned inbox request");
             return StatusCode::UNAUTHORIZED;
@@ -802,12 +821,20 @@ async fn handle_inbox(
         return StatusCode::BAD_REQUEST;
     }
 
-    let actor_uri = sig_parts
-        .key_id
-        .split('#')
-        .next()
-        .unwrap_or(&sig_parts.key_id)
-        .to_string();
+    // r9da.90: if keyId has no '#', use it as-is (it IS the actor URI, not a fragment key).
+    // Splitting on '#' when '#' is absent would still return the full string via .next(),
+    // but this makes the intent explicit and avoids a confusing split on a non-existent delimiter.
+    // r9da.87: actor_uri must be owned — it is used across multiple await points below.
+    let actor_uri = if sig_parts.key_id.contains('#') {
+        sig_parts
+            .key_id
+            .split('#')
+            .next()
+            .unwrap_or(&sig_parts.key_id)
+            .to_string()
+    } else {
+        sig_parts.key_id.clone()
+    };
 
     // Reconstruct the request path
     let path = if let Some(uname) = _username {
@@ -853,6 +880,7 @@ async fn handle_inbox(
     // Verify Digest header — REQUIRED.
     // The Digest header cryptographically binds the body to the signature
     // (when 'digest' is in the signed headers). Without it, body substitution is trivial.
+    // r9da.29: .to_string() required — digest_header must outlive the header borrow.
     let digest_header = match headers.get("digest").and_then(|v| v.to_str().ok()) {
         Some(d) => d.to_string(),
         None => {
@@ -958,7 +986,9 @@ async fn handle_inbox(
                 }
             }
 
-            // Fetch the follower's actor document to get their inbox
+            // Fetch the follower's actor document to get their inbox.
+            // r9da.67: Return 500 on fetch failure rather than silently discarding the Follow.
+            // A silent ACCEPTED would ACK the Follow to the sender but never store it.
             let actor_doc = match state
                 .http_client
                 .get(follower_actor)
@@ -970,16 +1000,26 @@ async fn handle_inbox(
                     let body = match crate::http::read_body_limited(resp, 65536).await {
                         Ok(b) => b,
                         Err(e) => {
-                            tracing::warn!("actor document fetch failed: {e}");
-                            return StatusCode::ACCEPTED;
+                            tracing::warn!("actor document body read failed: {e}");
+                            return StatusCode::INTERNAL_SERVER_ERROR;
                         }
                     };
                     match serde_json::from_slice::<serde_json::Value>(&body) {
                         Ok(v) => v,
-                        Err(_) => return StatusCode::ACCEPTED,
+                        Err(e) => {
+                            tracing::warn!("actor document JSON parse failed: {e}");
+                            return StatusCode::INTERNAL_SERVER_ERROR;
+                        }
                     }
                 }
-                _ => return StatusCode::ACCEPTED,
+                Ok(resp) => {
+                    tracing::warn!(status = %resp.status(), "actor document fetch returned non-2xx");
+                    return StatusCode::INTERNAL_SERVER_ERROR;
+                }
+                Err(e) => {
+                    tracing::warn!("actor document fetch failed: {e}");
+                    return StatusCode::INTERNAL_SERVER_ERROR;
+                }
             };
 
             let inbox_uri = actor_doc["inbox"].as_str().unwrap_or("").to_string();
@@ -1001,12 +1041,30 @@ async fn handle_inbox(
             };
 
             if inbox_uri.is_empty() || !inbox_uri.starts_with("https://") {
-                return StatusCode::ACCEPTED;
+                return StatusCode::BAD_REQUEST;
             }
+
+            // r9da.89: Validate that the inbox URI's host matches the follower actor's host.
+            // Accepting a cross-domain inbox would let a compromised actor redirect deliveries.
+            let follower_host = url::Url::parse(follower_actor)
+                .ok()
+                .and_then(|u| u.host_str().map(|h| h.to_string()));
+            let inbox_host = url::Url::parse(&inbox_uri)
+                .ok()
+                .and_then(|u| u.host_str().map(|h| h.to_string()));
+            if follower_host != inbox_host || follower_host.is_none() {
+                tracing::warn!(
+                    follower = follower_actor,
+                    inbox = %inbox_uri,
+                    "inbox host does not match follower actor host"
+                );
+                return StatusCode::BAD_REQUEST;
+            }
+
             if let Ok(parsed) = url::Url::parse(&inbox_uri) {
                 if let Some(host) = parsed.host_str() {
                     if is_private_host_resolved(host).await {
-                        return StatusCode::ACCEPTED;
+                        return StatusCode::BAD_REQUEST;
                     }
                 }
             }
@@ -1257,6 +1315,9 @@ async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 }
 
 /// Serve a simple HTML profile page for browser visitors.
+// ponytail: r9da.27 — 3 separate DB queries (profile row, posts, follower count + post count).
+// Acceptable for a low-traffic profile page. Ceiling: combine into a single query with
+// COUNT() subqueries if profiling shows this as a bottleneck.
 async fn serve_profile_html(state: &AppState, username: &str) -> axum::response::Response {
     let row = sqlx::query_as::<_, (String, String, String, String)>(
         "SELECT display_name, bio, created_at, metadata FROM personas WHERE username = ?",
@@ -1298,10 +1359,12 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
                 } else {
                     ammonia::clean(value).to_string()
                 };
+                // r9da.84: escape_html_attr for th content — field names are plain text,
+                // not HTML, so attribute-level escaping is correct here.
                 let _ = write!(
                     fields_html,
                     "<tr><th>{}</th><td>{}</td></tr>",
-                    ammonia::clean(name),
+                    crate::sanitize::escape_html_attr(name),
                     value_html
                 );
             }
@@ -1310,6 +1373,8 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
     }
 
     // Build posts HTML
+    // r9da.81: content_html is already sanitized by ammonia at storage time (in feed/webhook
+    // ingestion). process_content adds hashtag/mention links only — no re-sanitization needed.
     let mut posts_html = String::new();
     for p in &posts {
         let (processed, _) = crate::content::process_content(&p.content_html, &state.domain);
