@@ -3,6 +3,7 @@ pub mod card;
 pub mod config;
 pub mod content;
 pub mod db;
+pub mod db_extras;
 pub mod delivery;
 pub mod did;
 pub mod feed;

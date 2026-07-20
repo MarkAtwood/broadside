@@ -94,15 +94,8 @@ pub async fn add(
         .await
         .context("storing relay subscription")?;
 
-    // Remaining SQL: follow_id update has no fieldwork equivalent.
-    // fieldwork::relay provides subscribe/accept/reject/unsubscribe but not field-level updates.
     let follow_id = format!("{actor_uri}/relay-follow/{id}");
-    sqlx::query("UPDATE relays SET follow_id = ? WHERE id = ?")
-        .bind(&follow_id)
-        .bind(id)
-        .execute(pool)
-        .await
-        .context("updating relay follow_id")?;
+    crate::db_extras::relay_update_follow_id(pool, id, &follow_id).await?;
     let activity = serde_json::json!({
         "@context": "https://www.w3.org/ns/activitystreams",
         "id": follow_id,
@@ -242,13 +235,7 @@ pub async fn remove(
 
 /// List all relay subscriptions.
 pub async fn list(pool: &SqlitePool) -> anyhow::Result<()> {
-    // Remaining SQL: list all relays (any state) has no fieldwork equivalent.
-    // fieldwork::relay provides get_accepted (accepted only) and find_by_actor (single lookup).
-    let rows = sqlx::query_as::<_, (String, String, String, i64)>(
-        "SELECT actor_uri, inbox_url, state, created_at FROM relays ORDER BY created_at",
-    )
-    .fetch_all(pool)
-    .await?;
+    let rows = crate::db_extras::relay_list_all(pool).await?;
 
     if rows.is_empty() {
         println!("No relay subscriptions.");

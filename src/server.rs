@@ -401,16 +401,10 @@ async fn actor(
     let header_media_id = persona_row.header_media_id;
     let created_at_epoch = persona_row.created_at;
     let metadata_json = persona_row.fields_json;
-    // Remaining SQL: did_key is a broadside-specific column (migration 101), not in fieldwork's PersonaRow.
-    let did_key: Option<String> = sqlx::query_as::<_, (Option<String>,)>(
-        "SELECT did_key FROM personas WHERE username = ?",
-    )
-    .bind(&username)
-    .fetch_optional(&state.pool)
-    .await
-    .ok()
-    .flatten()
-    .and_then(|r| r.0);
+    let did_key: Option<String> = crate::db_extras::get_did_key_by_username(&state.pool, &username)
+        .await
+        .ok()
+        .flatten();
 
     let created_at = chrono::DateTime::from_timestamp(created_at_epoch, 0)
         .map(|dt| dt.format("%Y-%m-%dT%H:%M:%SZ").to_string())
@@ -706,17 +700,10 @@ async fn did_document(
     };
     let public_key = persona_row.public_key_pem;
 
-    // Remaining SQL: did_key and recovery_pubkey are broadside-specific columns (migrations 101-102).
-    let (did_key, recovery_pubkey_hex): (Option<String>, Option<String>) =
-        sqlx::query_as::<_, (Option<String>, Option<String>)>(
-            "SELECT did_key, recovery_pubkey FROM personas WHERE username = ?",
-        )
-        .bind(&username)
-        .fetch_optional(&state.pool)
-        .await
-        .ok()
-        .flatten()
-        .unwrap_or((None, None));
+    let (did_key, recovery_pubkey_hex) =
+        crate::db_extras::get_did_and_recovery_by_username(&state.pool, &username)
+            .await
+            .unwrap_or((None, None));
 
     let recovery_pubkey = recovery_pubkey_hex
         .as_deref()
@@ -1284,14 +1271,9 @@ async fn health(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
         .map(|v| v.len() as i64)
         .unwrap_or(0);
 
-    // Remaining SQL: pending delivery count has no direct fieldwork equivalent.
-    // fieldwork::delivery_db provides fetch_pending (with time filter) but not a simple count.
-    let pending =
-        sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM delivery_queue WHERE delivered_at IS NULL AND dead_at IS NULL")
-            .fetch_one(&state.pool)
-            .await
-            .map(|(c,)| c)
-            .unwrap_or(0);
+    let pending = crate::db_extras::delivery_count_pending(&state.pool)
+        .await
+        .unwrap_or(0);
 
     Json(serde_json::json!({
         "status": "ok",

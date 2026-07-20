@@ -90,12 +90,7 @@ pub async fn add(
         .await
         .with_context(|| format!("inserting persona {username}"))?;
 
-    // Store broadside-specific DID columns (did_key, recovery_pubkey) not in fieldwork schema
-    sqlx::query("UPDATE personas SET did_key = ?, recovery_pubkey = ? WHERE id = ?")
-        .bind(&did_key)
-        .bind(&recovery_pubkey_hex)
-        .bind(&id)
-        .execute(pool)
+    crate::db_extras::set_persona_did(pool, &id, &did_key, &recovery_pubkey_hex)
         .await
         .with_context(|| format!("setting DID for persona {username}"))?;
 
@@ -160,29 +155,8 @@ pub async fn update(
         .with_context(|| format!("updating profile for @{username}"))?;
     }
 
-    // Remaining SQL: avatar_media_id/header_media_id updates have no fieldwork equivalent.
-    // fieldwork::persona_db::update_persona_profile only covers display_name/bio/bio_html.
     if avatar.is_some() || header.is_some() {
-        let mut set_parts: Vec<String> = Vec::new();
-        let mut values: Vec<&str> = Vec::new();
-        if let Some(v) = avatar {
-            set_parts.push("avatar_media_id = ?".to_string());
-            values.push(v);
-        }
-        if let Some(v) = header {
-            set_parts.push("header_media_id = ?".to_string());
-            values.push(v);
-        }
-        let sql = format!(
-            "UPDATE personas SET {} WHERE id = ?",
-            set_parts.join(", ")
-        );
-        let mut q = sqlx::query(&sql);
-        for v in &values {
-            q = q.bind(*v);
-        }
-        q = q.bind(&persona_id);
-        q.execute(pool).await?;
+        crate::db_extras::update_persona_media(pool, &persona_id, avatar, header).await?;
     }
 
     println!("Updated persona @{username}");

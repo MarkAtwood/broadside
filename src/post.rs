@@ -51,16 +51,8 @@ pub async fn create(
         .await
         .with_context(|| format!("inserting post for persona {persona_id}"))?;
 
-    // Remaining SQL: broadside_post_meta is a broadside-specific table with no fieldwork equivalent.
     if let Some(sref) = source_ref {
-        sqlx::query(
-            "INSERT INTO broadside_post_meta (post_id, source_ref) VALUES (?, ?)",
-        )
-        .bind(id)
-        .bind(sref)
-        .execute(pool)
-        .await
-        .with_context(|| format!("inserting source_ref for post {id}"))?;
+        crate::db_extras::insert_post_meta(pool, id, sref).await?;
     }
 
     tracing::info!(post_id = %id, persona_id, "created post");
@@ -80,26 +72,24 @@ pub fn text_to_html(text: &str) -> String {
 }
 
 /// Fetch recent posts for a persona, newest first.
-/// Remaining SQL: joins broadside_post_meta (broadside-specific table) for source_ref.
 pub async fn list_for_persona(
     pool: &SqlitePool,
     persona_id: &str,
     limit: i64,
     offset: i64,
 ) -> anyhow::Result<Vec<PostRow>> {
-    let rows = sqlx::query_as::<_, PostRow>(
-        "SELECT CAST(p.id AS TEXT) AS id, p.persona_id, p.content_html, p.content, p.created_at, m.source_ref \
-         FROM posts p \
-         LEFT JOIN broadside_post_meta m ON m.post_id = p.id \
-         WHERE p.persona_id = ? ORDER BY p.created_at DESC LIMIT ? OFFSET ?",
-    )
-    .bind(persona_id)
-    .bind(limit)
-    .bind(offset)
-    .fetch_all(pool)
-    .await
-    .context("listing posts")?;
-    Ok(rows)
+    let rows = crate::db_extras::list_posts_with_meta(pool, persona_id, limit, offset).await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| PostRow {
+            id: r.id,
+            persona_id: r.persona_id,
+            content_html: r.content_html,
+            content: r.content,
+            created_at: r.created_at,
+            source_ref: r.source_ref,
+        })
+        .collect())
 }
 
 /// Count total posts for a persona.

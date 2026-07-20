@@ -93,15 +93,7 @@ pub async fn poll_feed(
         let ap_id = format!("urn:broadside:post:{id}");
         let id_str = id.to_string();
 
-        // Remaining SQL: broadside_post_meta is a broadside-specific table for dedup.
-        let exists = sqlx::query_as::<_, (i64,)>(
-            "SELECT COUNT(*) FROM broadside_post_meta WHERE source_ref = ?",
-        )
-        .bind(&entry_id)
-        .fetch_one(pool)
-        .await?;
-
-        if exists.0 > 0 {
+        if crate::db_extras::source_ref_exists(pool, &entry_id).await? {
             continue;
         }
 
@@ -129,14 +121,7 @@ pub async fn poll_feed(
         };
         let post_ok = fieldwork::posts_db::create_post(&fwp, &post).await.is_ok();
 
-        // Remaining SQL: broadside_post_meta is a broadside-specific table.
-        let _ = sqlx::query(
-            "INSERT OR IGNORE INTO broadside_post_meta (post_id, source_ref) VALUES (?, ?)",
-        )
-        .bind(id)
-        .bind(&entry_id)
-        .execute(pool)
-        .await;
+        crate::db_extras::insert_post_meta_ignore(pool, id, &entry_id).await;
 
         if post_ok {
             // Attach enclosure images as media (capped to prevent abuse)
@@ -195,22 +180,9 @@ pub async fn poll_feed(
         }
     }
 
-    // Remaining SQL: feed_state is a broadside-specific table with no fieldwork equivalent.
     if let Some(ref nid) = newest_id {
         let now = chrono::Utc::now().timestamp();
-        sqlx::query(
-            "INSERT INTO feed_state (feed_url, persona_id, last_seen_id, last_poll) \
-             VALUES (?, ?, ?, ?) \
-             ON CONFLICT(feed_url) DO UPDATE SET last_seen_id = ?, last_poll = ?",
-        )
-        .bind(&config.url)
-        .bind(&persona_id)
-        .bind(nid)
-        .bind(now)
-        .bind(nid)
-        .bind(now)
-        .execute(pool)
-        .await?;
+        crate::db_extras::upsert_feed_state(pool, &config.url, &persona_id, nid, now).await?;
     }
 
     if new_count > 0 {

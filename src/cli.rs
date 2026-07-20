@@ -215,12 +215,7 @@ impl Cli {
                                 })
                                 .collect();
                             let json = serde_json::to_string(&metadata)?;
-                            // Remaining SQL: fields_json update has no fieldwork equivalent.
-                            // fieldwork::persona_db::update_persona_profile covers display_name/bio/bio_html only.
-                            sqlx::query("UPDATE personas SET fields_json = ? WHERE username = ?")
-                                .bind(&json)
-                                .bind(&username)
-                                .execute(&pool)
+                            broadside::db_extras::update_fields_json(&pool, &username, &json)
                                 .await?;
                             println!("Set {} metadata field(s)", metadata.len());
                         }
@@ -332,17 +327,8 @@ impl Cli {
                         .unwrap_or(0);
                 }
 
-                // Remaining SQL: delivery_queue count queries have no fieldwork equivalent.
-                let (pending,) = sqlx::query_as::<_, (i64,)>(
-                    "SELECT COUNT(*) FROM delivery_queue WHERE delivered_at IS NULL AND dead_at IS NULL",
-                )
-                .fetch_one(&pool)
-                .await?;
-                let (dead,) = sqlx::query_as::<_, (i64,)>(
-                    "SELECT COUNT(*) FROM delivery_queue WHERE dead_at IS NOT NULL",
-                )
-                .fetch_one(&pool)
-                .await?;
+                let pending = broadside::db_extras::delivery_count_pending(&pool).await?;
+                let dead = broadside::db_extras::delivery_count_dead(&pool).await?;
 
                 println!("Personas:   {personas}");
                 println!("Followers:  {followers}");
@@ -363,16 +349,9 @@ impl Cli {
                 match command {
                     FollowersCommand::List { persona } => {
                         let persona_id = broadside::persona::get_id(&pool, &persona).await?;
-                        // Remaining SQL: follower list with actor_uri + accepted_at has no
-                        // fieldwork equivalent. follower_inboxes returns inbox URLs only.
-                        let rows = sqlx::query_as::<_, (String, i64)>(
-                            "SELECT ra.actor_uri, f.accepted_at \
-                             FROM followers f \
-                             JOIN remote_accounts ra ON ra.id = f.remote_account_id \
-                             WHERE f.persona_id = ? ORDER BY f.accepted_at",
+                        let rows = broadside::db_extras::list_followers_with_dates(
+                            &pool, &persona_id,
                         )
-                        .bind(&persona_id)
-                        .fetch_all(&pool)
                         .await?;
                         if rows.is_empty() {
                             println!("No followers for @{persona}.");
@@ -483,14 +462,8 @@ impl Cli {
                 let pool = connect_db(&self.data_dir).await?;
                 match command {
                     DidCommand::Backfill => {
-                        // Remaining SQL: did_key and recovery_pubkey are broadside-specific
-                        // columns on personas (migrations 101-102), not in fieldwork's PersonaRow.
-                        let rows = sqlx::query_as::<_, (String, String)>(
-                            "SELECT id, username FROM personas WHERE did_key IS NULL",
-                        )
-                        .fetch_all(&pool)
-                        .await
-                        .context("querying personas without DID")?;
+                        let rows =
+                            broadside::db_extras::list_personas_without_did(&pool).await?;
 
                         if rows.is_empty() {
                             println!("All personas already have DID keys.");
@@ -503,13 +476,9 @@ impl Cli {
                                 let phrase = broadside::did::private_key_to_mnemonic(&priv_key);
                                 // priv_key is Zeroizing — auto-zeroized on drop
 
-                                sqlx::query(
-                                    "UPDATE personas SET did_key = ?, recovery_pubkey = ? WHERE id = ?",
+                                broadside::db_extras::set_persona_did(
+                                    &pool, id, &did_key, &recovery_hex,
                                 )
-                                .bind(&did_key)
-                                .bind(&recovery_hex)
-                                .bind(id)
-                                .execute(&pool)
                                 .await
                                 .with_context(|| {
                                     format!("updating DID for @{username}")
@@ -536,14 +505,8 @@ impl Cli {
                         let pub_key = broadside::did::ed25519_public_from_private(&priv_key);
                         let did_key = broadside::did::ed25519_to_did_key(&pub_key);
 
-                        // Remaining SQL: did_key is a broadside-specific column (migration 101).
-                        let row = sqlx::query_as::<_, (String, String)>(
-                            "SELECT id, username FROM personas WHERE did_key = ?",
-                        )
-                        .bind(&did_key)
-                        .fetch_optional(&pool)
-                        .await
-                        .context("looking up persona by DID")?;
+                        let row =
+                            broadside::db_extras::find_persona_by_did(&pool, &did_key).await?;
 
                         match row {
                             Some((id, username)) => {

@@ -313,23 +313,14 @@ async fn process_batch(
                 let delivered_at = chrono::Utc::now().timestamp();
                 fieldwork::delivery_db::mark_delivered(&fwp, delivery_id, delivered_at).await?;
 
-                // Remaining SQL: cross-table DELETE joining remote_accounts by inbox URL.
-                // No fieldwork equivalent — fieldwork::followers_db::remove_follower takes
-                // a single remote_account_id, not an inbox URL lookup.
-                let removed = sqlx::query(
-                    "DELETE FROM followers WHERE remote_account_id IN \
-                     (SELECT id FROM remote_accounts WHERE inbox_url = ? OR shared_inbox_url = ?) \
-                     AND persona_id = ?",
+                let removed = crate::db_extras::remove_followers_by_inbox(
+                    pool, target_inbox, sender_persona_id,
                 )
-                .bind(target_inbox)
-                .bind(target_inbox)
-                .bind(sender_persona_id)
-                .execute(pool)
                 .await?;
 
                 tracing::info!(
                     inbox = %target_inbox,
-                    removed = removed.rows_affected(),
+                    removed,
                     "410 Gone — removed followers"
                 );
             }
@@ -371,14 +362,7 @@ pub async fn inspect(pool: &SqlitePool) -> anyhow::Result<()> {
     // Fetch pending jobs with a far-future timestamp to get all pending items
     let pending_jobs = fieldwork::delivery_db::fetch_pending(&fwp, 50, i64::MAX).await?;
 
-    // Remaining SQL: dead-lettered query has no fieldwork equivalent
-    // (fetch_pending excludes dead jobs by design).
-    let dead = sqlx::query_as::<_, (String, String, Option<String>)>(
-        "SELECT CAST(id AS TEXT), target_inbox, last_error \
-         FROM delivery_queue WHERE dead_at IS NOT NULL ORDER BY id LIMIT 50",
-    )
-    .fetch_all(pool)
-    .await?;
+    let dead = crate::db_extras::delivery_list_dead(pool).await?;
 
     if pending_jobs.is_empty() && dead.is_empty() {
         println!("Queue is empty.");
@@ -410,36 +394,16 @@ pub async fn inspect(pool: &SqlitePool) -> anyhow::Result<()> {
 
 /// CLI: retry all dead-lettered deliveries.
 pub async fn retry_dead(pool: &SqlitePool) -> anyhow::Result<()> {
-    // Remaining SQL: bulk retry (reset dead_at, attempts, next_attempt_at) has no fieldwork
-    // equivalent. fieldwork::delivery_db provides per-job operations, not bulk retry.
     let now = chrono::Utc::now().timestamp();
-    let result = sqlx::query(
-        "UPDATE delivery_queue SET dead_at = NULL, last_error = NULL, attempts = 0, next_attempt_at = ? \
-         WHERE dead_at IS NOT NULL",
-    )
-    .bind(now)
-    .execute(pool)
-    .await?;
-    println!(
-        "Retrying {} dead-lettered deliveries.",
-        result.rows_affected()
-    );
+    let count = crate::db_extras::delivery_retry_all_dead(pool, now).await?;
+    println!("Retrying {count} dead-lettered deliveries.");
     Ok(())
 }
 
 /// CLI: delivery stats.
 pub async fn stats(pool: &SqlitePool) -> anyhow::Result<()> {
-    // Remaining SQL: aggregate count queries on delivery_queue have no fieldwork equivalent.
-    // fieldwork::delivery_db provides fetch_pending (limited rows) not counts.
-    let (pending,) = sqlx::query_as::<_, (i64,)>(
-        "SELECT COUNT(*) FROM delivery_queue WHERE delivered_at IS NULL AND dead_at IS NULL",
-    )
-    .fetch_one(pool)
-    .await?;
-    let (dead,) =
-        sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM delivery_queue WHERE dead_at IS NOT NULL")
-            .fetch_one(pool)
-            .await?;
+    let pending = crate::db_extras::delivery_count_pending(pool).await?;
+    let dead = crate::db_extras::delivery_count_dead(pool).await?;
 
     println!("Pending: {pending}");
     println!("Dead:    {dead}");
