@@ -43,13 +43,15 @@ pub fn markdown_to_html(markdown: &str) -> String {
     sanitize_html(&html)
 }
 
+static TEXT_BUILDER: LazyLock<Builder<'static>> = LazyLock::new(|| {
+    let mut b = Builder::new();
+    b.tags(std::collections::HashSet::new());
+    b
+});
+
 /// Strip HTML tags to get plain text.
 pub fn html_to_text(html: &str) -> String {
-    // ponytail: ammonia with no tags allowed strips everything to text
-    Builder::new()
-        .tags(std::collections::HashSet::new())
-        .clean(html)
-        .to_string()
+    TEXT_BUILDER.clean(html).to_string()
 }
 
 /// Truncate a string at a UTF-8 safe boundary.

@@ -5,7 +5,7 @@ use anyhow::{bail, Context, Result};
 pub async fn read_body_limited(mut resp: reqwest::Response, max_bytes: usize) -> Result<Vec<u8>> {
     // Fast-reject via Content-Length if available (advisory but cheap)
     if let Some(len) = resp.content_length() {
-        if len as usize > max_bytes {
+        if len > max_bytes as u64 {
             bail!("response Content-Length {len} exceeds {max_bytes} byte limit");
         }
     }

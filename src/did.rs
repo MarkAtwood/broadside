@@ -1,11 +1,15 @@
 /// Generate an Ed25519 recovery keypair. Returns (private_key_bytes, public_key_bytes).
-pub fn generate_recovery_keypair() -> ([u8; 32], [u8; 32]) {
+/// Caller MUST zeroize the private key bytes after use.
+pub fn generate_recovery_keypair() -> (zeroize::Zeroizing<[u8; 32]>, [u8; 32]) {
     use ed25519_dalek::SigningKey;
     use rand::rngs::OsRng;
 
     let signing_key = SigningKey::generate(&mut OsRng);
     let verifying_key = signing_key.verifying_key();
-    (signing_key.to_bytes(), verifying_key.to_bytes())
+    (
+        zeroize::Zeroizing::new(signing_key.to_bytes()),
+        verifying_key.to_bytes(),
+    )
 }
 
 /// Encode an Ed25519 public key as did:key (multicodec 0xed01 + multibase base58btc).
@@ -37,17 +41,18 @@ pub fn private_key_to_mnemonic(private_key: &[u8; 32]) -> String {
 }
 
 /// Decode BIP-39 mnemonic back to private key bytes.
-pub fn mnemonic_to_private_key(phrase: &str) -> anyhow::Result<[u8; 32]> {
+pub fn mnemonic_to_private_key(phrase: &str) -> anyhow::Result<zeroize::Zeroizing<[u8; 32]>> {
     let mnemonic = bip39::Mnemonic::parse(phrase)
         .map_err(|e| anyhow::anyhow!("invalid recovery phrase: {e}"))?;
-    let entropy = mnemonic.to_entropy();
+    let mut entropy = mnemonic.to_entropy();
     let mut key = [0u8; 32];
     anyhow::ensure!(
         entropy.len() == 32,
         "recovery phrase must encode exactly 32 bytes (24 words)"
     );
     key.copy_from_slice(&entropy);
-    Ok(key)
+    zeroize::Zeroize::zeroize(&mut entropy);
+    Ok(zeroize::Zeroizing::new(key))
 }
 
 /// Derive the Ed25519 public key from a private key.
@@ -118,7 +123,12 @@ pub fn did_web_document(
 
 /// Hex-encode bytes for storage (recovery pubkey).
 pub fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
+    let mut s = String::with_capacity(bytes.len() * 2);
+    for b in bytes {
+        use std::fmt::Write;
+        let _ = write!(s, "{b:02x}");
+    }
+    s
 }
 
 /// Hex-decode a string back to bytes.
@@ -146,7 +156,7 @@ mod tests {
 
         let recovered = mnemonic_to_private_key(&mnemonic).unwrap();
         assert_eq!(
-            recovered, private_key,
+            *recovered, *private_key,
             "Round-trip must recover original key"
         );
 

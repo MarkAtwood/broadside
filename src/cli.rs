@@ -285,7 +285,7 @@ impl Cli {
                     if let Err(e) = broadside::card::fetch_and_store(
                         &pool,
                         &post_id,
-                        &url,
+                        url,
                         data_dir,
                         &client,
                         &config.server.domain,
@@ -478,12 +478,12 @@ impl Cli {
                             println!("All personas already have DID keys.");
                         } else {
                             for (id, username) in &rows {
-                                let (mut priv_key, pub_key) =
+                                let (priv_key, pub_key) =
                                     broadside::did::generate_recovery_keypair();
                                 let did_key = broadside::did::ed25519_to_did_key(&pub_key);
                                 let recovery_hex = broadside::did::hex_encode(&pub_key);
                                 let phrase = broadside::did::private_key_to_mnemonic(&priv_key);
-                                zeroize::Zeroize::zeroize(&mut priv_key);
+                                // priv_key is Zeroizing — auto-zeroized on drop
 
                                 sqlx::query(
                                     "UPDATE personas SET did_key = ?, recovery_pubkey = ? WHERE id = ?",

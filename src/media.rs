@@ -194,8 +194,10 @@ fn process_image(bytes: &[u8]) -> anyhow::Result<(DynamicImage, u32, u32)> {
     // Set decode limits to prevent decompression bombs
     let mut reader = image::ImageReader::new(std::io::Cursor::new(bytes)).with_guessed_format()?;
     let mut limits = image::Limits::default();
-    // Cap at 4096x4096 = 16M pixels * 4 bytes = 64MB decoded max
+    // Cap decoded memory at 64MB and max 256 image dimensions total (prevents GIF frame bombs)
     limits.max_alloc = Some(64 * 1024 * 1024);
+    limits.max_image_width = Some(MAX_DIMENSION);
+    limits.max_image_height = Some(MAX_DIMENSION);
     reader.limits(limits);
     let img = reader
         .decode()

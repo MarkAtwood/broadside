@@ -40,12 +40,11 @@ pub async fn add(
     let display = display_name.unwrap_or(username);
 
     // Generate Ed25519 recovery keypair for DID identity
-    let (mut recovery_private, recovery_public) = crate::did::generate_recovery_keypair();
+    let (recovery_private, recovery_public) = crate::did::generate_recovery_keypair();
     let did_key = crate::did::ed25519_to_did_key(&recovery_public);
     let recovery_pubkey_hex = crate::did::hex_encode(&recovery_public);
     let recovery_phrase = crate::did::private_key_to_mnemonic(&recovery_private);
-    // Zeroize private key — only the mnemonic leaves this function
-    zeroize::Zeroize::zeroize(&mut recovery_private);
+    // recovery_private is Zeroizing<[u8; 32]> — auto-zeroized on drop
 
     sqlx::query(
         "INSERT INTO personas (id, username, display_name, private_key, public_key, did_key, recovery_pubkey) \
