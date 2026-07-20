@@ -39,16 +39,13 @@ impl ActorKeyCache {
             }
         }
 
-        // SSRF guard: only fetch public https URLs
+        // SSRF guard: only fetch public https URLs.
+        // Private-IP blocking is enforced at the transport layer by the SsrfSafeResolver
+        // on the reqwest client passed to ActorKeyCache::new; the pre-check here was a
+        // redundant DNS lookup that could also be bypassed by DNS rebinding between the
+        // check and the connect. The resolver blocks at connect time instead.
         if !actor_uri.starts_with("https://") {
             anyhow::bail!("actor URI must be https: {actor_uri}");
-        }
-        if let Ok(parsed) = url::Url::parse(actor_uri) {
-            if let Some(host) = parsed.host_str() {
-                if crate::server::is_private_host_resolved(host).await {
-                    anyhow::bail!("actor URI points to private host: {actor_uri}");
-                }
-            }
         }
 
         // Fetch actor document with body size limit (64KB is sufficient for any actor doc)
@@ -90,7 +87,9 @@ impl ActorKeyCache {
             let mut entries = self.entries.lock().await;
             // Evict if too full: clear half the cache to amortise eviction cost
             if entries.len() >= MAX_ENTRIES {
-                // ponytail: half-clear is O(n/2) amortised over n/2 subsequent inserts = O(1) per insert
+                // ponytail: eviction scan is O(n) over at most MAX_ENTRIES (10000) entries and
+                // runs at most once per n/2 inserts (amortised O(1) per insert). Ceiling: use
+                // an LRU crate or a generational index if the entry count grows significantly.
                 entries.retain(|_, v| v.fetched_at.elapsed() < CACHE_TTL / 2);
                 if entries.len() >= MAX_ENTRIES {
                     // All entries are fresh; drop half arbitrarily

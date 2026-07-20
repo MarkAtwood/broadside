@@ -1,7 +1,9 @@
 use anyhow::{bail, Context};
 use sqlx::SqlitePool;
+use std::sync::Arc;
 
 use crate::id::gen_id;
+use crate::server::SsrfSafeResolver;
 use crate::signatures;
 
 /// Add a relay subscription. Fetches the relay actor to discover its inbox,
@@ -42,6 +44,7 @@ pub async fn add(
     let client = reqwest::Client::builder()
         .redirect(reqwest::redirect::Policy::none())
         .timeout(std::time::Duration::from_secs(30))
+        .dns_resolver(Arc::new(SsrfSafeResolver))
         .build()?;
     let resp = client
         .get(relay_url)
@@ -212,6 +215,7 @@ pub async fn remove(
     let client = reqwest::Client::builder()
         .redirect(reqwest::redirect::Policy::none())
         .timeout(std::time::Duration::from_secs(30))
+        .dns_resolver(Arc::new(SsrfSafeResolver))
         .build()?;
     let _ = client
         .post(&inbox_uri)

@@ -68,7 +68,16 @@ impl Config {
         for (i, feed) in self.feed.iter().enumerate() {
             parse_duration(&feed.poll_interval)
                 .with_context(|| format!("feed[{i}].poll_interval"))?;
+            if !feed.url.starts_with("http://") && !feed.url.starts_with("https://") {
+                bail!(
+                    "feed[{i}].url must start with http:// or https://: {}",
+                    feed.url
+                );
+            }
         }
+        // ponytail: persona names in feed/webhook configs are not cross-validated against the
+        // database here because the DB isn't open at config load time. Ceiling: add a
+        // post-connect validation step in main() that queries persona names and checks.
         if let Some(watch) = &self.watch {
             let path = Path::new(&watch.path);
             if !path.is_absolute() {

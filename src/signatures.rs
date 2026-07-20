@@ -101,11 +101,23 @@ pub fn verify_signature(
 }
 
 /// Parsed components of an HTTP Signature header.
-#[derive(Debug)]
+// ponytail: fields are owned Strings because they are returned from parse_signature_header
+// and the input header string does not live long enough to borrow from. Ceiling: use
+// Cow<'_, str> if profiling shows excessive allocation on the hot verify path.
 pub struct SignatureParts {
     pub key_id: String,
     pub headers: String,
     pub signature: String,
+}
+
+impl std::fmt::Debug for SignatureParts {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SignatureParts")
+            .field("key_id", &self.key_id)
+            .field("headers", &self.headers)
+            .field("signature", &"[REDACTED]")
+            .finish()
+    }
 }
 
 /// Parse a Signature header value into its components.
@@ -118,12 +130,21 @@ pub fn parse_signature_header(header: &str) -> anyhow::Result<SignatureParts> {
 
     for part in split_signature_params(header) {
         let part = part.trim();
-        if let Some(val) = part.strip_prefix("keyId=\"") {
-            key_id_val = Some(val.strip_suffix('"').unwrap_or(val).to_string());
-        } else if let Some(val) = part.strip_prefix("headers=\"") {
-            headers_val = Some(val.strip_suffix('"').unwrap_or(val).to_string());
-        } else if let Some(val) = part.strip_prefix("signature=\"") {
-            signature_val = Some(val.strip_suffix('"').unwrap_or(val).to_string());
+        if let Some(inner) = part.strip_prefix("keyId=\"") {
+            let val = inner
+                .strip_suffix('"')
+                .context("keyId value missing closing quote in Signature header")?;
+            key_id_val = Some(val.to_string());
+        } else if let Some(inner) = part.strip_prefix("headers=\"") {
+            let val = inner
+                .strip_suffix('"')
+                .context("headers value missing closing quote in Signature header")?;
+            headers_val = Some(val.to_string());
+        } else if let Some(inner) = part.strip_prefix("signature=\"") {
+            let val = inner
+                .strip_suffix('"')
+                .context("signature value missing closing quote in Signature header")?;
+            signature_val = Some(val.to_string());
         }
     }
 

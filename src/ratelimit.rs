@@ -3,6 +3,9 @@ use std::time::Instant;
 use tokio::sync::Mutex;
 
 /// Simple per-IP token bucket rate limiter.
+// ponytail: single Mutex over the entire HashMap. At current inbox load (tens of req/s)
+// this is not a bottleneck. Ceiling: replace with DashMap or sharded locks if profiling
+// shows contention (typically only needed above ~10k req/s on many-core hardware).
 pub struct RateLimiter {
     buckets: Mutex<HashMap<String, Bucket>>,
     capacity: u32,
@@ -29,6 +32,9 @@ impl RateLimiter {
         let mut buckets = self.buckets.lock().await;
         let now = Instant::now();
 
+        // ponytail: entry() requires an owned key, allocating a String on every call even
+        // for existing entries. Ceiling: use raw_entry (nightly) or switch to DashMap which
+        // accepts &str via the Equivalent trait.
         let bucket = buckets.entry(key.to_string()).or_insert(Bucket {
             tokens: self.capacity as f64,
             last_refill: now,
