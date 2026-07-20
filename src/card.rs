@@ -15,12 +15,21 @@ pub struct CardMeta {
     pub card_type: String,
 }
 
-/// Extract the first https URL from HTML content.
-pub fn extract_first_url(html: &str) -> Option<String> {
-    // Match href="https://..." or bare https:// URLs in text
+/// Extract the first https URL from HTML content, skipping URLs inside href/src attributes.
+pub fn extract_first_url(html: &str) -> Option<&str> {
+    // Negative lookbehind via manual scan: skip matches preceded by href=" or src="
     static URL_RE: std::sync::LazyLock<regex::Regex> =
         std::sync::LazyLock::new(|| regex::Regex::new(r#"https://[^\s"'<>\])]+"#).unwrap());
-    URL_RE.find(html).map(|m| m.as_str().to_string())
+    for m in URL_RE.find_iter(html) {
+        let start = m.start();
+        // Check if preceded by href=" or src=" (6 chars max lookbehind)
+        let prefix = &html[..start];
+        if prefix.ends_with(r#"href=""#) || prefix.ends_with(r#"src=""#) {
+            continue;
+        }
+        return Some(m.as_str());
+    }
+    None
 }
 
 /// Parse OG/Twitter meta tags from HTML bytes (only scans first 100KB).
@@ -118,12 +127,36 @@ fn title_re() -> &'static regex::Regex {
 }
 
 fn html_decode(s: &str) -> String {
-    s.replace("&amp;", "&")
-        .replace("&lt;", "<")
-        .replace("&gt;", ">")
-        .replace("&quot;", "\"")
-        .replace("&#39;", "'")
-        .replace("&#x27;", "'")
+    let mut out = String::with_capacity(s.len());
+    let mut rest = s;
+    while let Some(amp) = rest.find('&') {
+        out.push_str(&rest[..amp]);
+        rest = &rest[amp..];
+        let (replacement, consumed) = if rest.starts_with("&amp;") {
+            ("&", 5)
+        } else if rest.starts_with("&lt;") {
+            ("<", 4)
+        } else if rest.starts_with("&gt;") {
+            (">", 4)
+        } else if rest.starts_with("&quot;") {
+            ("\"", 6)
+        } else if rest.starts_with("&#39;") {
+            ("'", 5)
+        } else if rest.starts_with("&#x27;") {
+            ("'", 6)
+        } else {
+            ("", 0)
+        };
+        if consumed > 0 {
+            out.push_str(replacement);
+            rest = &rest[consumed..];
+        } else {
+            out.push('&');
+            rest = &rest[1..];
+        }
+    }
+    out.push_str(rest);
+    out
 }
 
 /// Fetch OG metadata for a URL and store the card in the database.
@@ -194,7 +227,7 @@ pub async fn fetch_and_store(
     .bind(url)
     .bind(&title)
     .bind(&description)
-    .bind(&meta.image_url)
+    .bind(if meta.image_url.starts_with("https://") { &meta.image_url } else { "" })
     .bind(&image_path)
     .bind(&site_name)
     .bind(&meta.card_type)
@@ -238,8 +271,13 @@ async fn fetch_card_image(
 
         let bytes = crate::http::read_body_limited(resp, 5 * 1024 * 1024).await?;
 
-        // Decode and resize to max 800x418 (standard OG image ratio)
-        let img = image::load_from_memory(&bytes).context("decoding card image")?;
+        // Decode with limits to prevent decompression bombs (64MB cap, matches process_image)
+        let mut reader =
+            image::ImageReader::new(std::io::Cursor::new(&bytes)).with_guessed_format()?;
+        let mut limits = image::Limits::default();
+        limits.max_alloc = Some(64 * 1024 * 1024);
+        reader.limits(limits);
+        let img = reader.decode().context("decoding card image")?;
         let resized = if img.width() > 800 || img.height() > 418 {
             img.resize(800, 418, image::imageops::FilterType::Lanczos3)
         } else {
@@ -317,7 +355,7 @@ pub fn spawn_fetch(
     domain: String,
 ) {
     let url = match extract_first_url(&content_html) {
-        Some(u) => u,
+        Some(u) => u.to_string(),
         None => return,
     };
 

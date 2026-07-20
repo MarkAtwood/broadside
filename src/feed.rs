@@ -61,7 +61,8 @@ pub async fn poll_feed(
         html.push_str(&sanitize::sanitize_html(&body_html));
 
         if let Some(ref url) = link {
-            // Use ammonia to produce a safe <a> tag (handles entity encoding)
+            // escape_html_attr produces a safe href; sanitize_html is defense-in-depth
+            // in case future changes alter the template structure.
             let escaped_url = crate::sanitize::escape_html_attr(url);
             let link_html = format!(r#"<p><a href="{escaped_url}">{escaped_url}</a></p>"#);
             html.push_str(&sanitize::sanitize_html(&link_html));
@@ -108,7 +109,7 @@ pub async fn poll_feed(
                         let mime = content
                             .content_type
                             .as_ref()
-                            .map(|m| m.essence().to_string())
+                            .map(|m| m.as_str())
                             .unwrap_or_default();
                         if mime.starts_with("image/")
                             || url_str.ends_with(".jpg")

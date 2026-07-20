@@ -58,6 +58,18 @@ pub fn process_content(html: &str, domain: &str) -> (String, Vec<Tag>) {
         idx > 0 && pos < skip_ranges[idx - 1].1
     };
 
+    // Collect bare URL spans so hashtags inside URLs (e.g. #fragment) are not linkified.
+    let url_spans: Vec<(usize, usize)> = URL_RE
+        .find_iter(html)
+        .filter(|m| !in_link(m.start()))
+        .map(|m| (m.start(), m.end()))
+        .collect();
+
+    let in_url = |pos: usize| -> bool {
+        let idx = url_spans.partition_point(|(start, _)| *start <= pos);
+        idx > 0 && pos < url_spans[idx - 1].1
+    };
+
     // Collect all replacements from the ORIGINAL html (positions are stable)
     let mut replacements: Vec<(usize, usize, String)> = Vec::new();
 
@@ -67,8 +79,9 @@ pub fn process_content(html: &str, domain: &str) -> (String, Vec<Tag>) {
             continue;
         }
         let url = m.as_str();
+        let escaped = crate::sanitize::escape_html_attr(url);
         let linked = format!(
-            r#"<a href="{url}" rel="nofollow noopener noreferrer" target="_blank">{url}</a>"#
+            r#"<a href="{escaped}" rel="nofollow noopener noreferrer" target="_blank">{escaped}</a>"#
         );
         replacements.push((m.start(), m.end(), linked));
     }
@@ -78,7 +91,7 @@ pub fn process_content(html: &str, domain: &str) -> (String, Vec<Tag>) {
         let name_match = cap.get(1).expect("hashtag capture group");
         // The # is one byte before the captured name
         let hash_pos = name_match.start() - 1;
-        if in_link(hash_pos) {
+        if in_link(hash_pos) || in_url(hash_pos) {
             continue;
         }
         let name = name_match.as_str();
@@ -87,11 +100,12 @@ pub fn process_content(html: &str, domain: &str) -> (String, Vec<Tag>) {
         let linked = format!(r#"<a href="{href}" class="mention hashtag" rel="tag">#{name}</a>"#);
         replacements.push((hash_pos, name_match.end(), linked));
 
-        if !tags.iter().any(|t: &Tag| t.name == format!("#{lower}")) {
+        let tag_name = format!("#{lower}");
+        if !tags.iter().any(|t: &Tag| t.name == tag_name) {
             tags.push(Tag {
                 tag_type: TagType::Hashtag,
                 href,
-                name: format!("#{lower}"),
+                name: tag_name,
             });
         }
     }
