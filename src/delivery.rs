@@ -56,33 +56,24 @@ impl CircuitBreaker {
 /// Stores a broadside-specific JSON stub `{"post_id":"..."}` in activity_json.
 /// The delivery worker expands this into a full Create activity at send time.
 pub async fn fan_out(pool: &SqlitePool, post_id: &str, persona_id: &str) -> anyhow::Result<u64> {
-    // Query follower inboxes via remote_accounts JOIN
-    let rows = sqlx::query_as::<_, (String, Option<String>)>(
-        "SELECT ra.inbox_url, ra.shared_inbox_url \
-         FROM followers f \
-         JOIN remote_accounts ra ON ra.id = f.remote_account_id \
-         WHERE f.persona_id = ?",
-    )
-    .bind(persona_id)
-    .fetch_all(pool)
-    .await
-    .context("querying followers for fan-out")?;
-
     let now = chrono::Utc::now().timestamp();
     let fwp = fw_pool(pool);
+
+    // Query follower inboxes (already deduplicated by shared_inbox preference)
+    let inboxes = fieldwork::followers_db::follower_inboxes(&fwp, persona_id)
+        .await
+        .context("querying followers for fan-out")?;
+
     // ponytail: store post_id in activity_json as a broadside-specific stub.
     // The delivery worker expands this into the full Create activity at send time
     // (needs domain which isn't available here).
     let stub = serde_json::json!({"post_id": post_id}).to_string();
 
-    // ponytail: .to_string() calls below allocate into HashSet<String> for dedup ownership;
-    // unavoidable since `target` is a borrow from the loop iteration.
     let mut seen = HashSet::new();
     let mut queued = 0u64;
 
-    for (inbox_url, shared_inbox_url) in &rows {
-        let target = shared_inbox_url.as_deref().unwrap_or(inbox_url.as_str());
-        if !seen.insert(target.to_string()) {
+    for target in &inboxes {
+        if !seen.insert(target.clone()) {
             continue;
         }
 

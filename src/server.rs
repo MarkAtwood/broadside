@@ -289,13 +289,11 @@ async fn webfinger(
         return (StatusCode::NOT_FOUND, "unknown domain").into_response();
     }
 
-    let exists = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM personas WHERE username = ?")
-        .bind(username)
-        .fetch_one(&state.pool)
-        .await;
+    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
+    let exists = fieldwork::persona_db::get_persona_by_username(&fwp, username).await;
 
     match exists {
-        Ok((0,)) | Err(_) => (StatusCode::NOT_FOUND, "unknown user").into_response(),
+        Ok(None) | Err(_) => (StatusCode::NOT_FOUND, "unknown user").into_response(),
         Ok(_) => {
             let resp = WebfingerResponse {
                 subject: query.resource.clone(),
@@ -635,12 +633,10 @@ async fn followers_collection(
         Err(_) => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
     };
 
-    let (count,) =
-        sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM followers WHERE persona_id = ?")
-            .bind(&persona_id)
-            .fetch_one(&state.pool)
-            .await
-            .unwrap_or((0,));
+    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
+    let count = fieldwork::followers_db::follower_count(&fwp, &persona_id)
+        .await
+        .unwrap_or(0);
 
     let doc = serde_json::json!({
         "@context": "https://www.w3.org/ns/activitystreams",
@@ -1124,16 +1120,9 @@ async fn handle_inbox(
             };
 
             // Insert follower row
-            if let Err(e) = sqlx::query(
-                "INSERT OR IGNORE INTO followers \
-                 (persona_id, user_id, remote_account_id, accepted_at) \
-                 VALUES (?, ?, ?, ?)",
+            if let Err(e) = fieldwork::followers_db::add_follower(
+                &fwp, &persona_id, &user_id, remote_account_id, now,
             )
-            .bind(&persona_id)
-            .bind(&user_id)
-            .bind(remote_account_id)
-            .bind(now)
-            .execute(&state.pool)
             .await
             {
                 tracing::error!(error = %e, follower = follower_actor, "failed to insert follower");
@@ -1240,25 +1229,30 @@ async fn handle_inbox(
                 };
 
                 if let Some(pid) = target_persona_id {
-                    match sqlx::query(
-                        "DELETE FROM followers WHERE persona_id = ? AND remote_account_id IN \
-                         (SELECT id FROM remote_accounts WHERE actor_uri = ?)",
-                    )
-                    .bind(&pid)
-                    .bind(&actor_uri)
-                    .execute(&state.pool)
-                    .await
-                    {
-                        Ok(r) => {
-                            if r.rows_affected() > 0 {
-                                tracing::info!(
-                                    follower = %actor_uri,
-                                    "removed follower (Undo Follow)"
-                                );
+                    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
+                    match fieldwork::actor_cache::get_by_actor_uri(&fwp, &actor_uri).await {
+                        Ok(Some(remote_acct)) => {
+                            match fieldwork::followers_db::remove_follower(
+                                &fwp, &pid, remote_acct.id,
+                            )
+                            .await
+                            {
+                                Ok(()) => {
+                                    tracing::info!(
+                                        follower = %actor_uri,
+                                        "removed follower (Undo Follow)"
+                                    );
+                                }
+                                Err(e) => {
+                                    tracing::error!(error = %e, follower = %actor_uri, "failed to remove follower")
+                                }
                             }
                         }
+                        Ok(None) => {
+                            tracing::debug!(follower = %actor_uri, "Undo Follow for unknown remote account");
+                        }
                         Err(e) => {
-                            tracing::error!(error = %e, follower = %actor_uri, "failed to remove follower")
+                            tracing::error!(error = %e, follower = %actor_uri, "failed to look up remote account for Undo Follow")
                         }
                     }
                 }
@@ -1298,16 +1292,15 @@ async fn health(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
 // --- Index ---
 
 async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
-    let rows = sqlx::query_as::<_, (String, String)>(
-        "SELECT username, display_name FROM personas ORDER BY username",
-    )
-    .fetch_all(&state.pool)
-    .await
-    .unwrap_or_default();
+    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
+    let rows = fieldwork::persona_db::list_personas(&fwp)
+        .await
+        .unwrap_or_default();
 
     let domain_escaped = ammonia::clean(&state.domain);
     let mut personas_html = String::new();
-    for (username, display_name) in &rows {
+    for row in &rows {
+        let (username, display_name) = (&row.username, &row.display_name);
         let _ = write!(
             personas_html,
             r#"<li><a href="/users/{u}"><strong>{dn}</strong> <span>@{u}@{domain}</span></a></li>"#,
@@ -1367,26 +1360,20 @@ async fn index(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 // Acceptable for a low-traffic profile page. Ceiling: combine into a single query with
 // COUNT() subqueries if profiling shows this as a bottleneck.
 async fn serve_profile_html(state: &AppState, username: &str) -> axum::response::Response {
-    let row = sqlx::query_as::<_, (String, String, i64, String)>(
-        "SELECT display_name, bio, created_at, fields_json FROM personas WHERE username = ?",
-    )
-    .bind(username)
-    .fetch_optional(&state.pool)
-    .await;
-
-    let (display_name, bio, created_at_epoch, metadata_json) = match row {
+    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
+    let persona_row = match fieldwork::persona_db::get_persona_by_username(&fwp, username).await {
         Ok(Some(r)) => r,
         _ => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
     };
+    let persona_id = persona_row.id;
+    let display_name = persona_row.display_name;
+    let bio = persona_row.bio;
+    let created_at_epoch = persona_row.created_at;
+    let metadata_json = persona_row.fields_json;
 
     let created_at = chrono::DateTime::from_timestamp(created_at_epoch, 0)
         .map(|dt| dt.format("%Y-%m-%d").to_string())
         .unwrap_or_else(|| format!("{created_at_epoch}"));
-
-    let persona_id = match crate::persona::get_id(&state.pool, username).await {
-        Ok(id) => id,
-        Err(_) => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
-    };
 
     let posts = crate::post::list_for_persona(&state.pool, &persona_id, 20, 0)
         .await
@@ -1450,13 +1437,9 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
         format!("<div class=\"bio\">{}</div>", ammonia::clean(&bio))
     };
 
-    let follower_count =
-        sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM followers WHERE persona_id = ?")
-            .bind(&persona_id)
-            .fetch_one(&state.pool)
-            .await
-            .map(|(c,)| c)
-            .unwrap_or(0);
+    let follower_count = fieldwork::followers_db::follower_count(&fwp, &persona_id)
+        .await
+        .unwrap_or(0);
 
     let post_count = crate::post::count_for_persona(&state.pool, &persona_id)
         .await

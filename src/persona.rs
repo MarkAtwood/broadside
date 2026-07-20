@@ -153,32 +153,30 @@ pub async fn update(
 
 /// Look up a persona's private key PEM by username.
 pub async fn get_private_key(pool: &SqlitePool, username: &str) -> anyhow::Result<String> {
-    let (key,) =
-        sqlx::query_as::<_, (String,)>("SELECT private_key_pem FROM personas WHERE username = ?")
-            .bind(username)
-            .fetch_one(pool)
-            .await
-            .with_context(|| format!("persona @{username} not found"))?;
-    Ok(key)
+    let fwp = fieldwork::db::Pool::Sqlite(pool.clone());
+    let row = fieldwork::persona_db::get_persona_by_username(&fwp, username)
+        .await
+        .with_context(|| format!("persona @{username} not found"))?
+        .with_context(|| format!("persona @{username} not found"))?;
+    Ok(row.private_key_pem)
 }
 
 /// Look up a persona's public key PEM by username.
 pub async fn get_public_key(pool: &SqlitePool, username: &str) -> anyhow::Result<String> {
-    let (key,) =
-        sqlx::query_as::<_, (String,)>("SELECT public_key_pem FROM personas WHERE username = ?")
-            .bind(username)
-            .fetch_one(pool)
-            .await
-            .with_context(|| format!("persona @{username} not found"))?;
-    Ok(key)
+    let fwp = fieldwork::db::Pool::Sqlite(pool.clone());
+    let row = fieldwork::persona_db::get_persona_by_username(&fwp, username)
+        .await
+        .with_context(|| format!("persona @{username} not found"))?
+        .with_context(|| format!("persona @{username} not found"))?;
+    Ok(row.public_key_pem)
 }
 
 /// Look up a persona's ID by username.
 pub async fn get_id(pool: &SqlitePool, username: &str) -> anyhow::Result<String> {
-    let (id,) = sqlx::query_as::<_, (String,)>("SELECT id FROM personas WHERE username = ?")
-        .bind(username)
-        .fetch_one(pool)
+    let fwp = fieldwork::db::Pool::Sqlite(pool.clone());
+    let row = fieldwork::persona_db::get_persona_by_username(&fwp, username)
         .await
+        .with_context(|| format!("persona @{username} not found"))?
         .with_context(|| format!("persona @{username} not found"))?;
-    Ok(id)
+    Ok(row.id)
 }
