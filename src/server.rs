@@ -110,10 +110,12 @@ pub async fn serve(config: &Config) -> anyhow::Result<()> {
         .map(|w| (w.persona.clone(), w.key.clone()))
         .collect();
 
-    // Disable automatic redirect following for outbound requests (SSRF defense)
+    // SSRF defense: custom resolver blocks private IPs at connect time (no DNS rebinding),
+    // redirect following disabled to prevent redirect-based SSRF.
     let http_client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
         .redirect(reqwest::redirect::Policy::none())
+        .dns_resolver(Arc::new(SsrfSafeResolver))
         .build()?;
 
     // 60 requests per minute per IP on inbox endpoints
@@ -1345,7 +1347,7 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
 }
 
 /// Check if an IP address is private/loopback/link-local.
-fn is_private_ip(ip: std::net::IpAddr) -> bool {
+pub(crate) fn is_private_ip(ip: std::net::IpAddr) -> bool {
     use std::net::IpAddr;
     match ip {
         IpAddr::V4(v4) => {
@@ -1377,10 +1379,8 @@ pub fn is_private_host(host: &str) -> bool {
 
 /// Check if a hostname resolves to private/internal addresses via DNS.
 /// Fails closed: returns true (blocked) if DNS resolution fails.
-// ponytail: TOCTOU — DNS is resolved here but reqwest re-resolves independently on connect.
-// A DNS rebinding attack can bypass this check. Proper fix requires a custom reqwest
-// connector that pins resolved IPs, which reqwest doesn't support without replacing the
-// DNS resolver. This advisory check catches casual SSRF; accepted risk for now.
+// ponytail: This is an early-reject optimization. The actual SSRF defense is
+// SsrfSafeResolver on the reqwest client, which blocks private IPs at connect time.
 pub async fn is_private_host_resolved(host: &str) -> bool {
     if is_private_host(host) {
         return true;
@@ -1388,6 +1388,31 @@ pub async fn is_private_host_resolved(host: &str) -> bool {
     match tokio::net::lookup_host(format!("{host}:443")).await {
         Ok(mut addrs) => addrs.any(|addr| is_private_ip(addr.ip())),
         Err(_) => true,
+    }
+}
+
+/// Custom DNS resolver that blocks private/internal IPs at connect time.
+/// Eliminates DNS rebinding TOCTOU: reqwest uses this resolver for the actual connection,
+/// so there is no gap between the safety check and the TCP handshake.
+pub struct SsrfSafeResolver;
+
+impl reqwest::dns::Resolve for SsrfSafeResolver {
+    fn resolve(&self, name: reqwest::dns::Name) -> reqwest::dns::Resolving {
+        let host = name.as_str().to_string();
+        Box::pin(async move {
+            if is_private_host(&host) {
+                return Err(format!("blocked: {host} is a private hostname").into());
+            }
+            let addrs: Vec<std::net::SocketAddr> = tokio::net::lookup_host(format!("{host}:0"))
+                .await
+                .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> { Box::new(e) })?
+                .filter(|addr| !is_private_ip(addr.ip()))
+                .collect();
+            if addrs.is_empty() {
+                return Err(format!("blocked: {host} resolves only to private IPs").into());
+            }
+            Ok(Box::new(addrs.into_iter()) as reqwest::dns::Addrs)
+        })
     }
 }
 
