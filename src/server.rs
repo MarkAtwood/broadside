@@ -48,6 +48,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/users/{username}/outbox", get(outbox))
         .route("/users/{username}/followers", get(followers_collection))
         .route("/users/{username}/following", get(following_collection))
+        .route("/users/{username}/did.json", get(did_document))
         .route("/users/{username}/inbox", post(inbox))
         .route("/inbox", post(shared_inbox))
         .route("/hook/{persona}", post(crate::webhook::handle_webhook))
@@ -382,8 +383,8 @@ async fn actor(
     if wants_html {
         return serve_profile_html(&state, &username).await;
     }
-    let row = sqlx::query_as::<_, (String, String, String, String, String, Option<String>, Option<String>, String, String)>(
-        "SELECT id, username, display_name, bio, public_key, avatar_path, header_path, created_at, metadata \
+    let row = sqlx::query_as::<_, (String, String, String, String, String, Option<String>, Option<String>, String, String, Option<String>)>(
+        "SELECT id, username, display_name, bio, public_key, avatar_path, header_path, created_at, metadata, did_key \
          FROM personas WHERE username = ?",
     )
     .bind(&username)
@@ -400,6 +401,7 @@ async fn actor(
         header_path,
         created_at,
         metadata_json,
+        did_key,
     ) = match row {
         Ok(Some(r)) => r,
         _ => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
@@ -434,6 +436,14 @@ async fn actor(
             "publicKeyPem": public_key
         }
     });
+
+    // alsoKnownAs: did:web (always), did:key (if stored)
+    let did_web = crate::did::did_web(&state.domain, &username);
+    let mut aka = vec![serde_json::Value::String(did_web)];
+    if let Some(ref dk) = did_key {
+        aka.push(serde_json::Value::String(dk.clone()));
+    }
+    doc["alsoKnownAs"] = serde_json::Value::Array(aka);
 
     if let Some(ref avatar) = avatar_path {
         doc["icon"] = serde_json::json!({
@@ -658,6 +668,54 @@ async fn following_collection(
                 "application/activity+json",
             ),
             (axum::http::header::CACHE_CONTROL, "public, max-age=3600"),
+        ],
+        Json(doc),
+    )
+        .into_response()
+}
+
+// --- DID Document ---
+
+async fn did_document(
+    State(state): State<Arc<AppState>>,
+    Path(username): Path<String>,
+) -> impl IntoResponse {
+    let row = sqlx::query_as::<_, (String, Option<String>, Option<String>)>(
+        "SELECT public_key, did_key, recovery_pubkey FROM personas WHERE username = ?",
+    )
+    .bind(&username)
+    .fetch_optional(&state.pool)
+    .await;
+
+    let (public_key, did_key, recovery_pubkey_hex) = match row {
+        Ok(Some(r)) => r,
+        _ => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
+    };
+
+    let recovery_pubkey = recovery_pubkey_hex
+        .as_deref()
+        .and_then(|hex| crate::did::hex_decode(hex).ok())
+        .and_then(|bytes| <[u8; 32]>::try_from(bytes).ok());
+
+    let mut aka: Vec<String> = Vec::new();
+    if let Some(ref dk) = did_key {
+        aka.push(dk.clone());
+    }
+    aka.push(format!("https://{}/users/{}", state.domain, username));
+
+    let doc = crate::did::did_web_document(
+        &state.domain,
+        &username,
+        &public_key,
+        recovery_pubkey.as_ref(),
+        &aka,
+    );
+
+    (
+        StatusCode::OK,
+        [
+            (axum::http::header::CONTENT_TYPE, "application/did+json"),
+            (axum::http::header::CACHE_CONTROL, "public, max-age=300"),
         ],
         Json(doc),
     )
