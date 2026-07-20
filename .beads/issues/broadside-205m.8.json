@@ -17,6 +17,14 @@
       "created_at": "2026-07-19T04:10:36.364410596Z",
       "created_by": "Mark Atwood",
       "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-205m.8",
+      "depends_on_id": "broadside-205m.7",
+      "type": "blocks",
+      "created_at": "2026-07-20T01:35:03.772991613Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
     }
   ]
 }

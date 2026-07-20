@@ -17,6 +17,30 @@
       "created_at": "2026-07-19T03:55:56.005007404Z",
       "created_by": "Mark Atwood",
       "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-205m.5",
+      "depends_on_id": "broadside-205m.3",
+      "type": "blocks",
+      "created_at": "2026-07-20T01:35:03.488049416Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-205m.5",
+      "depends_on_id": "broadside-205m.4",
+      "type": "blocks",
+      "created_at": "2026-07-20T01:35:03.559280355Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-205m.5",
+      "depends_on_id": "broadside-205m.7",
+      "type": "blocks",
+      "created_at": "2026-07-20T01:35:03.631884714Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
     }
   ]
 }

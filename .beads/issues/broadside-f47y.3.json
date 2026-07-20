@@ -1,0 +1,30 @@
+{
+  "id": "broadside-f47y.3",
+  "title": "DB migration: add did_key, recovery_pubkey to personas",
+  "description": "Add did_key (TEXT) and recovery_pubkey (TEXT, hex-encoded Ed25519 public key) columns to personas table. Use ALTER TABLE ADD COLUMN with IF NOT EXISTS or equivalent safe migration pattern (matching smallhold db.rs lines 67-94). Both columns nullable for backward compat with existing personas.",
+  "status": "open",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:33:09.442750872Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T01:33:09.442750872Z",
+  "dependencies": [
+    {
+      "issue_id": "broadside-f47y.3",
+      "depends_on_id": "broadside-f47y",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:33:09.465083642Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-f47y.3",
+      "depends_on_id": "broadside-f47y.2",
+      "type": "blocks",
+      "created_at": "2026-07-20T01:33:29.098655157Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "broadside-f47y.8",
+  "title": "CLI: did recover lookup",
+  "description": "Add 'broadside did recover' command that accepts BIP-39 mnemonic (stdin or --mnemonic), derives did:key, looks up persona by did_key column. Outputs persona details if found. Match smallhold cli.rs did recover (lines 1012-1049). Useful for verifying recovery phrase or identifying a persona from backup.",
+  "status": "open",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:33:22.43140725Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T01:33:22.43140725Z",
+  "dependencies": [
+    {
+      "issue_id": "broadside-f47y.8",
+      "depends_on_id": "broadside-f47y",
+      "type": "parent-child",
+      "created_at": "2026-07-20T01:33:22.451460675Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-f47y.8",
+      "depends_on_id": "broadside-f47y.4",
+      "type": "blocks",
+      "created_at": "2026-07-20T01:33:29.524020858Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

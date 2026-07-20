@@ -1,0 +1,24 @@
+{
+  "id": "broadside-f47y",
+  "title": "DID support (did:web + did:key) for persona identity",
+  "description": "Add decentralized identifier support to broadside personas, compatible with gaja and smallhold implementations. Each persona gets an Ed25519 recovery keypair encoded as did:key (multicodec 0xed01 + base58btc, z6Mk... prefix) and a did:web derived from domain. DID documents served at /users/{username}/did.json per W3C DID v1. Actor documents include alsoKnownAs with both DIDs. BIP-39 24-word mnemonic for recovery phrase.",
+  "design": "Compatible with gaja did.rs and smallhold did.rs: same did:key encoding (ed25519 multicodec + base58btc), same did:web format (did:web:{domain}:users:{username}), same DID document structure (W3C DID v1 context, RsaVerificationKey2018 + Ed25519VerificationKey2020 verification methods), same BIP-39 mnemonic format. No did:plc (AT Protocol specific to gaja). Recovery is per-persona since broadside has no user accounts.",
+  "status": "closed",
+  "priority": 2,
+  "issue_type": "feature",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-07-20T01:32:57.367156863Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T01:34:10.229864432Z",
+  "closed_at": "2026-07-20T01:34:10.229864106Z",
+  "dependencies": [
+    {
+      "issue_id": "broadside-f47y",
+      "depends_on_id": "broadside-205m",
+      "type": "supersedes",
+      "created_at": "2026-07-20T01:34:10.224071295Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    }
+  ]
+}

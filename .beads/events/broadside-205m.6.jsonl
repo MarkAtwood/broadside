@@ -1,1 +1,2 @@
 {"id":"019f7886-75fd-7b5a-b401-be733de4a443","issue_id":"broadside-205m.6","event_type":"created","actor":"Mark Atwood","old_value":"","new_value":"","created_at":"2026-07-19T03:58:25.789744621Z"}
+{"id":"019f7d29-21dc-77fe-ad2f-3f211d0897c5","issue_id":"broadside-205m.6","event_type":"closed","actor":"Mark Atwood","old_value":"","new_value":"did:plc is AT Protocol specific (gaja only). Broadside doesn't need plc.directory registration. Smallhold also skips did:plc.","created_at":"2026-07-20T01:34:35.484525247Z"}

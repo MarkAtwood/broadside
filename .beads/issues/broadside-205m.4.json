@@ -17,6 +17,22 @@
       "created_at": "2026-07-19T03:55:43.826177048Z",
       "created_by": "Mark Atwood",
       "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-205m.4",
+      "depends_on_id": "broadside-205m.1",
+      "type": "blocks",
+      "created_at": "2026-07-20T01:35:03.213518745Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "broadside-205m.4",
+      "depends_on_id": "broadside-205m.9",
+      "type": "blocks",
+      "created_at": "2026-07-20T01:35:03.277805275Z",
+      "created_by": "Mark Atwood",
+      "metadata": "{}"
     }
   ]
 }
