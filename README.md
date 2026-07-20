@@ -188,6 +188,20 @@ volumes:
 
 Broadside uses SQLite for storage. PostgreSQL support is planned for environments that require managed databases (e.g., RDS/Aurora).
 
+### Reverse proxy requirement
+
+Broadside **must** run behind a reverse proxy. It does not perform TLS termination, rate limiting on public endpoints, or browser security header management itself — these are delegated to the infrastructure layer.
+
+| Concern | Why it's a proxy responsibility |
+|---|---|
+| **TLS termination** | Let's Encrypt integration, certificate rotation, and OCSP stapling are solved problems in Caddy/nginx. Embedding TLS adds attack surface for no gain. |
+| **Rate limiting** (webhook, inbox) | In-memory counters don't survive restarts and are trivially bypassed by rotating IPs. Proxy-level limiting (`rate_limit` in Caddy, `limit_req_zone` in nginx) covers all endpoints and persists across process restarts. |
+| **HSTS** (`Strict-Transport-Security`) | The proxy owns TLS, so it sets HSTS. Caddy does this automatically. |
+| **Permissions-Policy** | Browser feature restrictions (camera, microphone, geolocation) are best set once at the proxy for all backends. |
+| **Request size limits** | Reject oversized bodies before they reach the application. Broadside sets a 256 KB body limit internally as defense-in-depth, but the proxy should enforce its own limit. |
+
+Broadside sets its own `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Content-Security-Policy` headers because these are application-specific. The proxy handles infrastructure-level headers.
+
 ### CDN / Caching
 
 Broadside sets per-endpoint `Cache-Control` headers so a CDN or caching reverse proxy works out of the box:
@@ -200,9 +214,73 @@ Content-negotiated endpoints (actor serves JSON-LD or HTML based on `Accept`) in
 
 ### Caddy example
 
+Caddy handles TLS and HSTS automatically. Add rate limiting for the webhook and inbox endpoints:
+
 ```
 corp.example {
+    # Rate limit webhook endpoint: 10 requests/minute per IP
+    @webhook path /hook/*
+    rate_limit @webhook {
+        zone webhook {
+            key {remote_host}
+            events 10
+            window 1m
+        }
+    }
+
+    # Rate limit inbox endpoints: 60 requests/minute per IP
+    @inbox path /inbox /users/*/inbox
+    rate_limit @inbox {
+        zone inbox {
+            key {remote_host}
+            events 60
+            window 1m
+        }
+    }
+
+    header {
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    }
+
     reverse_proxy 127.0.0.1:3000
+}
+```
+
+### nginx example
+
+```nginx
+limit_req_zone $binary_remote_addr zone=webhook:10m rate=10r/m;
+limit_req_zone $binary_remote_addr zone=inbox:10m rate=60r/m;
+
+server {
+    listen 443 ssl;
+    server_name corp.example;
+
+    ssl_certificate     /etc/letsencrypt/live/corp.example/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/corp.example/privkey.pem;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+
+    location /hook/ {
+        limit_req zone=webhook burst=5 nodelay;
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header Host $host;
+    }
+
+    location ~ ^/(inbox|users/.*/inbox)$ {
+        limit_req zone=inbox burst=20 nodelay;
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header Host $host;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header Host $host;
+    }
 }
 ```
 
@@ -251,7 +329,7 @@ Broadside's attack surface is deliberately minimal:
 - **SSRF protection**: all outbound fetches require HTTPS, block private/link-local/metadata IPs, no HTTP redirect following
 - **Media**: MIME sniffing (not extension trust), 10 MB limit, 64 MB decoded pixel cap (decompression bomb protection), EXIF stripping
 - **Content**: HTML sanitized via ammonia (Mastodon-compatible allowlist)
-- **Rate limiting**: per-IP token bucket on inbox endpoints
+- **Rate limiting**: per-IP token bucket on inbox endpoints (webhook/inbox rate limiting delegated to reverse proxy)
 - **Graceful shutdown**: SIGTERM/SIGINT handled cleanly
 
 There is no OAuth, no client API, no admin UI, no login form, no session management.

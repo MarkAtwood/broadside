@@ -392,6 +392,8 @@ Webhook keys are transmitted via `Authorization: Bearer` header (not query strin
 
 Per-IP token bucket on inbox endpoints (60 requests/minute). Keys on `X-Real-IP` header (must be set by reverse proxy). Stale buckets pruned every 10 minutes.
 
+Webhook endpoint rate limiting and HSTS/Permissions-Policy headers are delegated to the reverse proxy — see README "Reverse proxy requirement" section for rationale and example configurations.
+
 ### Operational
 
 The server warns at startup if `broadside.db` or `config.toml` are world-readable. Signing error messages are sanitized before storage in the delivery queue to prevent key material leakage.
