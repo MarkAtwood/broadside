@@ -10,7 +10,6 @@ description = "One-way ActivityPub server for organizations"
 ammonia = "4"
 anyhow = "1"
 axum = { version = "0.8", features = ["tokio"] }
-base64 = "0.22"
 bip39 = "2"
 chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
 clap = { version = "4", features = ["derive", "env"] }
@@ -20,7 +19,6 @@ feed-rs = "2"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
 multibase = "0.9"
 notify = "7"
-pulldown-cmark = { version = "0.12", default-features = false, features = ["html"] }
 rand = "0.8"
 regex = "1"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
@@ -33,10 +31,14 @@ sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
 tokio = { version = "1", features = ["full"] }
 toml = "0.8"
 url = "2"
-whatlang = "0.16"
 zeroize = "1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Shared fediverse building blocks (path dep for local dev; use git dep for CI)
+fieldwork = { path = "../fedistract/fieldwork", features = ["sanitize", "content", "inbox", "theme", "nodeinfo", "webfinger"] }
+cavage-httpsig = { path = "../fedistract/cavage-httpsig" }
+ssrf-guard = { path = "../fedistract/ssrf-guard", features = ["reqwest"] }
 
 [dev-dependencies]
 tempfile = "3"

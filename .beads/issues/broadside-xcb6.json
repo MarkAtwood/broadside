@@ -1,0 +1,12 @@
+{
+  "id": "broadside-xcb6",
+  "title": "Migrate to fieldwork::theme",
+  "description": "Replace broadside's inline theme.rs with fieldwork::theme module.\n\nChanges:\n- Replace crate::theme::load_theme_css() with fieldwork::theme::load_theme_css()\n- Replace inline BASE_CSS constant in server.rs with fieldwork::theme::BASE_CSS\n- Replace inline \u003c/style\u003e stripping in server.rs with fieldwork::theme::load_extra_css() which handles theme tokens + custom CSS + sanitization in one call\n- Delete broadside/src/theme.rs (now provided by fieldwork)\n- Update config to pass theme_tokens_path and custom_css_path to fieldwork::theme::load_extra_css()\n\nThe CSS value validation (is_safe_css_value) from broadside's pentest has been merged into fieldwork::theme.",
+  "status": "open",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@wolfssl.com",
+  "created_at": "2026-07-20T02:44:37.730385624Z",
+  "created_by": "Mark Atwood",
+  "updated_at": "2026-07-20T02:44:37.730385624Z"
+}

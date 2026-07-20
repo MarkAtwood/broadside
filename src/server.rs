@@ -880,7 +880,6 @@ async fn handle_inbox(
     // Verify Digest header — REQUIRED.
     // The Digest header cryptographically binds the body to the signature
     // (when 'digest' is in the signed headers). Without it, body substitution is trivial.
-    // r9da.29: .to_string() required — digest_header must outlive the header borrow.
     let digest_header = match headers.get("digest").and_then(|v| v.to_str().ok()) {
         Some(d) => d.to_string(),
         None => {
@@ -888,21 +887,8 @@ async fn handle_inbox(
             return StatusCode::BAD_REQUEST;
         }
     };
-    if let Some(expected_b64) = digest_header.strip_prefix("SHA-256=") {
-        use base64::engine::general_purpose::STANDARD as B64;
-        use base64::Engine;
-        use sha2::Digest;
-        use subtle::ConstantTimeEq;
-        let actual = sha2::Sha256::digest(body.as_bytes());
-        let expected = match B64.decode(expected_b64) {
-            Ok(v) => v,
-            Err(_) => return StatusCode::BAD_REQUEST,
-        };
-        if actual.ct_eq(&expected).unwrap_u8() != 1 {
-            tracing::warn!("Digest mismatch");
-            return StatusCode::BAD_REQUEST;
-        }
-    } else {
+    if fieldwork::inbox::verify_digest(body.as_bytes(), &digest_header).is_err() {
+        tracing::warn!("Digest mismatch or invalid");
         return StatusCode::BAD_REQUEST;
     }
 
@@ -1475,75 +1461,12 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
         .into_response()
 }
 
-/// Check if an IP address is private/loopback/link-local.
-pub(crate) fn is_private_ip(ip: std::net::IpAddr) -> bool {
-    use std::net::IpAddr;
-    match ip {
-        IpAddr::V4(v4) => {
-            v4.is_loopback()
-                || v4.is_private()
-                || v4.is_link_local()
-                || v4.is_broadcast()
-                || v4.is_unspecified()
-        }
-        IpAddr::V6(v6) => {
-            v6.is_loopback()
-                || v6.is_unspecified()
-                || (v6.segments()[0] & 0xfe00) == 0xfc00
-                || (v6.segments()[0] & 0xffc0) == 0xfe80
-                || v6
-                    .to_ipv4_mapped()
-                    .is_some_and(|v4| v4.is_loopback() || v4.is_private() || v4.is_link_local())
-        }
-    }
-}
-
-/// Check if a hostname string is a known private/loopback name or IP literal.
-pub fn is_private_host(host: &str) -> bool {
-    if let Ok(ip) = host.parse::<std::net::IpAddr>() {
-        return is_private_ip(ip);
-    }
-    host == "localhost" || host.ends_with(".local") || host.ends_with(".internal")
-}
-
-/// Check if a hostname resolves to private/internal addresses via DNS.
-/// Fails closed: returns true (blocked) if DNS resolution fails.
-// ponytail: This is an early-reject optimization. The actual SSRF defense is
-// SsrfSafeResolver on the reqwest client, which blocks private IPs at connect time.
-pub async fn is_private_host_resolved(host: &str) -> bool {
-    if is_private_host(host) {
-        return true;
-    }
-    match tokio::net::lookup_host(format!("{host}:443")).await {
-        Ok(mut addrs) => addrs.any(|addr| is_private_ip(addr.ip())),
-        Err(_) => true,
-    }
-}
-
-/// Custom DNS resolver that blocks private/internal IPs at connect time.
-/// Eliminates DNS rebinding TOCTOU: reqwest uses this resolver for the actual connection,
-/// so there is no gap between the safety check and the TCP handshake.
-pub struct SsrfSafeResolver;
-
-impl reqwest::dns::Resolve for SsrfSafeResolver {
-    fn resolve(&self, name: reqwest::dns::Name) -> reqwest::dns::Resolving {
-        let host = name.as_str().to_string();
-        Box::pin(async move {
-            if is_private_host(&host) {
-                return Err(format!("blocked: {host} is a private hostname").into());
-            }
-            let addrs: Vec<std::net::SocketAddr> = tokio::net::lookup_host(format!("{host}:0"))
-                .await
-                .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> { Box::new(e) })?
-                .filter(|addr| !is_private_ip(addr.ip()))
-                .collect();
-            if addrs.is_empty() {
-                return Err(format!("blocked: {host} resolves only to private IPs").into());
-            }
-            Ok(Box::new(addrs.into_iter()) as reqwest::dns::Addrs)
-        })
-    }
-}
+// SSRF protection: re-exported from ssrf-guard crate. The inline implementation
+// was moved there to share across fediverse server projects.
+pub use ssrf_guard::is_private_host;
+pub use ssrf_guard::is_private_ip;
+pub use ssrf_guard::is_private_host_resolved;
+pub use ssrf_guard::SsrfSafeResolver;
 
 /// Validate that a persona username contains only safe characters for ActivityPub URIs.
 pub fn is_valid_username(username: &str) -> bool {
