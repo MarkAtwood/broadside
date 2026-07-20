@@ -3,7 +3,10 @@ use image::DynamicImage;
 use sqlx::SqlitePool;
 use std::path::Path;
 
-use crate::id::gen_int_id;
+/// Wrap a raw SqlitePool in fieldwork's Pool enum for shared module calls.
+fn fw_pool(pool: &SqlitePool) -> fieldwork::db::Pool {
+    fieldwork::db::Pool::Sqlite(pool.clone())
+}
 
 const MAX_FILE_SIZE: u64 = 10 * 1024 * 1024; // 10 MB
 const MAX_DIMENSION: u32 = 4096;
@@ -93,7 +96,7 @@ async fn store_processed_image(
     img.write_to(&mut cursor, image::ImageFormat::Png)
         .context("encoding processed image")?;
 
-    let media_id = gen_int_id();
+    let media_id = fieldwork::id::generate_id();
     let dest_filename = format!("{media_id}.png");
     let media_dir = data_dir.join("media");
     tokio::fs::create_dir_all(&media_dir).await?;
@@ -106,7 +109,7 @@ async fn store_processed_image(
     let now = chrono::Utc::now().timestamp();
     let user_id = crate::persona::get_operator_user_id(pool).await?;
 
-    // Look up persona_id from the post
+    // Look up persona_id from the post (broadside-specific join)
     let (persona_id,) = sqlx::query_as::<_, (String,)>(
         "SELECT persona_id FROM posts WHERE id = ?",
     )
@@ -115,24 +118,23 @@ async fn store_processed_image(
     .await
     .context("looking up persona for media")?;
 
-    sqlx::query(
-        "INSERT INTO media (id, user_id, persona_id, post_id, file_path, mime_type, file_size, description, blurhash, width, height, created_at) \
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    )
-    .bind(media_id)
-    .bind(&user_id)
-    .bind(&persona_id)
-    .bind(post_id)
-    .bind(&rel_path)
-    .bind("image/png") // actual stored format after re-encoding
-    .bind(file_size)
-    .bind(description)
-    .bind(&hash)
-    .bind(width as i64)
-    .bind(height as i64)
-    .bind(now)
-    .execute(pool)
-    .await?;
+    let post_id_int: Option<i64> = post_id.parse().ok();
+    let media_row = fieldwork::media_db::MediaRow {
+        id: media_id,
+        user_id,
+        persona_id,
+        post_id: post_id_int,
+        file_path: rel_path,
+        mime_type: "image/png".to_string(), // actual stored format after re-encoding
+        file_size,
+        width: Some(width as i32),
+        height: Some(height as i32),
+        blurhash: if hash.is_empty() { None } else { Some(hash) },
+        integrity: None,
+        description: description.to_string(),
+        created_at: now,
+    };
+    fieldwork::media_db::insert_media(&fw_pool(pool), &media_row).await?;
 
     Ok(media_id.to_string())
 }
@@ -143,44 +145,41 @@ pub async fn attachments_for_post(
     post_id: &str,
     domain: &str,
 ) -> Vec<serde_json::Value> {
-    let rows =
-        match sqlx::query_as::<_, (String, String, String, String, Option<i64>, Option<i64>)>(
-            "SELECT file_path, mime_type, description, COALESCE(blurhash, ''), width, height \
-         FROM media WHERE post_id = ? ORDER BY id",
-        )
-        .bind(post_id)
-        .fetch_all(pool)
-        .await
-        {
-            Ok(r) => r,
-            Err(e) => {
-                tracing::warn!(post_id, error = %e, "failed to fetch media attachments");
-                return Vec::new();
-            }
-        };
+    let post_id_int: i64 = match post_id.parse() {
+        Ok(id) => id,
+        Err(_) => return Vec::new(),
+    };
+
+    let rows = match fieldwork::media_db::attachments_for_post(&fw_pool(pool), post_id_int).await {
+        Ok(r) => r,
+        Err(e) => {
+            tracing::warn!(post_id, error = %e, "failed to fetch media attachments");
+            return Vec::new();
+        }
+    };
 
     rows.iter()
-        .map(
-            |(file_path, mime_type, description, blurhash, width, height)| {
-                let url = format!("https://{}/{}", domain, file_path);
-                let mut attachment = serde_json::json!({
-                    "type": "Document",
-                    "mediaType": mime_type,
-                    "url": url,
-                    "name": description,
-                });
-                if !blurhash.is_empty() {
-                    attachment["blurhash"] = serde_json::json!(blurhash);
+        .map(|m| {
+            let url = format!("https://{}/{}", domain, m.file_path);
+            let mut attachment = serde_json::json!({
+                "type": "Document",
+                "mediaType": m.mime_type,
+                "url": url,
+                "name": m.description,
+            });
+            if let Some(ref bh) = m.blurhash {
+                if !bh.is_empty() {
+                    attachment["blurhash"] = serde_json::json!(bh);
                 }
-                if let Some(w) = width {
-                    attachment["width"] = serde_json::json!(w);
-                }
-                if let Some(h) = height {
-                    attachment["height"] = serde_json::json!(h);
-                }
-                attachment
-            },
-        )
+            }
+            if let Some(w) = m.width {
+                attachment["width"] = serde_json::json!(w);
+            }
+            if let Some(h) = m.height {
+                attachment["height"] = serde_json::json!(h);
+            }
+            attachment
+        })
         .collect()
 }
 

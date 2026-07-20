@@ -5,18 +5,12 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
 
-use crate::id::gen_int_id;
 use crate::signatures;
 
-/// Retry delays by attempt number (0-indexed after the first immediate try).
-const RETRY_DELAYS: &[Duration] = &[
-    Duration::from_secs(60),    // attempt 2
-    Duration::from_secs(300),   // attempt 3
-    Duration::from_secs(1800),  // attempt 4
-    Duration::from_secs(7200),  // attempt 5
-    Duration::from_secs(28800), // attempt 6
-];
-const MAX_ATTEMPTS: i32 = 7;
+/// Wrap a raw SqlitePool in fieldwork's Pool enum for shared module calls.
+fn fw_pool(pool: &SqlitePool) -> fieldwork::db::Pool {
+    fieldwork::db::Pool::Sqlite(pool.clone())
+}
 
 /// Per-domain circuit breaker state.
 // ponytail: In-memory only — state is lost on restart. Acceptable for a single-process server:
@@ -75,6 +69,7 @@ pub async fn fan_out(pool: &SqlitePool, post_id: &str, persona_id: &str) -> anyh
     .context("querying followers for fan-out")?;
 
     let now = chrono::Utc::now().timestamp();
+    let fwp = fw_pool(pool);
     // ponytail: store post_id in activity_json as a broadside-specific stub.
     // The delivery worker expands this into the full Create activity at send time
     // (needs domain which isn't available here).
@@ -91,46 +86,20 @@ pub async fn fan_out(pool: &SqlitePool, post_id: &str, persona_id: &str) -> anyh
             continue;
         }
 
-        let id = gen_int_id();
-        sqlx::query(
-            "INSERT INTO delivery_queue (id, target_inbox, sender_persona_id, activity_json, next_attempt_at, created_at) \
-             VALUES (?, ?, ?, ?, ?, ?)",
-        )
-        .bind(id)
-        .bind(target)
-        .bind(persona_id)
-        .bind(&stub)
-        .bind(now)
-        .bind(now)
-        .execute(pool)
-        .await?;
+        fieldwork::delivery_db::enqueue(&fwp, target, persona_id, &stub, now).await?;
         queued += 1;
     }
 
-    // Also deliver to all active relay inboxes
-    let relays =
-        sqlx::query_as::<_, (String,)>("SELECT inbox_url FROM relays WHERE state = 'active'")
-            .fetch_all(pool)
-            .await
-            .context("querying relays for fan-out")?;
+    // Also deliver to all accepted relay inboxes
+    let relays = fieldwork::relay::get_accepted(&fwp)
+        .await
+        .context("querying relays for fan-out")?;
 
-    for (relay_inbox,) in &relays {
-        if !seen.insert(relay_inbox.clone()) {
+    for relay in &relays {
+        if !seen.insert(relay.inbox_url.clone()) {
             continue;
         }
-        let id = gen_int_id();
-        sqlx::query(
-            "INSERT INTO delivery_queue (id, target_inbox, sender_persona_id, activity_json, next_attempt_at, created_at) \
-             VALUES (?, ?, ?, ?, ?, ?)",
-        )
-        .bind(id)
-        .bind(relay_inbox)
-        .bind(persona_id)
-        .bind(&stub)
-        .bind(now)
-        .bind(now)
-        .execute(pool)
-        .await?;
+        fieldwork::delivery_db::enqueue(&fwp, &relay.inbox_url, persona_id, &stub, now).await?;
         queued += 1;
     }
 
@@ -172,17 +141,9 @@ async fn process_batch(
     breaker: &Arc<Mutex<CircuitBreaker>>,
 ) -> anyhow::Result<u32> {
     let now = chrono::Utc::now().timestamp();
+    let fwp = fw_pool(pool);
 
-    // Canonical schema: pending = delivered_at IS NULL AND dead_at IS NULL
-    let rows = sqlx::query_as::<_, (i64, String, String, String, i32)>(
-        "SELECT dq.id, dq.sender_persona_id, dq.target_inbox, dq.activity_json, dq.attempts \
-         FROM delivery_queue dq \
-         WHERE dq.delivered_at IS NULL AND dq.dead_at IS NULL AND dq.next_attempt_at <= ? \
-         ORDER BY dq.next_attempt_at ASC LIMIT 50",
-    )
-    .bind(now)
-    .fetch_all(pool)
-    .await?;
+    let jobs = fieldwork::delivery_db::fetch_pending(&fwp, 50, now).await?;
 
     let mut processed = 0u32;
     // Cache per-post: (serialized_body, private_key, actor_uri)
@@ -190,17 +151,23 @@ async fn process_batch(
     // memcpy cost is negligible vs the HTTP roundtrip (~100ms+). Upgrade path: Arc<Vec<u8>>.
     let mut post_cache: HashMap<String, (Vec<u8>, String, String)> = HashMap::new();
 
-    for (delivery_id_int, sender_persona_id, target_inbox, activity_json, attempts) in rows {
-        let delivery_id = delivery_id_int.to_string();
+    for job in jobs {
+        let delivery_id = job.id;
+        let sender_persona_id = &job.sender_persona_id;
+        let target_inbox = &job.target_inbox;
+        let activity_json = &job.activity_json;
+        let attempts = job.attempts;
         // Re-validate inbox URI at delivery time (defense against DNS rebinding)
         if !target_inbox.starts_with("https://") {
-            mark_dead(pool, &delivery_id, "target_inbox not https").await?;
+            fieldwork::delivery_db::mark_dead(&fwp, delivery_id, "target_inbox not https", now).await?;
+            tracing::warn!(delivery_id, error = "target_inbox not https", "delivery dead-lettered");
             processed += 1;
             continue;
         }
-        let inbox_domain = extract_domain(&target_inbox);
+        let inbox_domain = extract_domain(target_inbox);
         if crate::server::is_private_host_resolved(&inbox_domain).await {
-            mark_dead(pool, &delivery_id, "target_inbox resolves to private host").await?;
+            fieldwork::delivery_db::mark_dead(&fwp, delivery_id, "target_inbox resolves to private host", now).await?;
+            tracing::warn!(delivery_id, error = "target_inbox resolves to private host", "delivery dead-lettered");
             processed += 1;
             continue;
         }
@@ -214,13 +181,14 @@ async fn process_batch(
         }
 
         // Extract post_id from the activity_json stub ({"post_id":"..."})
-        let post_id = match serde_json::from_str::<serde_json::Value>(&activity_json)
+        let post_id = match serde_json::from_str::<serde_json::Value>(activity_json)
             .ok()
             .and_then(|v| v["post_id"].as_str().map(|s| s.to_string()))
         {
             Some(pid) => pid,
             None => {
-                mark_dead(pool, &delivery_id, "missing post_id in activity_json").await?;
+                fieldwork::delivery_db::mark_dead(&fwp, delivery_id, "missing post_id in activity_json", now).await?;
+                tracing::warn!(delivery_id, error = "missing post_id in activity_json", "delivery dead-lettered");
                 processed += 1;
                 continue;
             }
@@ -238,7 +206,8 @@ async fn process_batch(
         let (post_id, content_html, created_at_epoch, username) = match post {
             Some(p) => p,
             None => {
-                mark_dead(pool, &delivery_id, "post not found").await?;
+                fieldwork::delivery_db::mark_dead(&fwp, delivery_id, "post not found", now).await?;
+                tracing::warn!(delivery_id, error = "post not found", "delivery dead-lettered");
                 processed += 1;
                 continue;
             }
@@ -312,7 +281,7 @@ async fn process_batch(
 
         let (body, private_key, actor_uri) = post_cache.get(&cache_key).expect("just inserted");
         let key_id = format!("{actor_uri}#main-key");
-        let target_path = url::Url::parse(&target_inbox)
+        let target_path = url::Url::parse(target_inbox)
             .map(|u| u.path().to_string())
             .unwrap_or_else(|_| "/inbox".to_string());
 
@@ -322,14 +291,15 @@ async fn process_batch(
                 Ok(h) => h,
                 Err(e) => {
                     tracing::error!(inbox = %target_inbox, error = %e, "failed to sign request");
-                    mark_dead(pool, &delivery_id, "signing failed").await?;
+                    fieldwork::delivery_db::mark_dead(&fwp, delivery_id, "signing failed", now).await?;
+                    tracing::warn!(delivery_id, error = "signing failed", "delivery dead-lettered");
                     processed += 1;
                     continue;
                 }
             };
 
         let result = client
-            .post(&target_inbox)
+            .post(target_inbox.as_str())
             .headers(sig_headers)
             .header("Content-Type", "application/activity+json")
             .body(body.clone())
@@ -339,37 +309,30 @@ async fn process_batch(
         match result {
             Ok(resp) if resp.status().is_success() => {
                 let delivered_at = chrono::Utc::now().timestamp();
-                sqlx::query("UPDATE delivery_queue SET delivered_at = ? WHERE id = ?")
-                    .bind(delivered_at)
-                    .bind(&delivery_id)
-                    .execute(pool)
-                    .await?;
+                fieldwork::delivery_db::mark_delivered(&fwp, delivery_id, delivered_at).await?;
                 breaker.lock().await.record_success(&inbox_domain);
-                tracing::debug!(inbox = target_inbox, "delivered");
+                tracing::debug!(inbox = %target_inbox, "delivered");
             }
             Ok(resp) if resp.status().as_u16() == 410 => {
-                // 410 Gone — remove followers pointing to this inbox
+                // 410 Gone — mark delivered, then remove followers pointing to this inbox
                 let delivered_at = chrono::Utc::now().timestamp();
-                sqlx::query("UPDATE delivery_queue SET delivered_at = ? WHERE id = ?")
-                    .bind(delivered_at)
-                    .bind(&delivery_id)
-                    .execute(pool)
-                    .await?;
+                fieldwork::delivery_db::mark_delivered(&fwp, delivery_id, delivered_at).await?;
 
                 // Remove followers whose remote_account points at this inbox
+                // (broadside-specific join — no fieldwork equivalent)
                 let removed = sqlx::query(
                     "DELETE FROM followers WHERE remote_account_id IN \
                      (SELECT id FROM remote_accounts WHERE inbox_url = ? OR shared_inbox_url = ?) \
                      AND persona_id = ?",
                 )
-                .bind(&target_inbox)
-                .bind(&target_inbox)
-                .bind(&sender_persona_id)
+                .bind(target_inbox)
+                .bind(target_inbox)
+                .bind(sender_persona_id)
                 .execute(pool)
                 .await?;
 
                 tracing::info!(
-                    inbox = target_inbox,
+                    inbox = %target_inbox,
                     removed = removed.rows_affected(),
                     "410 Gone — removed followers"
                 );
@@ -377,11 +340,16 @@ async fn process_batch(
             Ok(resp) => {
                 let status = resp.status();
                 let err_msg = format!("HTTP {status}");
-                handle_retry(pool, &delivery_id, attempts, &err_msg).await?;
+                let retry_now = chrono::Utc::now().timestamp();
+                fieldwork::delivery_db::schedule_retry(&fwp, delivery_id, &err_msg, retry_now).await?;
+                tracing::warn!(delivery_id, attempt = attempts + 1, error = %err_msg, "delivery failed, will retry");
                 breaker.lock().await.record_failure(&inbox_domain);
             }
             Err(e) => {
-                handle_retry(pool, &delivery_id, attempts, &e.to_string()).await?;
+                let err_msg = e.to_string();
+                let retry_now = chrono::Utc::now().timestamp();
+                fieldwork::delivery_db::schedule_retry(&fwp, delivery_id, &err_msg, retry_now).await?;
+                tracing::warn!(delivery_id, attempt = attempts + 1, error = %err_msg, "delivery failed, will retry");
                 breaker.lock().await.record_failure(&inbox_domain);
             }
         }
@@ -390,55 +358,6 @@ async fn process_batch(
     }
 
     Ok(processed)
-}
-
-async fn handle_retry(
-    pool: &SqlitePool,
-    delivery_id: &str,
-    attempts: i32,
-    error: &str,
-) -> anyhow::Result<()> {
-    let next_attempt = attempts + 1;
-    if next_attempt >= MAX_ATTEMPTS {
-        mark_dead(pool, delivery_id, error).await?;
-        return Ok(());
-    }
-
-    let delay = RETRY_DELAYS
-        .get(attempts as usize)
-        .copied()
-        .unwrap_or(Duration::from_secs(28800));
-    let next_attempt_at = chrono::Utc::now().timestamp() + delay.as_secs() as i64;
-
-    sqlx::query(
-        "UPDATE delivery_queue SET attempts = ?, next_attempt_at = ?, last_error = ? WHERE id = ?",
-    )
-    .bind(next_attempt)
-    .bind(next_attempt_at)
-    .bind(error)
-    .bind(delivery_id)
-    .execute(pool)
-    .await?;
-
-    tracing::warn!(
-        delivery_id,
-        attempt = next_attempt,
-        error,
-        "delivery failed, will retry"
-    );
-    Ok(())
-}
-
-async fn mark_dead(pool: &SqlitePool, delivery_id: &str, error: &str) -> anyhow::Result<()> {
-    let dead_at = chrono::Utc::now().timestamp();
-    sqlx::query("UPDATE delivery_queue SET dead_at = ?, last_error = ? WHERE id = ?")
-        .bind(dead_at)
-        .bind(error)
-        .bind(delivery_id)
-        .execute(pool)
-        .await?;
-    tracing::warn!(delivery_id, error, "delivery dead-lettered");
-    Ok(())
 }
 
 // ponytail: Allocates one String per delivery call. Dwarfed by the HTTP request cost (~100ms+).

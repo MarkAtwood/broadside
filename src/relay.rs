@@ -2,9 +2,13 @@ use anyhow::{bail, Context};
 use sqlx::SqlitePool;
 use std::sync::Arc;
 
-use crate::id::gen_int_id;
 use crate::server::SsrfSafeResolver;
 use crate::signatures;
+
+/// Wrap a raw SqlitePool in fieldwork's Pool enum for shared module calls.
+fn fw_pool(pool: &SqlitePool) -> fieldwork::db::Pool {
+    fieldwork::db::Pool::Sqlite(pool.clone())
+}
 
 /// Add a relay subscription. Fetches the relay actor to discover its inbox,
 /// then sends a Follow activity and stores the subscription as pending.
@@ -31,13 +35,9 @@ pub async fn add(
     }
 
     // Check if already subscribed
-    let existing = sqlx::query_as::<_, (String,)>("SELECT state FROM relays WHERE actor_uri = ?")
-        .bind(relay_url)
-        .fetch_optional(pool)
-        .await?;
-
-    if let Some((state,)) = existing {
-        bail!("relay already registered (state: {state})");
+    let fwp = fw_pool(pool);
+    if let Some(existing) = fieldwork::relay::find_by_actor(&fwp, relay_url).await? {
+        bail!("relay already registered (state: {})", existing.state);
     }
 
     // ponytail: new Client per CLI invocation; CLI runs once and exits, no reuse benefit.
@@ -83,26 +83,25 @@ pub async fn add(
 
     // Resolve persona username to persona_id for the FK
     let persona_id = crate::persona::get_id(pool, persona).await?;
-    let now = chrono::Utc::now().timestamp();
+
+    // Build the follow_id URI before inserting (needed for the Follow activity)
+    let actor_uri = format!("https://{domain}/users/{persona}");
+    // Use a temporary ID for the follow_id URI; subscribe() generates the actual row ID
+    let temp_follow_id = format!("{actor_uri}/relay-follow/pending");
 
     // Store the relay subscription
-    let id = gen_int_id();
-    sqlx::query(
-        "INSERT INTO relays (id, actor_uri, inbox_url, persona_id, state, created_at) \
-         VALUES (?, ?, ?, ?, 'pending', ?)",
-    )
-    .bind(id)
-    .bind(relay_url)
-    .bind(&inbox_url)
-    .bind(&persona_id)
-    .bind(now)
-    .execute(pool)
-    .await
-    .context("storing relay subscription")?;
+    let id = fieldwork::relay::subscribe(&fwp, relay_url, &inbox_url, Some(&persona_id), &temp_follow_id)
+        .await
+        .context("storing relay subscription")?;
 
-    // Send Follow activity to the relay
-    let actor_uri = format!("https://{domain}/users/{persona}");
+    // Update follow_id now that we have the actual row ID
     let follow_id = format!("{actor_uri}/relay-follow/{id}");
+    sqlx::query("UPDATE relays SET follow_id = ? WHERE id = ?")
+        .bind(&follow_id)
+        .bind(id)
+        .execute(pool)
+        .await
+        .context("updating relay follow_id")?;
     let activity = serde_json::json!({
         "@context": "https://www.w3.org/ns/activitystreams",
         "id": follow_id,
@@ -161,22 +160,18 @@ pub async fn remove(
     domain: &str,
     persona_override: Option<&str>,
 ) -> anyhow::Result<()> {
-    let row = sqlx::query_as::<_, (String, String, Option<String>)>(
-        "SELECT CAST(id AS TEXT), inbox_url, persona_id FROM relays WHERE actor_uri = ?",
-    )
-    .bind(relay_url)
-    .fetch_optional(pool)
-    .await?;
+    let fwp = fw_pool(pool);
+    let relay_row = fieldwork::relay::find_by_actor(&fwp, relay_url)
+        .await?
+        .context(format!("relay not found: {relay_url}"))?;
 
-    let (relay_id, inbox_url, stored_persona_id) = match row {
-        Some(r) => r,
-        None => bail!("relay not found: {relay_url}"),
-    };
+    let relay_id = relay_row.id;
+    let inbox_url = relay_row.inbox_url;
 
     // Resolve persona: use override username, or look up stored persona_id's username
     let persona_username = if let Some(p) = persona_override {
         p.to_string()
-    } else if let Some(ref pid) = stored_persona_id {
+    } else if let Some(ref pid) = relay_row.persona_id {
         let (uname,) = sqlx::query_as::<_, (String,)>(
             "SELECT username FROM personas WHERE id = ?",
         )
@@ -241,10 +236,7 @@ pub async fn remove(
         .await;
 
     // Delete regardless of Undo delivery success
-    sqlx::query("DELETE FROM relays WHERE id = ?")
-        .bind(&relay_id)
-        .execute(pool)
-        .await?;
+    fieldwork::relay::unsubscribe(&fwp, relay_id).await?;
 
     println!("Removed relay: {relay_url}");
     Ok(())
@@ -266,7 +258,7 @@ pub async fn list(pool: &SqlitePool) -> anyhow::Result<()> {
     println!("Relay subscriptions ({}):", rows.len());
     for (actor_uri, inbox_url, state, created_at) in &rows {
         let marker = match state.as_str() {
-            "active" => "✓",
+            "accepted" => "✓",
             "pending" => "◐",
             "rejected" => "✗",
             _ => "?",
@@ -283,12 +275,11 @@ pub async fn list(pool: &SqlitePool) -> anyhow::Result<()> {
 
 /// Activate a relay subscription (called when we receive an Accept from the relay).
 pub async fn activate(pool: &SqlitePool, relay_actor_uri: &str) -> anyhow::Result<bool> {
-    let result = sqlx::query(
-        "UPDATE relays SET state = 'active' WHERE actor_uri = ? AND state = 'pending'",
-    )
-    .bind(relay_actor_uri)
-    .execute(pool)
-    .await?;
-
-    Ok(result.rows_affected() > 0)
+    let fwp = fw_pool(pool);
+    let relay = match fieldwork::relay::find_by_actor(&fwp, relay_actor_uri).await? {
+        Some(r) if r.state == fieldwork::relay::RelayState::Pending => r,
+        _ => return Ok(false),
+    };
+    fieldwork::relay::accept(&fwp, relay.id).await?;
+    Ok(true)
 }

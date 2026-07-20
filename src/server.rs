@@ -455,33 +455,22 @@ async fn actor(
     doc["alsoKnownAs"] = serde_json::Value::Array(aka);
 
     // Resolve avatar/header media IDs to file paths
+    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
     if let Some(mid) = avatar_media_id {
-        if let Ok(Some((path, mime))) = sqlx::query_as::<_, (String, String)>(
-            "SELECT file_path, mime_type FROM media WHERE id = ?",
-        )
-        .bind(mid)
-        .fetch_optional(&state.pool)
-        .await
-        {
+        if let Ok(Some(m)) = fieldwork::media_db::get_media(&fwp, mid).await {
             doc["icon"] = serde_json::json!({
                 "type": "Image",
-                "mediaType": mime,
-                "url": format!("https://{}/{}", state.domain, path)
+                "mediaType": m.mime_type,
+                "url": format!("https://{}/{}", state.domain, m.file_path)
             });
         }
     }
     if let Some(mid) = header_media_id {
-        if let Ok(Some((path, mime))) = sqlx::query_as::<_, (String, String)>(
-            "SELECT file_path, mime_type FROM media WHERE id = ?",
-        )
-        .bind(mid)
-        .fetch_optional(&state.pool)
-        .await
-        {
+        if let Ok(Some(m)) = fieldwork::media_db::get_media(&fwp, mid).await {
             doc["image"] = serde_json::json!({
                 "type": "Image",
-                "mediaType": mime,
-                "url": format!("https://{}/{}", state.domain, path)
+                "mediaType": m.mime_type,
+                "url": format!("https://{}/{}", state.domain, m.file_path)
             });
         }
     }
@@ -1083,6 +1072,7 @@ async fn handle_inbox(
 
             // Upsert into remote_accounts, then insert follower
             let now = chrono::Utc::now().timestamp();
+            let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
             let user_id = match crate::persona::get_operator_user_id(&state.pool).await {
                 Ok(uid) => uid,
                 Err(_) => return StatusCode::INTERNAL_SERVER_ERROR,
@@ -1104,41 +1094,31 @@ async fn handle_inbox(
                 .unwrap_or(follower_actor)
                 .to_string();
 
-            if let Err(e) = sqlx::query(
-                "INSERT INTO remote_accounts \
-                 (actor_uri, username, domain, display_name, public_key_pem, public_key_id, inbox_url, shared_inbox_url, last_fetched_at) \
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) \
-                 ON CONFLICT(actor_uri) DO UPDATE SET \
-                 inbox_url = excluded.inbox_url, shared_inbox_url = excluded.shared_inbox_url, \
-                 public_key_pem = excluded.public_key_pem, last_fetched_at = excluded.last_fetched_at",
-            )
-            .bind(follower_actor)
-            .bind(actor_doc["preferredUsername"].as_str().unwrap_or(""))
-            .bind(&follower_domain)
-            .bind(actor_doc["name"].as_str().unwrap_or(""))
-            .bind(&remote_pub_key)
-            .bind(&remote_key_id)
-            .bind(&inbox_uri)
-            .bind(&shared_inbox_uri)
-            .bind(now)
-            .execute(&state.pool)
-            .await
-            {
-                tracing::error!(error = %e, follower = follower_actor, "failed to upsert remote_account");
-                return StatusCode::INTERNAL_SERVER_ERROR;
-            }
+            let remote_acct = fieldwork::actor_cache::RemoteAccountRow {
+                id: fieldwork::id::generate_id(),
+                actor_uri: follower_actor.to_string(),
+                username: actor_doc["preferredUsername"].as_str().unwrap_or("").to_string(),
+                domain: follower_domain,
+                display_name: actor_doc["name"].as_str().unwrap_or("").to_string(),
+                bio_html: actor_doc["summary"].as_str().unwrap_or("").to_string(),
+                avatar_url: actor_doc["icon"]["url"].as_str().map(|s| s.to_string()),
+                header_url: actor_doc["image"]["url"].as_str().map(|s| s.to_string()),
+                public_key_pem: remote_pub_key,
+                public_key_id: remote_key_id,
+                inbox_url: inbox_uri.clone(),
+                shared_inbox_url: shared_inbox_uri.clone(),
+                followers_url: actor_doc["followers"].as_str().map(|s| s.to_string()),
+                is_locked: actor_doc["manuallyApprovesFollowers"].as_bool().unwrap_or(false),
+                bot: actor_doc["type"].as_str() == Some("Service"),
+                last_fetched_at: now,
+                fetched_failed_at: None,
+                fetch_fail_count: 0,
+            };
 
-            // Look up the remote_account_id
-            let remote_account_id = match sqlx::query_as::<_, (i64,)>(
-                "SELECT id FROM remote_accounts WHERE actor_uri = ?",
-            )
-            .bind(follower_actor)
-            .fetch_one(&state.pool)
-            .await
-            {
-                Ok((id,)) => id,
+            let remote_account_id = match fieldwork::actor_cache::upsert_remote_account(&fwp, &remote_acct).await {
+                Ok(id) => id,
                 Err(e) => {
-                    tracing::error!(error = %e, "failed to find remote_account after upsert");
+                    tracing::error!(error = %e, follower = follower_actor, "failed to upsert remote_account");
                     return StatusCode::INTERNAL_SERVER_ERROR;
                 }
             };
