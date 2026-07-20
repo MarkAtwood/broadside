@@ -109,14 +109,13 @@ async fn store_processed_image(
     let now = chrono::Utc::now().timestamp();
     let user_id = crate::persona::get_operator_user_id(pool).await?;
 
-    // Look up persona_id from the post (broadside-specific join)
-    let (persona_id,) = sqlx::query_as::<_, (String,)>(
-        "SELECT persona_id FROM posts WHERE id = ?",
-    )
-    .bind(post_id)
-    .fetch_one(pool)
-    .await
-    .context("looking up persona for media")?;
+    let post_id_int: i64 = post_id.parse().context("post_id not a valid integer")?;
+    let fwp = fw_pool(pool);
+    let post_row = fieldwork::posts_db::get_post(&fwp, post_id_int)
+        .await
+        .context("looking up post for media")?
+        .context("post not found for media")?;
+    let persona_id = post_row.persona_id;
 
     let post_id_int: Option<i64> = post_id.parse().ok();
     let media_row = fieldwork::media_db::MediaRow {

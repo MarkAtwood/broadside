@@ -2,6 +2,11 @@ use anyhow::Context;
 use sqlx::SqlitePool;
 use std::path::Path;
 
+/// Wrap a raw SqlitePool in fieldwork's Pool enum for shared module calls.
+fn fw_pool(pool: &SqlitePool) -> fieldwork::db::Pool {
+    fieldwork::db::Pool::Sqlite(pool.clone())
+}
+
 /// Parsed OpenGraph / Twitter Card metadata.
 #[derive(Debug, Default)]
 pub struct CardMeta {
@@ -207,30 +212,39 @@ pub async fn fetch_and_store(
     crate::sanitize::truncate_utf8(&mut site_name, 256);
 
     let now = chrono::Utc::now().timestamp();
-    // Upsert into link_cards, then link via post_cards junction
-    sqlx::query(
-        "INSERT OR REPLACE INTO link_cards (url, card_type, title, description, image_url, provider_name, fetched_at) \
-         VALUES (?, ?, ?, ?, ?, ?, ?)",
-    )
-    .bind(url)
-    .bind(&meta.card_type)
-    .bind(&title)
-    .bind(&description)
-    .bind(if meta.image_url.starts_with("https://") { &meta.image_url } else { "" })
-    .bind(&site_name)
-    .bind(now)
-    .execute(pool)
-    .await
-    .context("inserting link_card")?;
+    let fwp = fw_pool(pool);
+    let image = if meta.image_url.starts_with("https://") {
+        Some(meta.image_url.clone())
+    } else {
+        None
+    };
+    let card_row = fieldwork::cards_db::CardRow {
+        id: 0, // ignored by upsert_card
+        url: url.to_string(),
+        card_type: meta.card_type.clone(),
+        title,
+        description,
+        image_url: image,
+        author_name: String::new(),
+        author_url: String::new(),
+        provider_name: site_name,
+        provider_url: String::new(),
+        html: String::new(),
+        width: 0,
+        height: 0,
+        fetched_at: now,
+        failed: false,
+    };
+    fieldwork::cards_db::upsert_card(&fwp, &card_row)
+        .await
+        .context("inserting link_card")?;
 
-    sqlx::query(
-        "INSERT OR IGNORE INTO post_cards (post_id, card_url) VALUES (?, ?)",
-    )
-    .bind(post_id)
-    .bind(url)
-    .execute(pool)
-    .await
-    .context("linking post to card")?;
+    let post_id_int: i64 = post_id
+        .parse()
+        .context("post_id is not a valid integer")?;
+    fieldwork::cards_db::link_card_to_post(&fwp, post_id_int, url)
+        .await
+        .context("linking post to card")?;
 
     tracing::debug!(post_id, url, title = %meta.title, "card fetched");
     Ok(())
@@ -242,32 +256,24 @@ pub async fn get_card_for_post(
     post_id: &str,
     _domain: &str,
 ) -> Option<serde_json::Value> {
-    let row = sqlx::query_as::<_, (String, String, String, Option<String>, String, String)>(
-        "SELECT lc.url, lc.title, lc.description, lc.image_url, lc.provider_name, lc.card_type \
-         FROM link_cards lc \
-         JOIN post_cards pc ON pc.card_url = lc.url \
-         WHERE pc.post_id = ? LIMIT 1",
-    )
-    .bind(post_id)
-    .fetch_optional(pool)
-    .await
-    .ok()??;
-
-    let (url, title, description, image_url, site_name, _card_type) = row;
+    let post_id_int: i64 = post_id.parse().ok()?;
+    let fwp = fw_pool(pool);
+    let cards = fieldwork::cards_db::cards_for_post(&fwp, post_id_int).await.ok()?;
+    let row = cards.into_iter().next()?;
 
     let mut card = serde_json::json!({
         "type": "Link",
-        "href": url,
-        "name": title,
+        "href": row.url,
+        "name": row.title,
     });
 
-    if !description.is_empty() {
-        card["summary"] = serde_json::Value::String(description);
+    if !row.description.is_empty() {
+        card["summary"] = serde_json::Value::String(row.description);
     }
-    if !site_name.is_empty() {
-        card["attributedTo"] = serde_json::Value::String(site_name);
+    if !row.provider_name.is_empty() {
+        card["attributedTo"] = serde_json::Value::String(row.provider_name);
     }
-    if let Some(ref img) = image_url {
+    if let Some(ref img) = row.image_url {
         if !img.is_empty() {
             card["icon"] = serde_json::json!({
                 "type": "Image",

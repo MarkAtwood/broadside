@@ -331,17 +331,19 @@ async fn nodeinfo_discovery(State(state): State<Arc<AppState>>) -> impl IntoResp
 }
 
 async fn nodeinfo(State(state): State<Arc<AppState>>) -> impl IntoResponse {
-    let user_count = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM personas")
-        .fetch_one(&state.pool)
+    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
+    let personas = fieldwork::persona_db::list_personas(&fwp)
         .await
-        .map(|(c,)| c)
-        .unwrap_or(0);
+        .unwrap_or_default();
+    let user_count = personas.len() as i64;
 
-    let post_count = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM posts")
-        .fetch_one(&state.pool)
-        .await
-        .map(|(c,)| c)
-        .unwrap_or(0);
+    // ponytail: posts_count requires a persona_id; sum across all personas for nodeinfo.
+    // For a single-persona broadside instance this is one extra query. For multi-persona,
+    // N+1 queries — acceptable at nodeinfo frequency (cached 5 min).
+    let mut post_count = 0i64;
+    for p in &personas {
+        post_count += fieldwork::posts_db::posts_count(&fwp, &p.id).await.unwrap_or(0);
+    }
 
     let doc = serde_json::json!({
         "version": "2.0",
@@ -385,30 +387,30 @@ async fn actor(
     if wants_html {
         return serve_profile_html(&state, &username).await;
     }
-    // Canonical schema: column names use _pem, _media_id, fields_json, created_at is INTEGER
-    let row = sqlx::query_as::<_, (String, String, String, String, String, Option<i64>, Option<i64>, i64, String, Option<String>)>(
-        "SELECT id, username, display_name, bio, public_key_pem, avatar_media_id, header_media_id, created_at, fields_json, did_key \
-         FROM personas WHERE username = ?",
-    )
-    .bind(&username)
-    .fetch_optional(&state.pool)
-    .await;
-
-    let (
-        _id,
-        username,
-        display_name,
-        bio,
-        public_key,
-        avatar_media_id,
-        header_media_id,
-        created_at_epoch,
-        metadata_json,
-        did_key,
-    ) = match row {
+    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
+    let persona_row = match fieldwork::persona_db::get_persona_by_username(&fwp, &username).await {
         Ok(Some(r)) => r,
         _ => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
     };
+
+    let username = persona_row.username;
+    let display_name = persona_row.display_name;
+    let bio = persona_row.bio;
+    let public_key = persona_row.public_key_pem;
+    let avatar_media_id = persona_row.avatar_media_id;
+    let header_media_id = persona_row.header_media_id;
+    let created_at_epoch = persona_row.created_at;
+    let metadata_json = persona_row.fields_json;
+    // Remaining SQL: did_key is a broadside-specific column (migration 101), not in fieldwork's PersonaRow.
+    let did_key: Option<String> = sqlx::query_as::<_, (Option<String>,)>(
+        "SELECT did_key FROM personas WHERE username = ?",
+    )
+    .bind(&username)
+    .fetch_optional(&state.pool)
+    .await
+    .ok()
+    .flatten()
+    .and_then(|r| r.0);
 
     let created_at = chrono::DateTime::from_timestamp(created_at_epoch, 0)
         .map(|dt| dt.format("%Y-%m-%dT%H:%M:%SZ").to_string())
@@ -697,17 +699,24 @@ async fn did_document(
     State(state): State<Arc<AppState>>,
     Path(username): Path<String>,
 ) -> impl IntoResponse {
-    let row = sqlx::query_as::<_, (String, Option<String>, Option<String>)>(
-        "SELECT public_key_pem, did_key, recovery_pubkey FROM personas WHERE username = ?",
-    )
-    .bind(&username)
-    .fetch_optional(&state.pool)
-    .await;
-
-    let (public_key, did_key, recovery_pubkey_hex) = match row {
+    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
+    let persona_row = match fieldwork::persona_db::get_persona_by_username(&fwp, &username).await {
         Ok(Some(r)) => r,
         _ => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
     };
+    let public_key = persona_row.public_key_pem;
+
+    // Remaining SQL: did_key and recovery_pubkey are broadside-specific columns (migrations 101-102).
+    let (did_key, recovery_pubkey_hex): (Option<String>, Option<String>) =
+        sqlx::query_as::<_, (Option<String>, Option<String>)>(
+            "SELECT did_key, recovery_pubkey FROM personas WHERE username = ?",
+        )
+        .bind(&username)
+        .fetch_optional(&state.pool)
+        .await
+        .ok()
+        .flatten()
+        .unwrap_or((None, None));
 
     let recovery_pubkey = recovery_pubkey_hex
         .as_deref()
@@ -1269,12 +1278,14 @@ async fn handle_inbox(
 // --- Health ---
 
 async fn health(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
-    let persona_count = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM personas")
-        .fetch_one(&state.pool)
+    let fwp = fieldwork::db::Pool::Sqlite(state.pool.clone());
+    let persona_count = fieldwork::persona_db::list_personas(&fwp)
         .await
-        .map(|(c,)| c)
+        .map(|v| v.len() as i64)
         .unwrap_or(0);
 
+    // Remaining SQL: pending delivery count has no direct fieldwork equivalent.
+    // fieldwork::delivery_db provides fetch_pending (with time filter) but not a simple count.
     let pending =
         sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM delivery_queue WHERE delivered_at IS NULL AND dead_at IS NULL")
             .fetch_one(&state.pool)

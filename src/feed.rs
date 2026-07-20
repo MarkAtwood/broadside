@@ -4,6 +4,11 @@ use sqlx::SqlitePool;
 use crate::config::FeedConfig;
 use crate::sanitize;
 
+/// Wrap a raw SqlitePool in fieldwork's Pool enum for shared module calls.
+fn fw_pool(pool: &SqlitePool) -> fieldwork::db::Pool {
+    fieldwork::db::Pool::Sqlite(pool.clone())
+}
+
 const MAX_CONTENT_LEN: usize = 5000;
 
 /// Poll a single feed and create posts for new entries.
@@ -88,7 +93,7 @@ pub async fn poll_feed(
         let ap_id = format!("urn:broadside:post:{id}");
         let id_str = id.to_string();
 
-        // Check if source_ref already exists (dedup)
+        // Remaining SQL: broadside_post_meta is a broadside-specific table for dedup.
         let exists = sqlx::query_as::<_, (i64,)>(
             "SELECT COUNT(*) FROM broadside_post_meta WHERE source_ref = ?",
         )
@@ -100,21 +105,31 @@ pub async fn poll_feed(
             continue;
         }
 
-        let result = sqlx::query(
-            "INSERT INTO posts (id, user_id, persona_id, ap_id, content, content_html, visibility, created_at) \
-             VALUES (?, ?, ?, ?, ?, ?, 'public', ?)",
-        )
-        .bind(id)
-        .bind(&user_id)
-        .bind(&persona_id)
-        .bind(&ap_id)
-        .bind(&text)
-        .bind(&html)
-        .bind(now)
-        .execute(pool)
-        .await?;
+        let fwp = fw_pool(pool);
+        let post = fieldwork::posts_db::PostRow {
+            id,
+            user_id: user_id.clone(),
+            persona_id: persona_id.clone(),
+            ap_id,
+            in_reply_to_id: None,
+            in_reply_to_uri: None,
+            boost_of_id: None,
+            boost_of_uri: None,
+            content: text.clone(),
+            content_html: html.clone(),
+            spoiler_text: String::new(),
+            visibility: "public".to_string(),
+            sensitive: false,
+            language: None,
+            context_url: None,
+            created_at: now,
+            edited_at: None,
+            deleted_at: None,
+            deleted_reason: None,
+        };
+        let post_ok = fieldwork::posts_db::create_post(&fwp, &post).await.is_ok();
 
-        // Store source_ref for dedup
+        // Remaining SQL: broadside_post_meta is a broadside-specific table.
         let _ = sqlx::query(
             "INSERT OR IGNORE INTO broadside_post_meta (post_id, source_ref) VALUES (?, ?)",
         )
@@ -123,7 +138,7 @@ pub async fn poll_feed(
         .execute(pool)
         .await;
 
-        if result.rows_affected() > 0 {
+        if post_ok {
             // Attach enclosure images as media (capped to prevent abuse)
             let max_media = crate::media::MAX_MEDIA;
             let mut media_count = 0usize;
@@ -180,7 +195,7 @@ pub async fn poll_feed(
         }
     }
 
-    // Update feed state
+    // Remaining SQL: feed_state is a broadside-specific table with no fieldwork equivalent.
     if let Some(ref nid) = newest_id {
         let now = chrono::Utc::now().timestamp();
         sqlx::query(

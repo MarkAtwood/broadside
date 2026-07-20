@@ -62,13 +62,19 @@ pub async fn init_data_dir(data_dir: &Path) -> anyhow::Result<()> {
 
     // Ensure a default operator user exists (for fresh databases)
     let now = chrono::Utc::now().timestamp();
-    sqlx::query(
-        "INSERT OR IGNORE INTO users (id, email, display_name, role, created_at) \
-         VALUES ('legacy-operator', 'admin@localhost', 'Operator', 'admin', ?)",
-    )
-    .bind(now)
-    .execute(&pool)
-    .await?;
+    let fw_pool = fieldwork::db::Pool::Sqlite(pool.clone());
+    // Only insert if no users exist yet (idempotent)
+    if fieldwork::tenant_db::list_users(&fw_pool).await.map(|v| v.is_empty()).unwrap_or(true) {
+        let _ = fieldwork::tenant_db::create_user(
+            &fw_pool,
+            "legacy-operator",
+            "admin@localhost",
+            None,
+            "admin",
+            now,
+        )
+        .await;
+    }
 
     pool.close().await;
 

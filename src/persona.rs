@@ -6,13 +6,22 @@ use sqlx::SqlitePool;
 
 use crate::id::gen_id;
 
+/// Wrap a raw SqlitePool in fieldwork's Pool enum for shared module calls.
+fn fw_pool(pool: &SqlitePool) -> fieldwork::db::Pool {
+    fieldwork::db::Pool::Sqlite(pool.clone())
+}
+
 /// Get the single operator user_id. Broadside is single-user; this returns the first user.
 pub async fn get_operator_user_id(pool: &SqlitePool) -> anyhow::Result<String> {
-    let (id,) = sqlx::query_as::<_, (String,)>("SELECT id FROM users LIMIT 1")
-        .fetch_one(pool)
+    let fwp = fw_pool(pool);
+    let users = fieldwork::tenant_db::list_users(&fwp)
         .await
         .context("no operator user found — database may not be initialized")?;
-    Ok(id)
+    users
+        .into_iter()
+        .next()
+        .map(|u| u.id)
+        .context("no operator user found — database may not be initialized")
 }
 
 /// Generate an RSA 2048 keypair, returning (private_pem, public_pem).
@@ -57,22 +66,38 @@ pub async fn add(
     let recovery_phrase = crate::did::private_key_to_mnemonic(&recovery_private);
     // recovery_private is Zeroizing<[u8; 32]> — auto-zeroized on drop
 
-    sqlx::query(
-        "INSERT INTO personas (id, user_id, username, display_name, private_key_pem, public_key_pem, did_key, recovery_pubkey, created_at) \
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    )
-    .bind(&id)
-    .bind(&user_id)
-    .bind(username)
-    .bind(display)
-    .bind(&private_pem)
-    .bind(&public_pem)
-    .bind(&did_key)
-    .bind(&recovery_pubkey_hex)
-    .bind(now)
-    .execute(pool)
-    .await
-    .with_context(|| format!("inserting persona {username}"))?;
+    let fwp = fw_pool(pool);
+    let row = fieldwork::persona_db::PersonaRow {
+        id: id.clone(),
+        user_id,
+        username: username.to_string(),
+        display_name: display.to_string(),
+        bio: String::new(),
+        bio_html: String::new(),
+        private_key_pem: private_pem,
+        public_key_pem: public_pem,
+        avatar_media_id: None,
+        header_media_id: None,
+        is_locked: false,
+        discoverable: true,
+        bot: false,
+        did_web: Some(did_key.clone()),
+        fields_json: "[]".to_string(),
+        created_at: now,
+        last_status_at: None,
+    };
+    fieldwork::persona_db::create_persona(&fwp, &row)
+        .await
+        .with_context(|| format!("inserting persona {username}"))?;
+
+    // Store broadside-specific DID columns (did_key, recovery_pubkey) not in fieldwork schema
+    sqlx::query("UPDATE personas SET did_key = ?, recovery_pubkey = ? WHERE id = ?")
+        .bind(&did_key)
+        .bind(&recovery_pubkey_hex)
+        .bind(&id)
+        .execute(pool)
+        .await
+        .with_context(|| format!("setting DID for persona {username}"))?;
 
     println!("Created persona @{username} (id: {id})");
     eprintln!("DID: {did_key}");
@@ -84,22 +109,24 @@ pub async fn add(
 
 /// List all personas with follower counts.
 pub async fn list(pool: &SqlitePool) -> anyhow::Result<()> {
-    let rows = sqlx::query_as::<_, (String, String, String, i64)>(
-        "SELECT p.id, p.username, p.display_name, COUNT(f.remote_account_id) as follower_count \
-         FROM personas p LEFT JOIN followers f ON f.persona_id = p.id \
-         GROUP BY p.id ORDER BY p.username",
-    )
-    .fetch_all(pool)
-    .await
-    .context("listing personas")?;
+    let fwp = fw_pool(pool);
+    let rows = fieldwork::persona_db::list_personas(&fwp)
+        .await
+        .context("listing personas")?;
 
     if rows.is_empty() {
         println!("No personas configured.");
         return Ok(());
     }
 
-    for (id, username, display_name, followers) in &rows {
-        println!("@{username} ({display_name}) — {followers} followers [id: {id}]");
+    for row in &rows {
+        let followers = fieldwork::followers_db::follower_count(&fwp, &row.id)
+            .await
+            .unwrap_or(0);
+        println!(
+            "@{} ({}) — {} followers [id: {}]",
+            row.username, row.display_name, followers, row.id
+        );
     }
     Ok(())
 }
@@ -117,34 +144,45 @@ pub async fn update(
         anyhow::bail!("nothing to update — specify --display-name, --bio, --avatar, or --header");
     }
 
-    let mut fields: Vec<(&str, &str)> = Vec::new();
-    if let Some(v) = display_name {
-        fields.push(("display_name = ?", v));
-    }
-    if let Some(v) = bio {
-        fields.push(("bio = ?", v));
-    }
-    if let Some(v) = avatar {
-        fields.push(("avatar_media_id = ?", v));
-    }
-    if let Some(v) = header {
-        fields.push(("header_media_id = ?", v));
+    let fwp = fw_pool(pool);
+    let persona_id = get_id(pool, username).await?;
+
+    // Use fieldwork for display_name and bio
+    if display_name.is_some() || bio.is_some() {
+        fieldwork::persona_db::update_persona_profile(
+            &fwp,
+            &persona_id,
+            display_name,
+            bio,
+            None,
+        )
+        .await
+        .with_context(|| format!("updating profile for @{username}"))?;
     }
 
-    let set_clause: Vec<&str> = fields.iter().map(|(clause, _)| *clause).collect();
-    let sql = format!(
-        "UPDATE personas SET {} WHERE username = ?",
-        set_clause.join(", ")
-    );
-    let mut q = sqlx::query(&sql);
-    for (_, value) in &fields {
-        q = q.bind(*value);
-    }
-    q = q.bind(username);
-    let result = q.execute(pool).await?;
-
-    if result.rows_affected() == 0 {
-        anyhow::bail!("persona @{username} not found");
+    // Remaining SQL: avatar_media_id/header_media_id updates have no fieldwork equivalent.
+    // fieldwork::persona_db::update_persona_profile only covers display_name/bio/bio_html.
+    if avatar.is_some() || header.is_some() {
+        let mut set_parts: Vec<String> = Vec::new();
+        let mut values: Vec<&str> = Vec::new();
+        if let Some(v) = avatar {
+            set_parts.push("avatar_media_id = ?".to_string());
+            values.push(v);
+        }
+        if let Some(v) = header {
+            set_parts.push("header_media_id = ?".to_string());
+            values.push(v);
+        }
+        let sql = format!(
+            "UPDATE personas SET {} WHERE id = ?",
+            set_parts.join(", ")
+        );
+        let mut q = sqlx::query(&sql);
+        for v in &values {
+            q = q.bind(*v);
+        }
+        q = q.bind(&persona_id);
+        q.execute(pool).await?;
     }
 
     println!("Updated persona @{username}");

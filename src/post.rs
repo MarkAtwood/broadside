@@ -3,6 +3,11 @@ use sqlx::SqlitePool;
 
 use crate::id::gen_int_id;
 
+/// Wrap a raw SqlitePool in fieldwork's Pool enum for shared module calls.
+fn fw_pool(pool: &SqlitePool) -> fieldwork::db::Pool {
+    fieldwork::db::Pool::Sqlite(pool.clone())
+}
+
 /// Create a post from plain text or HTML content.
 pub async fn create(
     pool: &SqlitePool,
@@ -20,23 +25,33 @@ pub async fn create(
     let ap_id = format!("urn:broadside:post:{id}");
     let id_str = id.to_string();
 
-    sqlx::query(
-        "INSERT INTO posts (id, user_id, persona_id, ap_id, content, content_html, visibility, created_at) \
-         VALUES (?, ?, ?, ?, ?, ?, 'public', ?)",
-    )
-    .bind(id)
-    .bind(&user_id)
-    .bind(persona_id)
-    .bind(&ap_id)
-    .bind(content_text)
-    .bind(content_html)
-    .bind(now)
-    .execute(pool)
-    .await
-    .with_context(|| format!("inserting post for persona {persona_id}"))?;
+    let fwp = fw_pool(pool);
+    let post = fieldwork::posts_db::PostRow {
+        id,
+        user_id,
+        persona_id: persona_id.to_string(),
+        ap_id,
+        in_reply_to_id: None,
+        in_reply_to_uri: None,
+        boost_of_id: None,
+        boost_of_uri: None,
+        content: content_text.to_string(),
+        content_html: content_html.to_string(),
+        spoiler_text: String::new(),
+        visibility: "public".to_string(),
+        sensitive: false,
+        language: None,
+        context_url: None,
+        created_at: now,
+        edited_at: None,
+        deleted_at: None,
+        deleted_reason: None,
+    };
+    fieldwork::posts_db::create_post(&fwp, &post)
+        .await
+        .with_context(|| format!("inserting post for persona {persona_id}"))?;
 
-    // Store source_ref in broadside_post_meta if provided.
-    // Uses plain INSERT (not OR IGNORE) so duplicate source_ref triggers a UNIQUE error.
+    // Remaining SQL: broadside_post_meta is a broadside-specific table with no fieldwork equivalent.
     if let Some(sref) = source_ref {
         sqlx::query(
             "INSERT INTO broadside_post_meta (post_id, source_ref) VALUES (?, ?)",
@@ -65,6 +80,7 @@ pub fn text_to_html(text: &str) -> String {
 }
 
 /// Fetch recent posts for a persona, newest first.
+/// Remaining SQL: joins broadside_post_meta (broadside-specific table) for source_ref.
 pub async fn list_for_persona(
     pool: &SqlitePool,
     persona_id: &str,
@@ -88,10 +104,8 @@ pub async fn list_for_persona(
 
 /// Count total posts for a persona.
 pub async fn count_for_persona(pool: &SqlitePool, persona_id: &str) -> anyhow::Result<i64> {
-    let (count,) = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM posts WHERE persona_id = ?")
-        .bind(persona_id)
-        .fetch_one(pool)
-        .await?;
+    let fwp = fw_pool(pool);
+    let count = fieldwork::posts_db::posts_count(&fwp, persona_id).await?;
     Ok(count)
 }
 

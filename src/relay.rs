@@ -94,7 +94,8 @@ pub async fn add(
         .await
         .context("storing relay subscription")?;
 
-    // Update follow_id now that we have the actual row ID
+    // Remaining SQL: follow_id update has no fieldwork equivalent.
+    // fieldwork::relay provides subscribe/accept/reject/unsubscribe but not field-level updates.
     let follow_id = format!("{actor_uri}/relay-follow/{id}");
     sqlx::query("UPDATE relays SET follow_id = ? WHERE id = ?")
         .bind(&follow_id)
@@ -172,14 +173,11 @@ pub async fn remove(
     let persona_username = if let Some(p) = persona_override {
         p.to_string()
     } else if let Some(ref pid) = relay_row.persona_id {
-        let (uname,) = sqlx::query_as::<_, (String,)>(
-            "SELECT username FROM personas WHERE id = ?",
-        )
-        .bind(pid)
-        .fetch_one(pool)
-        .await
-        .context("looking up persona for relay")?;
-        uname
+        let persona = fieldwork::persona_db::get_persona_by_id(&fwp, pid)
+            .await
+            .context("looking up persona for relay")?
+            .context("persona not found for relay")?;
+        persona.username
     } else {
         bail!("no persona stored for this relay; pass --persona explicitly");
     };
@@ -244,6 +242,8 @@ pub async fn remove(
 
 /// List all relay subscriptions.
 pub async fn list(pool: &SqlitePool) -> anyhow::Result<()> {
+    // Remaining SQL: list all relays (any state) has no fieldwork equivalent.
+    // fieldwork::relay provides get_accepted (accepted only) and find_by_actor (single lookup).
     let rows = sqlx::query_as::<_, (String, String, String, i64)>(
         "SELECT actor_uri, inbox_url, state, created_at FROM relays ORDER BY created_at",
     )

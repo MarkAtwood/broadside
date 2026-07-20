@@ -215,6 +215,8 @@ impl Cli {
                                 })
                                 .collect();
                             let json = serde_json::to_string(&metadata)?;
+                            // Remaining SQL: fields_json update has no fieldwork equivalent.
+                            // fieldwork::persona_db::update_persona_profile covers display_name/bio/bio_html only.
                             sqlx::query("UPDATE personas SET fields_json = ? WHERE username = ?")
                                 .bind(&json)
                                 .bind(&username)
@@ -313,15 +315,24 @@ impl Cli {
             }
             Command::Status => {
                 let pool = connect_db(&self.data_dir).await?;
-                let (personas,) = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM personas")
-                    .fetch_one(&pool)
-                    .await?;
-                let (followers,) = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM followers")
-                    .fetch_one(&pool)
-                    .await?;
-                let (posts,) = sqlx::query_as::<_, (i64,)>("SELECT COUNT(*) FROM posts")
-                    .fetch_one(&pool)
-                    .await?;
+                let fwp = fieldwork::db::Pool::Sqlite(pool.clone());
+                let persona_list = fieldwork::persona_db::list_personas(&fwp)
+                    .await
+                    .unwrap_or_default();
+                let personas = persona_list.len() as i64;
+
+                let mut followers = 0i64;
+                let mut posts = 0i64;
+                for p in &persona_list {
+                    followers += fieldwork::followers_db::follower_count(&fwp, &p.id)
+                        .await
+                        .unwrap_or(0);
+                    posts += fieldwork::posts_db::posts_count(&fwp, &p.id)
+                        .await
+                        .unwrap_or(0);
+                }
+
+                // Remaining SQL: delivery_queue count queries have no fieldwork equivalent.
                 let (pending,) = sqlx::query_as::<_, (i64,)>(
                     "SELECT COUNT(*) FROM delivery_queue WHERE delivered_at IS NULL AND dead_at IS NULL",
                 )
@@ -352,6 +363,8 @@ impl Cli {
                 match command {
                     FollowersCommand::List { persona } => {
                         let persona_id = broadside::persona::get_id(&pool, &persona).await?;
+                        // Remaining SQL: follower list with actor_uri + accepted_at has no
+                        // fieldwork equivalent. follower_inboxes returns inbox URLs only.
                         let rows = sqlx::query_as::<_, (String, i64)>(
                             "SELECT ra.actor_uri, f.accepted_at \
                              FROM followers f \
@@ -373,15 +386,13 @@ impl Cli {
                         }
                     }
                     FollowersCommand::Count => {
-                        let rows = sqlx::query_as::<_, (String, i64)>(
-                            "SELECT p.username, COUNT(f.remote_account_id) \
-                             FROM personas p LEFT JOIN followers f ON f.persona_id = p.id \
-                             GROUP BY p.id ORDER BY p.username",
-                        )
-                        .fetch_all(&pool)
-                        .await?;
-                        for (username, count) in &rows {
-                            println!("@{username}: {count}");
+                        let fwp = fieldwork::db::Pool::Sqlite(pool.clone());
+                        let personas = fieldwork::persona_db::list_personas(&fwp).await?;
+                        for p in &personas {
+                            let count = fieldwork::followers_db::follower_count(&fwp, &p.id)
+                                .await
+                                .unwrap_or(0);
+                            println!("@{}: {count}", p.username);
                         }
                     }
                 }
@@ -472,6 +483,8 @@ impl Cli {
                 let pool = connect_db(&self.data_dir).await?;
                 match command {
                     DidCommand::Backfill => {
+                        // Remaining SQL: did_key and recovery_pubkey are broadside-specific
+                        // columns on personas (migrations 101-102), not in fieldwork's PersonaRow.
                         let rows = sqlx::query_as::<_, (String, String)>(
                             "SELECT id, username FROM personas WHERE did_key IS NULL",
                         )
@@ -523,6 +536,7 @@ impl Cli {
                         let pub_key = broadside::did::ed25519_public_from_private(&priv_key);
                         let did_key = broadside::did::ed25519_to_did_key(&pub_key);
 
+                        // Remaining SQL: did_key is a broadside-specific column (migration 101).
                         let row = sqlx::query_as::<_, (String, String)>(
                             "SELECT id, username FROM personas WHERE did_key = ?",
                         )
