@@ -1,6 +1,6 @@
 use anyhow::{bail, Context};
 use image::DynamicImage;
-use sqlx::SqlitePool;
+use fieldwork::db::sqlx::SqlitePool;
 use std::path::Path;
 
 /// Wrap a raw SqlitePool in fieldwork's Pool enum for shared module calls.

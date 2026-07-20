@@ -300,7 +300,6 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
- "sqlx",
  "ssrf-guard",
  "subtle",
  "tempfile",

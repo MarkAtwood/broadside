@@ -1,5 +1,5 @@
 use anyhow::Context;
-use sqlx::SqlitePool;
+use fieldwork::db::sqlx::SqlitePool;
 
 use crate::id::gen_int_id;
 
@@ -99,7 +99,7 @@ pub async fn count_for_persona(pool: &SqlitePool, persona_id: i64) -> anyhow::Re
     Ok(count)
 }
 
-#[derive(Debug, sqlx::FromRow)]
+#[derive(Debug)]
 pub struct PostRow {
     pub id: String,
     pub persona_id: i64,

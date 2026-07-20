@@ -1,5 +1,5 @@
 use anyhow::Context;
-use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePool};
+use fieldwork::db::sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePool};
 use std::path::Path;
 use std::str::FromStr;
 

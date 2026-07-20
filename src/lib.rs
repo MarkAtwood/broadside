@@ -1,3 +1,6 @@
+// Re-export sqlx from fieldwork so derive macros (e.g. sqlx::FromRow) resolve.
+pub use fieldwork::db::sqlx;
+
 pub mod actor_cache;
 pub mod card;
 pub mod config;

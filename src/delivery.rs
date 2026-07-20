@@ -1,5 +1,5 @@
 use anyhow::Context;
-use sqlx::SqlitePool;
+use fieldwork::db::sqlx::SqlitePool;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use std::time::{Duration, Instant};

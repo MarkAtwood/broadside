@@ -1,5 +1,5 @@
 use anyhow::{bail, Context};
-use sqlx::SqlitePool;
+use fieldwork::db::sqlx::SqlitePool;
 use std::sync::Arc;
 
 use crate::server::SsrfSafeResolver;

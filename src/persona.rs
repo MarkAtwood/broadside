@@ -2,7 +2,7 @@ use anyhow::Context;
 use rsa::pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding};
 use rsa::rand_core::OsRng;
 use rsa::RsaPrivateKey;
-use sqlx::SqlitePool;
+use fieldwork::db::sqlx::SqlitePool;
 
 use crate::id::gen_int_id;
 

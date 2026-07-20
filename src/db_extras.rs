@@ -5,7 +5,8 @@
 //! instead of using sqlx::query directly.
 
 use anyhow::Context;
-use sqlx::SqlitePool;
+use fieldwork::db::sqlx;
+use fieldwork::db::sqlx::SqlitePool;
 
 // --- broadside_post_meta ---
 
@@ -47,7 +48,7 @@ pub async fn source_ref_exists(pool: &SqlitePool, source_ref: &str) -> anyhow::R
 }
 
 /// Row type for posts joined with broadside_post_meta.
-#[derive(Debug, sqlx::FromRow)]
+#[derive(Debug)]
 pub struct PostWithMeta {
     pub id: String,
     pub persona_id: i64,
@@ -55,6 +56,20 @@ pub struct PostWithMeta {
     pub content: String,
     pub created_at: i64,
     pub source_ref: Option<String>,
+}
+
+impl<'r> sqlx::FromRow<'r, sqlx::sqlite::SqliteRow> for PostWithMeta {
+    fn from_row(row: &'r sqlx::sqlite::SqliteRow) -> sqlx::Result<Self> {
+        use sqlx::Row;
+        Ok(Self {
+            id: row.try_get("id")?,
+            persona_id: row.try_get("persona_id")?,
+            content_html: row.try_get("content_html")?,
+            content: row.try_get("content")?,
+            created_at: row.try_get("created_at")?,
+            source_ref: row.try_get("source_ref")?,
+        })
+    }
 }
 
 /// List posts for a persona, joined with broadside_post_meta for source_ref.

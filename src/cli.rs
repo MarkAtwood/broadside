@@ -538,7 +538,7 @@ impl Cli {
     }
 }
 
-async fn connect_db(data_dir: &Option<PathBuf>) -> anyhow::Result<sqlx::SqlitePool> {
+async fn connect_db(data_dir: &Option<PathBuf>) -> anyhow::Result<fieldwork::db::sqlx::SqlitePool> {
     let dir = data_dir
         .as_ref()
         .ok_or_else(|| anyhow::anyhow!("--data-dir or BROADSIDE_DATA_DIR required"))?;

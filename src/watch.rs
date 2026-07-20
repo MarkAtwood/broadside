@@ -1,6 +1,6 @@
 use anyhow::Context;
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
-use sqlx::SqlitePool;
+use fieldwork::db::sqlx::SqlitePool;
 use std::path::{Path, PathBuf};
 use tokio::sync::mpsc;
 

@@ -4,7 +4,7 @@ use axum::response::{IntoResponse, Json};
 use axum::routing::{get, post};
 use axum::Router;
 use serde::{Deserialize, Serialize};
-use sqlx::SqlitePool;
+use fieldwork::db::sqlx::SqlitePool;
 use std::fmt::Write;
 use std::sync::Arc;
 

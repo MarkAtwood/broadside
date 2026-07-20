@@ -1,5 +1,5 @@
 use anyhow::Context;
-use sqlx::SqlitePool;
+use fieldwork::db::sqlx::SqlitePool;
 
 use crate::config::FeedConfig;
 use crate::sanitize;
