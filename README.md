@@ -21,7 +21,7 @@ Broadside serves content through every major fediverse client API:
 | **Bookwyrm** | Book reviews | Books, reviews, reading activity |
 | **WriteFreely** | Blog articles | Posts, collections, markdown |
 
-All read-only — no write endpoints, no OAuth, no auth required for public content.
+All read-only — no write endpoints, no OAuth, no auth required for public content. Broadside serves profile pages and photo galleries as HTML, but does not ship a posting UI. Content goes in via CLI, RSS, webhook, or file drop.
 
 ## Quick start
 
