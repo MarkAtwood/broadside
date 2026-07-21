@@ -9,35 +9,6 @@ use axum::{Json, Router};
 use fieldwork::funkwhale_api::*;
 use std::sync::Arc;
 
-fn track_row_to_response(t: &fieldwork_db::audio_db::TrackRow) -> TrackResponse {
-    TrackResponse {
-        id: t.id,
-        title: t.title.clone(),
-        artist: t.artist.clone(),
-        album: t.album.clone(),
-        track_number: t.track_number,
-        duration: t.duration,
-        file_size: t.file_size,
-        mime_type: t.mime_type.clone(),
-        description: t.description.clone(),
-        visibility: t.visibility.clone(),
-        created_at: t.created_at,
-        listen_url: Some(format!("/api/v1/listen/{}", t.id)),
-    }
-}
-
-fn channel_row_to_response(c: &fieldwork_db::audio_db::AudioChannelRow) -> ChannelResponse {
-    ChannelResponse {
-        persona_id: c.persona_id,
-        description: c.description.clone(),
-        category: c.category.clone(),
-        language: c.language.clone(),
-        rss_enabled: c.rss_enabled,
-        itunes_category: c.itunes_category.clone(),
-        created_at: c.created_at,
-    }
-}
-
 async fn list_tracks(
     State(state): State<Arc<AppState>>,
     Query(params): Query<PaginationParams>,
@@ -46,7 +17,7 @@ async fn list_tracks(
     let tracks = fieldwork_db::audio_db::list_public_tracks(&state.pool, limit, offset)
         .await
         .unwrap_or_default();
-    let results: Vec<_> = tracks.iter().map(track_row_to_response).collect();
+    let results: Vec<_> = tracks.iter().map(|t| t.into()).collect();
     Json(PaginatedResponse {
         count: results.len(),
         results,
@@ -58,7 +29,7 @@ async fn get_track_handler(
     Path(id): Path<i64>,
 ) -> impl IntoResponse {
     match fieldwork_db::audio_db::get_track(&state.pool, id).await {
-        Ok(Some(t)) => Json(track_row_to_response(&t)).into_response(),
+        Ok(Some(t)) => Json(TrackResponse::from(&t)).into_response(),
         _ => StatusCode::NOT_FOUND.into_response(),
     }
 }
@@ -93,7 +64,7 @@ async fn list_channels(
     let channels = fieldwork_db::audio_db::list_all_audio_channels(&state.pool, limit, offset)
         .await
         .unwrap_or_default();
-    let results: Vec<_> = channels.iter().map(channel_row_to_response).collect();
+    let results: Vec<_> = channels.iter().map(|c| c.into()).collect();
     Json(PaginatedResponse {
         count: results.len(),
         results,
