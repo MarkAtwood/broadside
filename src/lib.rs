@@ -15,6 +15,7 @@ pub mod id;
 pub mod media;
 pub mod persona;
 pub mod lemmy_api;
+pub mod misskey_api;
 pub mod peertube_api;
 pub mod pixelfed_api;
 pub mod post;
