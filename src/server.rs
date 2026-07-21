@@ -56,6 +56,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/", get(index))
         .route("/health", get(health))
         .merge(crate::pixelfed_api::routes())
+        .merge(crate::lemmy_api::routes())
         // Body size limit: 256KB for all POST endpoints (inbox and webhook)
         .layer(axum::extract::DefaultBodyLimit::max(256 * 1024))
         .layer(axum::middleware::from_fn(security_headers))
