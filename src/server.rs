@@ -50,6 +50,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/users/{username}/followers", get(followers_collection))
         .route("/users/{username}/following", get(following_collection))
         .route("/users/{username}/did.json", get(did_document))
+        .route("/users/{username}/photos", get(photo_gallery))
         .route("/users/{username}/inbox", post(inbox))
         .route("/inbox", post(shared_inbox))
         .route("/hook/{persona}", post(crate::webhook::handle_webhook))
@@ -1487,6 +1488,76 @@ async fn serve_profile_html(state: &AppState, username: &str) -> axum::response:
             (axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8"),
             (axum::http::header::CACHE_CONTROL, "public, max-age=60"),
             (axum::http::header::VARY, "Accept"),
+        ],
+        html,
+    )
+        .into_response()
+}
+
+/// Serve an Instagram-style photo grid page for a persona.
+async fn photo_gallery(
+    State(state): State<Arc<AppState>>,
+    Path(username): Path<String>,
+) -> impl IntoResponse {
+    let persona_row = match fieldwork_db::persona_db::get_persona_by_username(&state.pool, &username).await {
+        Ok(Some(r)) => r,
+        _ => return (StatusCode::NOT_FOUND, "unknown user").into_response(),
+    };
+
+    let images = fieldwork_db::media_db::list_images_for_persona(&state.pool, persona_row.id, 100, 0)
+        .await
+        .unwrap_or_default();
+
+    let items: Vec<(String, String, String)> = images
+        .iter()
+        .map(|m| {
+            let file_url = format!("https://{}/{}", state.domain, m.file_path);
+            let alt_text = m.description.clone();
+            let post_url = m.post_id
+                .map(|pid| format!("https://{}/users/{}/statuses/{}", state.domain, username, pid))
+                .unwrap_or_else(|| format!("https://{}/@{}", state.domain, username));
+            (file_url, alt_text, post_url)
+        })
+        .collect();
+
+    let grid_html = fieldwork::util::render_photo_grid(&items);
+    let display_name = ammonia::clean(&persona_row.display_name);
+    let username_clean = ammonia::clean(&username);
+    let domain_clean = ammonia::clean(&state.domain);
+
+    let html = format!(
+        r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>@{username} photos</title>
+  <style>{base_css}{grid_css}</style>
+  <style>{extra_css}</style>
+</head>
+<body>
+  <main>
+    <h1>{display_name}</h1>
+    <p class="handle">@{username}@{domain}</p>
+    <h2>Photos</h2>
+    {grid_html}
+  </main>
+</body>
+</html>"#,
+        base_css = BASE_CSS,
+        grid_css = fieldwork::util::PHOTO_GRID_CSS,
+        extra_css = state.extra_css,
+        username = username_clean,
+        domain = domain_clean,
+        display_name = display_name,
+        grid_html = grid_html,
+    );
+
+    (
+        StatusCode::OK,
+        [
+            (axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8"),
+            (axum::http::header::CACHE_CONTROL, "public, max-age=60"),
         ],
         html,
     )
