@@ -810,6 +810,7 @@ name = "fieldwork"
 version = "0.1.0"
 dependencies = [
  "ammonia",
+ "axum",
  "base64",
  "pulldown-cmark",
  "regex",

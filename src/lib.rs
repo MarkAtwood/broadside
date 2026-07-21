@@ -2,6 +2,7 @@
 pub use fieldwork_db::db::sqlx;
 
 pub mod actor_cache;
+pub mod bookwyrm_api;
 pub mod card;
 pub mod config;
 pub mod content;
@@ -9,6 +10,7 @@ pub mod db;
 pub mod db_extras;
 pub mod delivery;
 pub mod did;
+pub mod funkwhale_api;
 pub mod feed;
 pub mod http;
 pub mod id;
@@ -27,3 +29,4 @@ pub mod signatures;
 pub mod theme;
 pub mod watch;
 pub mod webhook;
+pub mod writefreely_api;
