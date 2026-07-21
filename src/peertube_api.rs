@@ -13,6 +13,7 @@ use serde::Deserialize;
 use std::sync::Arc;
 
 use crate::server::AppState;
+use fieldwork::util::{epoch_to_iso, now_iso};
 
 // ---------------------------------------------------------------------------
 // Query params
@@ -58,18 +59,6 @@ struct JobsQuery {
 
 fn default_limit() -> i64 {
     15
-}
-
-fn now_iso() -> String {
-    chrono::Utc::now()
-        .format("%Y-%m-%dT%H:%M:%S%.3fZ")
-        .to_string()
-}
-
-fn epoch_to_iso(epoch: i64) -> String {
-    chrono::DateTime::from_timestamp(epoch, 0)
-        .map(|dt| dt.format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string())
-        .unwrap_or_else(|| now_iso())
 }
 
 // ---------------------------------------------------------------------------

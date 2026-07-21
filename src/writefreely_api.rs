@@ -59,7 +59,7 @@ async fn get_collection_post(
 }
 
 async fn render_md(Json(body): Json<MarkdownRequest>) -> Json<WfResponse<MarkdownResponse>> {
-    let html = fieldwork::util::render_markdown_simple(&body.raw_body);
+    let html = fieldwork::util::render_markdown(&body.raw_body);
     Json(WfResponse { code: 200, data: MarkdownResponse { body: html } })
 }
 
