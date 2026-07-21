@@ -112,6 +112,7 @@ pub async fn poll_feed(
             edited_at: None,
             deleted_at: None,
             deleted_reason: None,
+            abstract_text: None,
         };
         let post_ok = fieldwork_db::posts_db::create_post(pool, &post).await.is_ok();
 

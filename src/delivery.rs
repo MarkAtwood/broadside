@@ -187,11 +187,11 @@ async fn process_batch(
             }
         };
         let fw_post = fieldwork_db::posts_db::get_post(pool, post_id_int).await?;
-        let (post_id, content_html, created_at_epoch, username) = match fw_post {
+        let (post_id, content_html, created_at_epoch, username, abstract_text) = match fw_post {
             Some(p) => {
                 let persona = fieldwork_db::persona_db::get_persona_by_id(pool, p.persona_id).await?;
                 let uname = persona.map(|r| r.username).unwrap_or_default();
-                (p.id.to_string(), p.content_html, p.created_at, uname)
+                (p.id.to_string(), p.content_html, p.created_at, uname, p.abstract_text)
             }
             None => {
                 fieldwork_db::delivery_db::mark_dead(pool, delivery_id, "post not found", now).await?;
@@ -248,6 +248,11 @@ async fn process_batch(
             // Only include contentMap when language was detected (avoid null field)
             if let Some(lang) = detected_lang {
                 activity["object"]["contentMap"] = serde_json::json!({lang: &processed_html});
+            }
+
+            // FEP post abstract
+            if let Some(ref abs) = abstract_text {
+                activity["object"]["abstract"] = serde_json::json!(abs);
             }
 
             // FEP-e232: add quoteUrl for Misskey/Pleroma compat

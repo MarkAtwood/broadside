@@ -21,6 +21,23 @@ pub async fn create(
     let id_str = id.to_string();
 
 
+    // FEP post abstract: auto-generate for long posts.
+    let abstract_text = if content_text.chars().count() > 500 {
+        let first_sentence_end = content_text.find(". ")
+            .or_else(|| content_text.find(".\n"))
+            .map(|i| i + 1)
+            .unwrap_or_else(|| content_text.len().min(200));
+        let end = first_sentence_end.min(200);
+        let truncated: String = content_text.chars().take(end).collect();
+        if truncated.len() < content_text.len() {
+            Some(format!("{truncated}..."))
+        } else {
+            Some(truncated)
+        }
+    } else {
+        None
+    };
+
     let post = fieldwork_db::posts_db::PostRow {
         id,
         user_id,
@@ -41,6 +58,7 @@ pub async fn create(
         edited_at: None,
         deleted_at: None,
         deleted_reason: None,
+        abstract_text,
     };
     fieldwork_db::posts_db::create_post(pool, &post)
         .await
