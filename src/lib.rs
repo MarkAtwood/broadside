@@ -14,6 +14,7 @@ pub mod http;
 pub mod id;
 pub mod media;
 pub mod persona;
+pub mod pixelfed_api;
 pub mod post;
 pub mod ratelimit;
 pub mod relay;
