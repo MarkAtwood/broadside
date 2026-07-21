@@ -2,17 +2,32 @@
 
 One-way ActivityPub server for organizations. Publish to the fediverse without running Mastodon.
 
-Broadside gives your organization a federated presence (`@announcements@corp.example`) that people can follow from Mastodon, Misskey, GoToSocial, or any ActivityPub client. You publish via CLI, RSS feed, webhook, or file drop. Broadside federates the content. There is no client API, no user login, no timeline to read.
+Broadside gives your organization a federated presence (`@announcements@corp.example`) that people can follow from any ActivityPub client. You publish via CLI, RSS feed, webhook, or file drop. Broadside federates the content. There is no login, no timeline to read.
 
-Tested and working against mastodon.social.
+Followers see your content in whatever fediverse app they use.
+
+## Client compatibility (read-only)
+
+Broadside serves content through every major fediverse client API:
+
+| API | What followers see | Endpoints |
+|-----|-------------------|-----------|
+| **Mastodon** | Posts in timeline | Actor, outbox, WebFinger, NodeInfo |
+| **Pixelfed** | Photo galleries | Albums, discover, trending |
+| **Lemmy** | Community posts | Communities, posts, comments |
+| **PeerTube** | Video channels | Videos, channels |
+| **Misskey** | Notes | Local timeline |
+| **Funkwhale** | Audio tracks | Tracks, albums, channels, playlists |
+| **Bookwyrm** | Book reviews | Books, reviews, reading activity |
+| **WriteFreely** | Blog articles | Posts, collections, markdown |
+
+All read-only — no write endpoints, no OAuth, no auth required for public content.
 
 ## Quick start
 
 ```bash
 broadside init /var/lib/broadside
 broadside persona add announcements --display-name="ACME Announcements"
-broadside persona update announcements --bio="Official announcements" \
-  --field "Website=https://acme.example"
 broadside serve
 ```
 
@@ -29,50 +44,43 @@ broadside post --persona=announcements --markdown < release-notes.md
 
 # With image attachments
 broadside post --persona=announcements --media=screenshot.png "New UI landed"
-
-# Or configure automatic ingestion in config.toml:
-# - RSS/Atom feed polling
-# - Webhook endpoint (POST /hook/{persona})
-# - Directory watcher (drop a .md file, it gets federated)
 ```
 
-Hashtags (`#release`), mentions (`@user@instance`), and URLs are automatically linked and rendered correctly in Mastodon.
+Or configure automatic ingestion:
+
+| Method | How | When to use |
+|--------|-----|-------------|
+| **CLI** | `broadside post --persona=NAME "content"` | Manual posts, scripting, cron |
+| **RSS/Atom** | Configure feed URL in `config.toml` | Auto-federate blog posts |
+| **Webhook** | `POST /hook/{persona}` with Bearer token | CI/CD, CMS, internal tools |
+| **Directory watch** | Drop a `.md` file in a watched directory | Simple file-based workflow |
+
+## Web pages
+
+- Profile pages with posts, stats, metadata fields
+- Photo gallery (`/users/{name}/photos`) — responsive CSS grid with lazy loading
+- DID document (`/users/{name}/did.json`)
+- Content negotiation — JSON-LD for AP clients, HTML for browsers
+- Dark mode via `prefers-color-scheme`
+- Brand theming via W3C Design Tokens or custom CSS
 
 ## What it does
 
-- Federates posts to followers via ActivityPub (Create{Note})
-- Accepts follows automatically (Follow → Accept)
-- Serves actor profiles with content negotiation (JSON-LD for AP clients, HTML for browsers)
-- WebFinger, NodeInfo, outbox, followers collection
-- HTTP signature verification on all inbound inbox requests
-- Multiple personas per domain (`@engineering@`, `@blog@`, `@releases@`)
+- Federates posts to followers via ActivityPub
+- Accepts follows automatically
+- Read-only compatibility with every major fediverse client API
+- DID support (did:scid, did:key, did:web) with BIP-39 mnemonic recovery
 - Media attachments with MIME validation, EXIF stripping, resize, and blurhash
-- Profile metadata fields (Website, GitHub, etc. — rendered on Mastodon profiles)
-- Brand theming via W3C Design Tokens (light/dark mode) or custom CSS
 - Delivery retry with exponential backoff and per-domain circuit breaker
-- CDN-friendly caching (`Cache-Control`, `Vary: Accept` on content-negotiated endpoints)
-- Rate limiting, SSRF protection, Digest/Date verification
-- Graceful shutdown on SIGTERM/SIGINT
+- CDN-friendly caching headers
 
 ## What it doesn't do
 
-- No Mastodon Client API. No OAuth. No web UI for posting.
+- No write client API. No OAuth. No web UI for posting.
 - No inbound content processing. Replies, likes, and boosts are accepted and discarded.
 - No timelines, notifications, or streaming.
-- No moderation tools. There is no community to moderate.
-
-## Four ways to post
-
-| Method | How | When to use |
-|---|---|---|
-| **CLI** | `broadside post --persona=NAME "content"` | Manual posts, scripting, cron |
-| **RSS/Atom** | Configure feed URL in `config.toml` | Auto-federate blog posts |
-| **Webhook** | `POST /hook/{persona}` with `Authorization: Bearer KEY` | CI/CD, CMS, internal tools |
-| **Directory watch** | Drop a `.md` file in a watched directory | Simple file-based workflow |
 
 ## Configuration
-
-Single file: `config.toml`.
 
 ```toml
 [server]
@@ -80,284 +88,68 @@ bind = "127.0.0.1:3000"
 domain = "corp.example"
 data_dir = "/var/lib/broadside"
 
-# Auto-federate your blog's RSS feed
 [[feed]]
 persona = "blog"
 url = "https://corp.example/blog/feed.xml"
 poll_interval = "15m"
 
-# Accept posts from CI/CD via webhook
 [[webhook]]
 persona = "releases"
 key = "change-this-to-a-real-secret"
-
-# Watch a directory for markdown files
-[watch]
-persona = "announcements"
-path = "/var/spool/broadside/incoming/"
-published = "/var/spool/broadside/published/"
-pattern = "*.md"
 ```
 
-## Brand theming
+## Architecture
 
-Profile pages match your brand out of the box. Two options, composable:
+Built on [fieldwork](https://github.com/MarkAtwood/fedistract) — shared fediverse building blocks used by all three servers (broadside, smallhold, gaja).
 
-**W3C Design Tokens** — hand broadside a standard [design tokens](https://tr.designtokens.org/format/) JSON file exported from Figma, Style Dictionary, or any tokens tool. Broadside maps six named tokens to its UI, with automatic light/dark mode support.
-
-```toml
-[server]
-theme_tokens_path = "/var/lib/broadside/brand-tokens.json"
 ```
-
-```json
-{
-  "color": {
-    "primary":    { "$value": "#0052CC" },
-    "background": { "$value": "#FFFFFF" },
-    "surface":    { "$value": "#F4F5F7" },
-    "text":       { "$value": "#172B4D" },
-    "muted":      { "$value": "#6B778C" },
-    "border":     { "$value": "#DFE1E6" }
-  },
-  "color-dark": {
-    "primary":    { "$value": "#4C9AFF" },
-    "background": { "$value": "#1B2638" },
-    "surface":    { "$value": "#253858" },
-    "text":       { "$value": "#E6EDFA" },
-    "muted":      { "$value": "#8993A4" },
-    "border":     { "$value": "#344563" }
-  }
-}
+reverse proxy (Caddy / nginx)
+         |
+broadside binary  (axum, tokio)
+  ├── Read-only Client APIs (Mastodon, Pixelfed, Lemmy, PeerTube, Misskey, Funkwhale, Bookwyrm, WriteFreely)
+  ├── ActivityPub S2S (inbox, outbox, actors, DID)
+  ├── WebFinger / NodeInfo
+  ├── Web pages (profiles, photo grid)
+  ├── Content ingestion (RSS, webhook, file watch)
+  ├── SQLite via sqlx (WAL mode)
+  └── Delivery worker (retry, circuit breaker)
 ```
-
-**Custom CSS** — for anything beyond colors (fonts, layout, logo), point to a CSS file. It layers on top of the design tokens.
-
-```toml
-[server]
-custom_css_path = "/var/lib/broadside/brand.css"
-```
-
-Both paths are optional. Without them, broadside uses a clean default with automatic dark mode.
 
 ## Deployment
 
-### Docker (recommended)
+Broadside **must** run behind a reverse proxy for TLS.
 
-```bash
-docker pull fallenpegasus/broadside:latest
-docker run -d --name broadside \
-  -v broadside-data:/data \
-  -p 3000:3000 \
-  fallenpegasus/broadside
 ```
-
-Initialize and create a persona:
-
-```bash
-docker exec broadside broadside init /data
-docker exec broadside broadside persona add announcements \
-  --display-name="ACME Announcements"
-```
-
-Images are published automatically on every release to [Docker Hub](https://hub.docker.com/r/fallenpegasus/broadside). Tags: `latest`, plus version numbers (e.g. `0.3.1`).
-
-### Docker Compose
-
-```yaml
-services:
-  broadside:
-    image: fallenpegasus/broadside:latest
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    volumes:
-      - broadside-data:/data
-    environment:
-      - RUST_LOG=broadside=info
-
-volumes:
-  broadside-data:
+corp.example {
+    reverse_proxy localhost:3000
+}
 ```
 
 ### Requirements
 
 - A domain with DNS pointing to your server
-- A reverse proxy (Caddy or nginx) for TLS termination
+- A reverse proxy (Caddy or nginx) for TLS
 - Nothing else. No PostgreSQL, no Redis, no Node.js.
-
-Broadside uses SQLite for storage. PostgreSQL support is planned for environments that require managed databases (e.g., RDS/Aurora).
-
-### Reverse proxy requirement
-
-Broadside **must** run behind a reverse proxy. It does not perform TLS termination, rate limiting on public endpoints, or browser security header management itself — these are delegated to the infrastructure layer.
-
-| Concern | Why it's a proxy responsibility |
-|---|---|
-| **TLS termination** | Let's Encrypt integration, certificate rotation, and OCSP stapling are solved problems in Caddy/nginx. Embedding TLS adds attack surface for no gain. |
-| **Rate limiting** (webhook, inbox) | In-memory counters don't survive restarts and are trivially bypassed by rotating IPs. Proxy-level limiting (`rate_limit` in Caddy, `limit_req_zone` in nginx) covers all endpoints and persists across process restarts. |
-| **HSTS** (`Strict-Transport-Security`) | The proxy owns TLS, so it sets HSTS. Caddy does this automatically. |
-| **Permissions-Policy** | Browser feature restrictions (camera, microphone, geolocation) are best set once at the proxy for all backends. |
-| **Request size limits** | Reject oversized bodies before they reach the application. Broadside sets a 256 KB body limit internally as defense-in-depth, but the proxy should enforce its own limit. |
-
-Broadside sets its own `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Content-Security-Policy` headers because these are application-specific. The proxy handles infrastructure-level headers.
-
-### CDN / Caching
-
-Broadside sets per-endpoint `Cache-Control` headers so a CDN or caching reverse proxy works out of the box:
-
-- **Actor, WebFinger, followers, NodeInfo**: `public, max-age=300` (5 min)
-- **Outbox pages, index, profile**: `public, max-age=60` (1 min)
-- **Inbox POST, webhook, health**: `no-store`
-
-Content-negotiated endpoints (actor serves JSON-LD or HTML based on `Accept`) include `Vary: Accept` so CDNs cache both variants correctly. No purge API needed — the short TTLs mean new posts and follows appear within a minute.
-
-### Caddy example
-
-Caddy handles TLS and HSTS automatically. Add rate limiting for the webhook and inbox endpoints:
-
-```
-corp.example {
-    # Rate limit webhook endpoint: 10 requests/minute per IP
-    @webhook path /hook/*
-    rate_limit @webhook {
-        zone webhook {
-            key {remote_host}
-            events 10
-            window 1m
-        }
-    }
-
-    # Rate limit inbox endpoints: 60 requests/minute per IP
-    @inbox path /inbox /users/*/inbox
-    rate_limit @inbox {
-        zone inbox {
-            key {remote_host}
-            events 60
-            window 1m
-        }
-    }
-
-    header {
-        Permissions-Policy "camera=(), microphone=(), geolocation=()"
-    }
-
-    reverse_proxy 127.0.0.1:3000
-}
-```
-
-### nginx example
-
-```nginx
-limit_req_zone $binary_remote_addr zone=webhook:10m rate=10r/m;
-limit_req_zone $binary_remote_addr zone=inbox:10m rate=60r/m;
-
-server {
-    listen 443 ssl;
-    server_name corp.example;
-
-    ssl_certificate     /etc/letsencrypt/live/corp.example/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/corp.example/privkey.pem;
-
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
-
-    location /hook/ {
-        limit_req zone=webhook burst=5 nodelay;
-        proxy_pass http://127.0.0.1:3000;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header Host $host;
-    }
-
-    location ~ ^/(inbox|users/.*/inbox)$ {
-        limit_req zone=inbox burst=20 nodelay;
-        proxy_pass http://127.0.0.1:3000;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header Host $host;
-    }
-
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header Host $host;
-    }
-}
-```
 
 ### Backup
 
-Copy the SQLite file and `media/` directory. That's the entire instance state.
+Copy the SQLite file and `media/` directory:
 
 ```bash
 sqlite3 /var/lib/broadside/broadside.db ".backup /backup/broadside.db"
 cp -r /var/lib/broadside/media/ /backup/media/
 ```
 
-### Monitoring
-
-```bash
-broadside status                  # CLI: personas, followers, queue depth
-curl http://localhost:3000/health  # JSON health endpoint
-```
-
-## CLI reference
-
-```
-broadside init <data_dir>                          # Create data dir, DB, sample config
-broadside persona add <username>                   # Generate keypair, create actor
-broadside persona list                             # List personas with follower counts
-broadside persona update <username> [options]      # Update display name, bio, avatar, metadata
-broadside post --persona=<name> <content>          # Publish a post
-broadside post --persona=<name> --markdown         # Read markdown from stdin
-broadside post --persona=<name> --media=<path> ... # Attach images
-broadside queue inspect                            # Show pending/dead deliveries
-broadside queue retry                              # Retry all dead-lettered deliveries
-broadside queue stats                              # Delivery statistics
-broadside followers list --persona=<name>          # List followers
-broadside followers count                          # Follower counts per persona
-broadside feed-poll                                # One-shot poll of all configured feeds
-broadside status                                   # Overall health
-broadside serve                                    # Start HTTP server
-```
-
 ## Security
 
-Broadside's attack surface is deliberately minimal:
-
-- **Inbox**: requires HTTP Signature, verifies Digest and Date headers, rejects unsigned/stale/tampered requests
-- **Webhook**: key authenticated via `Authorization: Bearer` header (constant-time comparison)
-- **SSRF protection**: all outbound fetches require HTTPS, block private/link-local/metadata IPs, no HTTP redirect following
-- **Media**: MIME sniffing (not extension trust), 10 MB limit, 64 MB decoded pixel cap (decompression bomb protection), EXIF stripping
-- **Content**: HTML sanitized via ammonia (Mastodon-compatible allowlist)
-- **Rate limiting**: per-IP token bucket on inbox endpoints (webhook/inbox rate limiting delegated to reverse proxy)
-- **Graceful shutdown**: SIGTERM/SIGINT handled cleanly
-
-There is no OAuth, no client API, no admin UI, no login form, no session management.
-
-## Building from source
-
-```bash
-cargo build --release
-# Binary at target/release/broadside (14 MB)
-```
-
-### Quality gates
-
-```bash
-cargo fmt --all
-cargo clippy -- -D warnings
-cargo test
-cargo audit
-```
-
-### Fuzz testing
-
-```bash
-cargo +nightly fuzz run fuzz_sanitize
-cargo +nightly fuzz run fuzz_signature_parser
-cargo +nightly fuzz run fuzz_image_sniff
-```
+- SSRF protection on all outbound HTTP
+- HTTP Signature verification with Digest and Date freshness checks
+- HTML sanitization via ammonia
+- Media: MIME sniffing, EXIF stripping, decompression bomb limits
+- Rate limiting on inbox endpoints
+- Security headers (CSP, X-Frame-Options, Referrer-Policy)
+- No OAuth, no login form, no session management — minimal attack surface
 
 ## License
 
-AGPL-3.0
+AGPL-3.0.
